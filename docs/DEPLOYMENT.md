@@ -1,150 +1,206 @@
-# ORACLE Alpha - Deployment Guide
+# 🚀 ORACLE Alpha Deployment Guide
 
-## Prerequisites
+## Quick Deploy Options
 
-### 1. Install Solana CLI
+### Option 1: Railway (Recommended for Demo)
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template)
+
 ```bash
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-solana --version
+# 1. Install Railway CLI
+npm install -g @railway/cli
+
+# 2. Login
+railway login
+
+# 3. Initialize project
+cd oracle-alpha
+railway init
+
+# 4. Add environment variables
+railway variables set SOLANA_CLUSTER=devnet
+railway variables set PORT=3900
+# Add other vars as needed
+
+# 5. Deploy
+railway up
+
+# Get your URL
+railway domain
 ```
 
-### 2. Install Anchor CLI
+**Pros:** Free tier, auto HTTPS, easy  
+**Cons:** Sleep after 30min inactivity on free
+
+---
+
+### Option 2: Render
+
 ```bash
-# Requires Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source $HOME/.cargo/env
+# Create render.yaml
+cat > render.yaml << 'EOF'
+services:
+  - type: web
+    name: oracle-alpha
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3900
+      - key: SOLANA_CLUSTER
+        value: devnet
+EOF
 
-# Install Anchor
-cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli
-anchor --version
+# Push to GitHub, connect Render to repo
 ```
 
-### 3. Configure Wallet
+**Pros:** Free tier, auto HTTPS, no sleep  
+**Cons:** Slower cold starts
+
+---
+
+### Option 3: Fly.io
+
 ```bash
-# Generate new wallet (or use existing)
-solana-keygen new -o ~/.config/solana/id.json
+# 1. Install flyctl
+curl -L https://fly.io/install.sh | sh
 
-# Check address
-solana address
+# 2. Login
+fly auth login
 
-# Fund wallet (mainnet requires ~2 SOL for deployment)
+# 3. Launch
+fly launch --name oracle-alpha
+
+# 4. Set secrets
+fly secrets set SOLANA_CLUSTER=devnet
+fly secrets set HELIUS_API_KEY=xxx
+
+# 5. Deploy
+fly deploy
 ```
 
-## Deployment
+**Pros:** Fast, global edge, generous free tier  
+**Cons:** Slightly more complex
 
-### Devnet (Testing)
+---
+
+### Option 4: Docker on VPS
+
 ```bash
-# Set cluster
-solana config set --url devnet
+# On your VPS (e.g., Vultr, DigitalOcean)
 
-# Airdrop test SOL
-solana airdrop 2
+# 1. Clone repo
+git clone https://github.com/dynamolabs/oracle-alpha.git
+cd oracle-alpha
 
-# Deploy
-anchor build
-anchor deploy --provider.cluster devnet
+# 2. Create .env
+cp .env.example .env
+nano .env  # Add your keys
+
+# 3. Run with docker-compose
+docker-compose up -d
+
+# 4. Check logs
+docker-compose logs -f
+
+# 5. Setup nginx reverse proxy (optional)
+# For HTTPS with Let's Encrypt
 ```
 
-### Mainnet (Production)
+---
+
+### Option 5: Vercel (API Only)
+
 ```bash
-# Set cluster
-solana config set --url mainnet-beta
+# 1. Install Vercel CLI
+npm i -g vercel
 
-# Check balance (need ~2 SOL)
-solana balance
+# 2. Create vercel.json
+cat > vercel.json << 'EOF'
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/api/server.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/api/server.ts"
+    }
+  ]
+}
+EOF
 
-# Deploy
-./scripts/deploy-mainnet.sh
+# 3. Deploy
+vercel --prod
 ```
 
-## Post-Deployment
+**Pros:** Great for API, auto scaling  
+**Cons:** No WebSocket on free tier
 
-### 1. Update Anchor.toml
-```toml
-[programs.mainnet]
-oracle = "YOUR_MAINNET_PROGRAM_ID"
+---
 
-[provider]
-cluster = "mainnet"
-```
+## Environment Variables
 
-### 2. Update Environment
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PORT` | No | API port (default: 3900) |
+| `NODE_ENV` | No | Environment (production/development) |
+| `SOLANA_CLUSTER` | No | mainnet/devnet (default: devnet) |
+| `SOLANA_RPC_URL` | No | Custom RPC URL |
+| `HELIUS_API_KEY` | No | For enhanced RPC |
+| `TELEGRAM_BOT_TOKEN` | No | Telegram alerts |
+| `TELEGRAM_CHAT_ID` | No | Telegram channel |
+| `DISCORD_WEBHOOK_URL` | No | Discord alerts |
+
+---
+
+## Recommended for Hackathon Demo
+
+**Railway** - fastest to deploy, good enough for demo, free
+
 ```bash
-# .env
-SOLANA_CLUSTER=mainnet-beta
-SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+# One-liner deploy
+railway login && railway init && railway up && railway domain
 ```
 
-### 3. Initialize State
+Your demo URL will be something like:  
+`https://oracle-alpha-production.up.railway.app`
+
+---
+
+## Health Check Endpoints
+
+After deployment, verify:
+
 ```bash
-npm run init:mainnet
+# Health check
+curl https://your-app.railway.app/health
+
+# API test
+curl https://your-app.railway.app/api/signals
+
+# Stats
+curl https://your-app.railway.app/api/stats
 ```
 
-## Verification
+---
 
-### Check Program
-```bash
-# View program info
-solana program show <PROGRAM_ID>
+## Post-Deploy Checklist
 
-# View program accounts
-solana account <PROGRAM_ID>
-```
+- [ ] Health endpoint responding
+- [ ] API returning data
+- [ ] WebSocket connecting (if supported)
+- [ ] Telegram alerts working
+- [ ] On-chain publishing working
+- [ ] Dashboard accessible
 
-### Test API
-```bash
-curl http://localhost:3900/health
-curl http://localhost:3900/api/onchain/stats
-```
+---
 
-## Costs
-
-| Action | Estimated Cost |
-|--------|---------------|
-| Initial Deploy | ~1.5-2 SOL |
-| Upgrade | ~0.01 SOL |
-| Publish Signal | ~0.00001 SOL |
-| Update ATH | ~0.00001 SOL |
-
-## Troubleshooting
-
-### "Insufficient funds"
-```bash
-# Check balance
-solana balance
-
-# Devnet: airdrop more
-solana airdrop 2
-```
-
-### "Program deploy failed"
-```bash
-# Retry with more compute
-anchor deploy --provider.cluster mainnet -- --max-len 300000
-```
-
-### "Account already exists"
-```bash
-# The program is already deployed - upgrade instead
-anchor upgrade target/deploy/oracle.so --program-id <PROGRAM_ID>
-```
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│                 ORACLE Alpha Program                 │
-├─────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │   State     │  │   Signal    │  │    ATH      │ │
-│  │  Account    │  │  Account    │  │   Tracker   │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘ │
-├─────────────────────────────────────────────────────┤
-│  Instructions:                                       │
-│  • initialize()    - Set up state                   │
-│  • publish_signal() - Record signal on-chain        │
-│  • update_ath()    - Track all-time high            │
-│  • close_signal()  - Finalize win/loss              │
-└─────────────────────────────────────────────────────┘
-```
+*Deploy guide by ShifuSensei 🐼*
