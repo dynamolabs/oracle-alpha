@@ -92,6 +92,32 @@ class OracleClient:
     def get_gainers(self) -> Dict[str, Any]:
         """Get recent top gainers"""
         return self._request('/api/gainers')
+    
+    def get_demo_status(self) -> Dict[str, Any]:
+        """Get demo mode status"""
+        return self._request('/api/demo/status')
+    
+    def _post(self, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
+        """Make POST request to API"""
+        from urllib.request import Request, urlopen
+        url = f"{self.base_url}{endpoint}"
+        headers = {'Content-Type': 'application/json'}
+        body = json.dumps(data).encode() if data else None
+        req = Request(url, data=body, headers=headers, method='POST')
+        with urlopen(req, timeout=10) as response:
+            return json.loads(response.read().decode())
+    
+    def start_demo(self, signals_per_minute: int = 4) -> Dict[str, Any]:
+        """Start demo mode signal generator"""
+        return self._post('/api/demo/start', {'signalsPerMinute': signals_per_minute})
+    
+    def stop_demo(self) -> Dict[str, Any]:
+        """Stop demo mode"""
+        return self._post('/api/demo/stop')
+    
+    def seed_historical(self, count: int = 30) -> Dict[str, Any]:
+        """Seed historical signals for demo"""
+        return self._post('/api/demo/seed', {'count': count})
 
 
 class OracleWebSocket:

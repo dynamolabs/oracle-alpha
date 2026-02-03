@@ -96,6 +96,36 @@ class OracleClient {
   async healthCheck(): Promise<any> {
     return this.fetch('/health');
   }
+
+  // Demo mode controls
+  async getDemoStatus(): Promise<any> {
+    return this.fetch('/api/demo/status');
+  }
+
+  async startDemo(signalsPerMinute: number = 4): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/demo/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signalsPerMinute })
+    });
+    return response.json();
+  }
+
+  async stopDemo(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/demo/stop`, {
+      method: 'POST'
+    });
+    return response.json();
+  }
+
+  async seedHistorical(count: number = 30): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/demo/seed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count })
+    });
+    return response.json();
+  }
 }
 
 // WebSocket Client for real-time signals
