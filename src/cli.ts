@@ -9,18 +9,57 @@ import { scanKOLActivity } from './sources/kol-tracker';
 import { scanNarratives } from './sources/narrative-detector';
 import { scanNewLaunches } from './sources/new-launches';
 
+// Colors
+const colors = {
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  orange: '\x1b[38;5;208m',
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m'
+};
+
 const command = process.argv[2] || 'scan';
 
+function printBanner() {
+  console.log(`
+${colors.cyan}╔═══════════════════════════════════════════════════════════╗
+║  ${colors.bold}🔮 ORACLE Alpha${colors.reset}${colors.cyan}                                          ║
+║  ${colors.dim}On-chain Reliable Alpha Compilation & Learning Engine${colors.reset}${colors.cyan}   ║
+╚═══════════════════════════════════════════════════════════╝${colors.reset}
+`);
+}
+
+function createBar(score: number, width: number = 20): string {
+  const filled = Math.round((score / 100) * width);
+  const empty = width - filled;
+  const color = score >= 80 ? colors.green : score >= 60 ? colors.yellow : colors.orange;
+  return `${color}${'█'.repeat(filled)}${colors.dim}${'░'.repeat(empty)}${colors.reset}`;
+}
+
 async function runFullScan() {
-  console.log('Running full signal aggregation...\n');
-  const signals = await aggregate();
+  printBanner();
+  console.log(`${colors.cyan}⏳ Scanning 8 signal sources...${colors.reset}\n`);
   
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`📊 SCAN COMPLETE - ${signals.length} aggregated signals`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  const startTime = Date.now();
+  const signals = await aggregate();
+  const duration = Date.now() - startTime;
+  
+  console.log(`
+${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}
+${colors.bold}📊 SCAN COMPLETE${colors.reset} - ${signals.length} signals found in ${(duration/1000).toFixed(1)}s
+${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}
+`);
 
   for (const signal of signals.slice(0, 15)) {
     printSignal(signal);
+  }
+  
+  if (signals.length > 15) {
+    console.log(`${colors.dim}... and ${signals.length - 15} more signals${colors.reset}\n`);
   }
 }
 
@@ -92,23 +131,33 @@ async function runNewLaunchScan() {
 
 function printSignal(signal: any) {
   const riskColors: Record<string, string> = {
-    LOW: '\x1b[32m',     // Green
-    MEDIUM: '\x1b[33m',  // Yellow
-    HIGH: '\x1b[38;5;208m', // Orange
-    EXTREME: '\x1b[31m', // Red
+    LOW: colors.green,
+    MEDIUM: colors.yellow,
+    HIGH: colors.orange,
+    EXTREME: colors.red,
   };
-  const reset = '\x1b[0m';
-  const bold = '\x1b[1m';
+  const riskEmoji: Record<string, string> = {
+    LOW: '🟢',
+    MEDIUM: '🟡',
+    HIGH: '🟠',
+    EXTREME: '🔴',
+  };
   
-  console.log(`${bold}🪙 $${signal.symbol}${reset} - ${signal.name}`);
-  console.log(`   Score: ${signal.score} | Risk: ${riskColors[signal.riskLevel]}${signal.riskLevel}${reset}`);
-  console.log(`   MCap: $${(signal.marketData.mcap / 1000).toFixed(1)}K | Vol: $${(signal.marketData.volume5m / 1000).toFixed(1)}K | Age: ${signal.marketData.age}m`);
-  console.log(`   Sources: ${signal.sources.map((s: any) => s.source).join(', ')}`);
+  const bar = createBar(signal.score);
+  const mcap = (signal.marketData?.mcap || 0) / 1000;
+  const vol = (signal.marketData?.volume5m || 0) / 1000;
+  
+  console.log(`${colors.bold}🪙 $${signal.symbol}${colors.reset} - ${signal.name}`);
+  console.log(`   ${bar} ${signal.score}/100`);
+  console.log(`   ${riskEmoji[signal.riskLevel]} Risk: ${riskColors[signal.riskLevel]}${signal.riskLevel}${colors.reset} | MCap: ${colors.cyan}$${mcap.toFixed(1)}K${colors.reset} | Vol: ${colors.cyan}$${vol.toFixed(1)}K${colors.reset} | Age: ${signal.marketData?.age || 0}m`);
+  console.log(`   ${colors.dim}Sources:${colors.reset} ${signal.sources.map((s: any) => s.source).join(', ')}`);
   if (signal.analysis?.narrative?.length) {
-    console.log(`   Narratives: ${signal.analysis.narrative.join(', ')}`);
+    console.log(`   ${colors.dim}Narratives:${colors.reset} ${signal.analysis.narrative.join(', ')}`);
   }
-  console.log(`   CA: ${signal.token.slice(0, 40)}...`);
-  console.log(`   ${signal.analysis?.recommendation || ''}`);
+  console.log(`   ${colors.dim}CA:${colors.reset} ${signal.token.slice(0, 44)}...`);
+  
+  const recColor = signal.score >= 80 ? colors.green : signal.score >= 70 ? colors.yellow : colors.dim;
+  console.log(`   ${recColor}→ ${signal.analysis?.recommendation || 'No recommendation'}${colors.reset}`);
   console.log('');
 }
 
