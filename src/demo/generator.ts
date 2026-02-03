@@ -9,7 +9,15 @@
  */
 
 import { AggregatedSignal, SignalSource, RiskLevel } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+
+// Simple UUID generator (avoids ESM issues with uuid package in tests)
+function generateId(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 // Realistic token names for demo
 const DEMO_TOKENS = [
@@ -121,7 +129,7 @@ export function generateDemoSignal(): AggregatedSignal {
   const riskLevel = getRiskLevel(score, sourceCombo.sources.length);
 
   const signal: AggregatedSignal = {
-    id: uuidv4(),
+    id: generateId(),
     token: randomAddress(),
     symbol: token.symbol,
     name: token.name,
