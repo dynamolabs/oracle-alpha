@@ -22,7 +22,7 @@
 - [x] **Dashboard** - Visual signal display
 
 ### ✅ Quality Assurance
-- [x] **Unit Tests** - 141 tests, >75% coverage
+- [x] **Unit Tests** - 193 tests, 77%+ coverage
 - [x] **CI/CD** - GitHub Actions
 - [x] **Integration Tests** - API endpoint testing
 - [x] **Type Safety** - Full TypeScript
@@ -58,14 +58,15 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 38+ |
-| Unit Tests | 141 |
-| Test Coverage | >75% |
-| Signal Sources | 9 |
+| Total Commits | 54 |
+| Source Files | 38 |
+| Unit Tests | 193 |
+| Test Coverage | 77%+ |
+| Signal Sources | 10 (9 + DexScreener) |
 | Tracked Wallets | 24 |
 | Tracked KOLs | 31 |
-| API Endpoints | 16+ |
-| Lines of Code | 5000+ |
+| API Endpoints | 20+ |
+| Lines of Code | 8,900+ |
 
 ---
 
@@ -95,6 +96,13 @@ WebSocket support for instant notifications. ATH tracking updates every 5 minute
 
 ### 5. Composable
 Other agents can integrate via API. Build your own trading bot on top of ORACLE signals.
+
+### 6. Demo Mode
+Built-in demo mode for presentations:
+- `npm run demo` - Starts with realistic signal generation
+- Seeds 30 historical signals with 60%+ win rate
+- 4 signals per minute for live demos
+- Perfect for video recording and presentations
 
 ---
 
