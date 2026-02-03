@@ -35,29 +35,36 @@ const KOTH_COOLDOWN = 30 * 60 * 1000; // 30 minutes cooldown per token
  * Fetch current King of the Hill tokens from pump.fun
  */
 async function fetchKOTHTokens(): Promise<KOTHToken[]> {
-  try {
-    // Fetch KOTH (coins that have reached king of the hill)
-    const response = await fetch(
-      `${PUMP_FUN_API}/coins/king-of-the-hill?limit=20&includeNsfw=false`,
-      {
+  const endpoints = [
+    `${PUMP_FUN_API}/coins/featured`,
+    `${PUMP_FUN_API}/coins/king-of-the-hill?limit=20&includeNsfw=false`
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'ORACLE-Alpha/1.0'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(
+            `[PUMP-KOTH] Fetched ${data.length} tokens from ${endpoint.split('/').pop()}`
+          );
+          return data;
         }
       }
-    );
-
-    if (!response.ok) {
-      console.log(`[PUMP-KOTH] API returned ${response.status}`);
-      return [];
+    } catch {
+      continue;
     }
-
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error('[PUMP-KOTH] Error fetching KOTH:', error);
-    return [];
   }
+
+  console.log('[PUMP-KOTH] No KOTH data available from API');
+  return [];
 }
 
 /**
@@ -70,12 +77,13 @@ async function fetchTrendingTokens(): Promise<KOTHToken[]> {
       {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'ORACLE-Alpha/1.0'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       }
     );
 
     if (!response.ok) {
+      console.log(`[PUMP-KOTH] Trending API returned ${response.status}`);
       return [];
     }
 

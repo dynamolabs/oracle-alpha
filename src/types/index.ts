@@ -23,7 +23,8 @@ export type SignalSource =
   | 'whale-accumulation'
   | 'whale-tracker'
   | 'news-scraper'
-  | 'pump-koth';
+  | 'pump-koth'
+  | 'dexscreener';
 
 // Aggregated Signal
 export interface AggregatedSignal {

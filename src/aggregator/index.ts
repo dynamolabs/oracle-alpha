@@ -7,6 +7,7 @@ import { scanNewLaunches } from '../sources/new-launches';
 import { scanWhaleActivity } from '../sources/whale-tracker';
 import { scanNews } from '../sources/news-scraper';
 import { scanPumpKOTH } from '../sources/pump-koth';
+import { scanDexScreener } from '../sources/dexscreener';
 import { batchGetMetadata } from '../utils/token-metadata';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -93,6 +94,14 @@ const SOURCE_CONFIGS: SourceConfig[] = [
     enabled: true,
     weight: 0.8,
     historicalWinRate: 0.32,
+    totalSignals: 0,
+    lastUpdated: Date.now()
+  },
+  {
+    source: 'dexscreener',
+    enabled: true,
+    weight: 1.1,
+    historicalWinRate: 0.42,
     totalSignals: 0,
     lastUpdated: Date.now()
   }
@@ -277,6 +286,11 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   const pumpKothSignals = await scanPumpKOTH();
   rawSignals.push(...pumpKothSignals);
   console.log(`[ORACLE] Pump KOTH signals: ${pumpKothSignals.length}`);
+
+  // DexScreener trending signals
+  const dexScreenerSignals = await scanDexScreener();
+  rawSignals.push(...dexScreenerSignals);
+  console.log(`[ORACLE] DexScreener signals: ${dexScreenerSignals.length}`);
 
   // Whale accumulation signals
   const whaleSignals = await scanWhaleActivity();
