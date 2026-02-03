@@ -1,0 +1,528 @@
+{
+  "address": "AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd",
+  "metadata": {
+    "name": "oracle",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "ORACLE Alpha - On-chain signal verification"
+  },
+  "instructions": [
+    {
+      "name": "close_signal",
+      "docs": [
+        "Close a signal (mark as win/loss)"
+      ],
+      "discriminator": [
+        115,
+        224,
+        27,
+        34,
+        218,
+        194,
+        251,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "oracle_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signal",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "exit_price",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "Initialize the Oracle with an authority"
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "oracle_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "publish_signal",
+      "docs": [
+        "Publish a new signal on-chain"
+      ],
+      "discriminator": [
+        169,
+        80,
+        49,
+        93,
+        169,
+        216,
+        95,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "oracle_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  105,
+                  103,
+                  110,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "oracle_state.total_signals",
+                "account": "OracleState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token",
+          "type": "pubkey"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "score",
+          "type": "u8"
+        },
+        {
+          "name": "risk_level",
+          "type": "u8"
+        },
+        {
+          "name": "sources_bitmap",
+          "type": "u8"
+        },
+        {
+          "name": "mcap",
+          "type": "u64"
+        },
+        {
+          "name": "entry_price",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_ath",
+      "docs": [
+        "Update signal with ATH (for tracking)"
+      ],
+      "discriminator": [
+        106,
+        245,
+        95,
+        175,
+        178,
+        65,
+        162,
+        156
+      ],
+      "accounts": [
+        {
+          "name": "oracle_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signal",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_ath",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "OracleState",
+      "discriminator": [
+        97,
+        156,
+        157,
+        189,
+        194,
+        73,
+        8,
+        15
+      ]
+    },
+    {
+      "name": "Signal",
+      "discriminator": [
+        20,
+        6,
+        227,
+        69,
+        183,
+        62,
+        78,
+        246
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "SignalClosed",
+      "discriminator": [
+        129,
+        164,
+        126,
+        13,
+        84,
+        53,
+        21,
+        41
+      ]
+    },
+    {
+      "name": "SignalPublished",
+      "discriminator": [
+        27,
+        49,
+        10,
+        82,
+        168,
+        186,
+        203,
+        42
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6001,
+      "name": "SymbolTooLong",
+      "msg": "Symbol too long (max 10 chars)"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidScore",
+      "msg": "Invalid score (must be 0-100)"
+    },
+    {
+      "code": 6003,
+      "name": "SignalAlreadyClosed",
+      "msg": "Signal already closed"
+    }
+  ],
+  "types": [
+    {
+      "name": "OracleState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_signals",
+            "type": "u64"
+          },
+          {
+            "name": "total_wins",
+            "type": "u64"
+          },
+          {
+            "name": "total_losses",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Signal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "token",
+            "type": "pubkey"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "risk_level",
+            "type": "u8"
+          },
+          {
+            "name": "sources_bitmap",
+            "type": "u8"
+          },
+          {
+            "name": "mcap_at_signal",
+            "type": "u64"
+          },
+          {
+            "name": "entry_price",
+            "type": "u64"
+          },
+          {
+            "name": "ath_price",
+            "type": "u64"
+          },
+          {
+            "name": "exit_price",
+            "type": "u64"
+          },
+          {
+            "name": "roi_bps",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "SignalStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignalClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "SignalStatus"
+              }
+            }
+          },
+          {
+            "name": "roi_bps",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignalPublished",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "token",
+            "type": "pubkey"
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignalStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Win"
+          },
+          {
+            "name": "Loss"
+          },
+          {
+            "name": "Closed"
+          }
+        ]
+      }
+    }
+  ]
+}

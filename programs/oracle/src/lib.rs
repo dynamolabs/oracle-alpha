@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("11111111111111111111111111111111"); // Will be replaced after deployment
+declare_id!("AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd"); // Will be replaced after deployment
 
 #[program]
 pub mod oracle {
@@ -153,7 +153,7 @@ pub struct PublishSignal<'info> {
         init,
         payer = authority,
         space = 8 + Signal::INIT_SPACE,
-        seeds = [b"signal", &oracle_state.total_signals.to_le_bytes()],
+        seeds = [b"signal", oracle_state.total_signals.to_le_bytes().as_ref()],
         bump
     )]
     pub signal: Account<'info, Signal>,
