@@ -14,8 +14,10 @@ export type SignalSource =
   | 'smart-wallet-elite'
   | 'smart-wallet-sniper'
   | 'volume-spike'
-  | 'kol-buy'
-  | 'narrative-trend'
+  | 'kol-tracker'
+  | 'kol-social'
+  | 'narrative-new'
+  | 'narrative-momentum'
   | 'new-listing'
   | 'whale-accumulation';
 

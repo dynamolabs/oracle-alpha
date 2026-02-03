@@ -1,6 +1,9 @@
 import { RawSignal, AggregatedSignal, SignalSource, SourceConfig } from '../types';
 import { scanSmartWallets } from '../sources/smart-wallet';
 import { scanVolumeSpikes } from '../sources/volume-spike';
+import { scanKOLActivity } from '../sources/kol-tracker';
+import { scanNarratives } from '../sources/narrative-detector';
+import { batchGetMetadata } from '../utils/token-metadata';
 import { v4 as uuidv4 } from 'uuid';
 
 // Source weights (adjusted by historical performance)
@@ -30,18 +33,34 @@ const SOURCE_CONFIGS: SourceConfig[] = [
     lastUpdated: Date.now()
   },
   {
-    source: 'kol-buy',
-    enabled: false, // TODO: Implement
-    weight: 0.8,
-    historicalWinRate: 0.30,
+    source: 'kol-tracker',
+    enabled: true,
+    weight: 1.1,
+    historicalWinRate: 0.45,
     totalSignals: 0,
     lastUpdated: Date.now()
   },
   {
-    source: 'narrative-trend',
-    enabled: false, // TODO: Implement
-    weight: 0.7,
-    historicalWinRate: 0.25,
+    source: 'kol-social',
+    enabled: true,
+    weight: 0.9,
+    historicalWinRate: 0.35,
+    totalSignals: 0,
+    lastUpdated: Date.now()
+  },
+  {
+    source: 'narrative-new',
+    enabled: true,
+    weight: 1.0,
+    historicalWinRate: 0.40,
+    totalSignals: 0,
+    lastUpdated: Date.now()
+  },
+  {
+    source: 'narrative-momentum',
+    enabled: true,
+    weight: 1.2,
+    historicalWinRate: 0.50,
     totalSignals: 0,
     lastUpdated: Date.now()
   }
@@ -204,6 +223,16 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   rawSignals.push(...volumeSignals);
   console.log(`[ORACLE] Volume spike signals: ${volumeSignals.length}`);
   
+  // KOL activity signals
+  const kolSignals = await scanKOLActivity();
+  rawSignals.push(...kolSignals);
+  console.log(`[ORACLE] KOL signals: ${kolSignals.length}`);
+  
+  // Narrative detection signals
+  const narrativeSignals = await scanNarratives();
+  rawSignals.push(...narrativeSignals);
+  console.log(`[ORACLE] Narrative signals: ${narrativeSignals.length}`);
+  
   // Group signals by token
   const signalsByToken = new Map<string, RawSignal[]>();
   
@@ -230,6 +259,23 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   
   // Sort by score descending
   aggregated.sort((a, b) => b.score - a.score);
+  
+  // Enrich with token metadata
+  if (aggregated.length > 0) {
+    console.log(`[ORACLE] Enriching ${aggregated.length} signals with metadata...`);
+    const addresses = aggregated.map(s => s.token);
+    const metadata = await batchGetMetadata(addresses);
+    
+    for (const signal of aggregated) {
+      const meta = metadata.get(signal.token);
+      if (meta && meta.symbol !== 'UNKNOWN') {
+        signal.symbol = meta.symbol;
+        signal.name = meta.name;
+        // Re-detect narratives with actual name
+        signal.analysis.narrative = detectNarratives(meta.name, meta.symbol);
+      }
+    }
+  }
   
   console.log(`[ORACLE] Aggregated signals: ${aggregated.length}`);
   
