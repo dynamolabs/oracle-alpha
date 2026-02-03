@@ -47,11 +47,38 @@
             text-align: center;
             padding: 8px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border-radius: 8px;
             display: none;
         }
         .demo-banner.active { display: block; }
+        
+        /* Activity Ticker */
+        .activity-ticker {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+        }
+        .ticker-item {
+            display: inline-block;
+            padding: 0 30px;
+            color: #888;
+            font-size: 0.85em;
+        }
+        .ticker-item.positive { color: #22c55e; }
+        .ticker-item.highlight { color: #00d9ff; }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
         
         .stats-grid {
             display: grid;
@@ -524,6 +551,13 @@
         
         <div class="demo-banner" id="demo-banner">
             🎬 DEMO MODE ACTIVE - Generating realistic signals for presentation
+        </div>
+        
+        <!-- Activity Ticker -->
+        <div class="activity-ticker" id="activity-ticker">
+            <div class="ticker-content" id="ticker-content">
+                <span class="ticker-item">🔮 ORACLE Alpha - Real-time signal aggregation</span>
+            </div>
         </div>
         
         <div class="stats-grid" id="stats">
@@ -1021,6 +1055,35 @@
         setInterval(fetchStats, 15000);
         setInterval(fetchLeaderboard, 30000);
         setInterval(fetchClosedSignals, 60000);
+        
+        // Update activity ticker
+        function updateTicker() {
+            const ticker = document.getElementById('ticker-content');
+            if (signals.length === 0) return;
+            
+            const items = [];
+            items.push('<span class="ticker-item highlight">🔮 ORACLE Alpha - Live Signal Feed</span>');
+            
+            // Add recent signals
+            for (const s of signals.slice(0, 5)) {
+                const color = s.score >= 70 ? 'positive' : '';
+                items.push(`<span class="ticker-item ${color}">$${s.symbol} Score:${s.score} ${s.riskLevel}</span>`);
+            }
+            
+            // Add stats
+            const winRate = document.getElementById('win-rate').textContent;
+            if (winRate !== '-') {
+                items.push(`<span class="ticker-item">📊 Win Rate: ${winRate}</span>`);
+            }
+            
+            items.push('<span class="ticker-item">⛓️ Verified on Solana</span>');
+            
+            // Duplicate for seamless loop
+            ticker.innerHTML = items.join('') + items.join('');
+        }
+        
+        setInterval(updateTicker, 5000);
+        setTimeout(updateTicker, 2000);
     </script>
 </body>
 </html>
