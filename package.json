@@ -20,7 +20,10 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:integration": "bash scripts/integration-test.sh",
+    "docker:build": "docker build -t oracle-alpha .",
+    "docker:run": "docker-compose up -d"
   },
   "keywords": [
     "solana",
