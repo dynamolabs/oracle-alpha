@@ -22,13 +22,19 @@ const TRACKED_KOLS: KOL[] = [
   { username: 'blknoiz06', label: 'BLKNOIZ', tier: 'S', winRate: 0.65, avgMultiplier: 5.2 },
   { username: 'DegenSpartan', label: 'DegenSpartan', tier: 'S', winRate: 0.58, avgMultiplier: 4.1 },
   { username: 'loomdart', label: 'Loomdart', tier: 'S', winRate: 0.62, avgMultiplier: 4.8 },
-  { username: 'crash_solana', label: 'Crash', tier: 'S', winRate: 0.60, avgMultiplier: 4.5 },
+  { username: 'crash_solana', label: 'Crash', tier: 'S', winRate: 0.6, avgMultiplier: 4.5 },
   { username: 'Ansem', label: 'Ansem', tier: 'S', winRate: 0.68, avgMultiplier: 6.2 },
   { username: 'MustStopMurad', label: 'Murad', tier: 'S', winRate: 0.64, avgMultiplier: 5.5 },
-  { username: 'HentaiAvenger2', label: 'HentaiAvenger', tier: 'S', winRate: 0.61, avgMultiplier: 4.3 },
+  {
+    username: 'HentaiAvenger2',
+    label: 'HentaiAvenger',
+    tier: 'S',
+    winRate: 0.61,
+    avgMultiplier: 4.3
+  },
   { username: 'WazzCrypto', label: 'Wazz', tier: 'S', winRate: 0.59, avgMultiplier: 3.9 },
   { username: 'GiganticRebirth', label: 'Gigantic', tier: 'S', winRate: 0.63, avgMultiplier: 5.1 },
-  
+
   // ═══════════════════════════════════════════════════════════════
   // A-TIER - Strong KOLs (50-59% Win Rate)
   // ═══════════════════════════════════════════════════════════════
@@ -39,12 +45,12 @@ const TRACKED_KOLS: KOL[] = [
   { username: 'LunarCrush', label: 'LunarCrush', tier: 'A', winRate: 0.51, avgMultiplier: 2.9 },
   { username: 'JupiterExchange', label: 'Jupiter', tier: 'A', winRate: 0.56, avgMultiplier: 3.7 },
   { username: 'ZssBecker', label: 'Zss', tier: 'A', winRate: 0.53, avgMultiplier: 3.1 },
-  { username: 'CryptoGodJohn', label: 'GodJohn', tier: 'A', winRate: 0.50, avgMultiplier: 2.7 },
+  { username: 'CryptoGodJohn', label: 'GodJohn', tier: 'A', winRate: 0.5, avgMultiplier: 2.7 },
   { username: 'SOLBigBrain', label: 'BigBrain', tier: 'A', winRate: 0.57, avgMultiplier: 3.8 },
   { username: 'CoinMamba', label: 'Mamba', tier: 'A', winRate: 0.52, avgMultiplier: 3.0 },
   { username: 'thetraderz', label: 'Traderz', tier: 'A', winRate: 0.54, avgMultiplier: 3.3 },
   { username: 'pentaborex', label: 'Penta', tier: 'A', winRate: 0.55, avgMultiplier: 3.5 },
-  
+
   // ═══════════════════════════════════════════════════════════════
   // B-TIER - Useful for Confluence (40-49% Win Rate)
   // ═══════════════════════════════════════════════════════════════
@@ -57,7 +63,7 @@ const TRACKED_KOLS: KOL[] = [
   { username: 'dcloudio', label: 'DCloud', tier: 'B', winRate: 0.41, avgMultiplier: 2.0 },
   { username: 'CredibleCrypto', label: 'Credible', tier: 'B', winRate: 0.48, avgMultiplier: 2.8 },
   { username: 'SolanaFloor', label: 'SOL Floor', tier: 'B', winRate: 0.44, avgMultiplier: 2.4 },
-  { username: 'DefiIgnas', label: 'Ignas', tier: 'B', winRate: 0.49, avgMultiplier: 2.9 },
+  { username: 'DefiIgnas', label: 'Ignas', tier: 'B', winRate: 0.49, avgMultiplier: 2.9 }
 ];
 
 // Contract address pattern for Solana
@@ -73,9 +79,26 @@ function extractTokenMentions(text: string): string[] {
 // Check if text indicates a buy/bullish signal
 function isBullishMention(text: string): boolean {
   const bullishTerms = [
-    'buy', 'bought', 'aping', 'aped', 'long', 'bullish', 'moon',
-    'send it', 'lfg', 'gem', 'alpha', 'early', '100x', '10x', '50x',
-    'accumulating', 'loading', 'adding', 'bid', 'bidding'
+    'buy',
+    'bought',
+    'aping',
+    'aped',
+    'long',
+    'bullish',
+    'moon',
+    'send it',
+    'lfg',
+    'gem',
+    'alpha',
+    'early',
+    '100x',
+    '10x',
+    '50x',
+    'accumulating',
+    'loading',
+    'adding',
+    'bid',
+    'bidding'
   ];
   const lowerText = text.toLowerCase();
   return bullishTerms.some(term => lowerText.includes(term));
@@ -89,16 +112,73 @@ interface TwitterMention {
   kol: KOL;
 }
 
+// Demo mode flag - generates realistic mock data for presentations
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
+
+// Mock tokens for demo mode
+const DEMO_TOKENS = [
+  {
+    address: 'DemoToken1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    symbol: 'AIXBT',
+    name: 'AI Agent XBT'
+  },
+  { address: 'DemoToken2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', symbol: 'GROK', name: 'Grok AI' },
+  { address: 'DemoToken3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', symbol: 'BONKAI', name: 'Bonk AI' },
+  {
+    address: 'DemoToken4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    symbol: 'TRUMP',
+    name: 'Official Trump'
+  },
+  {
+    address: 'DemoToken5xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    symbol: 'NEURAL',
+    name: 'Neural Net'
+  },
+  {
+    address: 'DemoToken6xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    symbol: 'AGENTX',
+    name: 'Agent X Protocol'
+  },
+  {
+    address: 'DemoToken7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    symbol: 'MOONBOT',
+    name: 'Moon Bot'
+  },
+  { address: 'DemoToken8xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', symbol: 'CATGPT', name: 'Cat GPT' }
+];
+
+// Track recently generated demo signals to avoid duplicates
+const recentDemoSignals = new Map<string, number>();
+const DEMO_COOLDOWN = 10 * 60 * 1000; // 10 minutes
+
 // Simulated Twitter scanning (replace with actual API)
 async function fetchKOLMentions(kol: KOL): Promise<TwitterMention[]> {
+  // In demo mode, occasionally generate mock mentions
+  if (DEMO_MODE && Math.random() < 0.15) {
+    // 15% chance per KOL
+    const token = DEMO_TOKENS[Math.floor(Math.random() * DEMO_TOKENS.length)];
+    const now = Date.now();
+
+    // Check cooldown for this token
+    const lastSeen = recentDemoSignals.get(token.address);
+    if (lastSeen && now - lastSeen < DEMO_COOLDOWN) {
+      return [];
+    }
+    recentDemoSignals.set(token.address, now);
+
+    return [
+      {
+        tweetId: `demo_${now}_${kol.username}`,
+        timestamp: now,
+        text: `Just aped into $${token.symbol} 🚀 This looks like a gem, early af. NFA but loading a bag here. ${token.address}`,
+        tokens: [token.address],
+        kol
+      }
+    ];
+  }
+
+  // Production mode: return empty (needs real Twitter API integration)
   // TODO: Integrate with Twitter API or scraper
-  // For now, return empty - will implement with actual data source
-  
-  // In production, this would:
-  // 1. Fetch recent tweets from KOL
-  // 2. Extract token addresses
-  // 3. Return structured mentions
-  
   return [];
 }
 
@@ -162,9 +242,9 @@ interface SocialMention {
 async function fetchSocialMentions(): Promise<SocialMention[]> {
   // TODO: Integrate with LunarCrush, Santiment, or custom Twitter scraper
   // For now, simulate based on trending tokens
-  
+
   const trending = await fetchTrendingTokens();
-  
+
   return trending.map(t => ({
     token: t.address,
     symbol: t.symbol,
@@ -183,12 +263,14 @@ export async function scanKOLActivity(): Promise<RawSignal[]> {
   // Method 1: Direct KOL tweet scanning (when API available)
   for (const kol of TRACKED_KOLS) {
     const mentions = await fetchKOLMentions(kol);
-    
+
     for (const mention of mentions) {
       for (const token of mention.tokens) {
         if (isBullishMention(mention.text)) {
-          const confidence = Math.round(kol.winRate * (kol.tier === 'S' ? 100 : kol.tier === 'A' ? 85 : 70));
-          
+          const confidence = Math.round(
+            kol.winRate * (kol.tier === 'S' ? 100 : kol.tier === 'A' ? 85 : 70)
+          );
+
           signals.push({
             source: 'kol-tracker',
             timestamp: mention.timestamp,
@@ -213,7 +295,7 @@ export async function scanKOLActivity(): Promise<RawSignal[]> {
 
   // Method 2: Social mention aggregation
   const socialMentions = await fetchSocialMentions();
-  
+
   for (const mention of socialMentions) {
     // Only signal if high influencer mention count
     if (mention.influencerMentions >= 3 && mention.sentiment > 0.7) {
