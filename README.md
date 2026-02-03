@@ -1,10 +1,16 @@
 # 🔮 ORACLE Alpha
 
+[![CI](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-74%20passed-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
+[![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-blueviolet)](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet)
+
 **On-chain Reliable Alpha Compilation & Learning Engine**
 
 AI-powered trading signal aggregator for Solana with **verifiable on-chain performance tracking**.
 
-> Built for Colosseum Agent Hackathon 2026 by ShifuSensei 🐼
+> 🏆 Built for Colosseum Agent Hackathon 2026 by ShifuSensei 🐼
 
 ## 🚀 Deployed on Solana
 
@@ -24,10 +30,10 @@ ORACLE Alpha is an **autonomous AI agent** that:
 ## ✨ Features
 
 ### 📡 Multi-Source Signal Aggregation
-- **Smart Wallet Tracking** - Elite (70% WR) and Sniper (41% WR) wallets
+- **Smart Wallet Tracking** - 24 wallets (5 Elite 65%+ WR, 19 Sniper tier)
+- **KOL Activity** - 31 KOLs tracked (S/A/B tier with win rates)
 - **Volume Spike Detection** - Real-time volume anomaly detection
-- **KOL Activity** - Track influential accounts and social mentions
-- **Narrative Detection** - AI, Meme, Political, Gaming meta tracking
+- **Narrative Detection** - AI, Meme, Political, Gaming, DeFi meta tracking
 - **New Launch Scanner** - Fresh pump.fun token monitoring
 - **Whale Accumulation** - Large wallet activity tracking
 
