@@ -10,7 +10,7 @@ export interface RawSignal {
   metadata: Record<string, any>;
 }
 
-export type SignalSource = 
+export type SignalSource =
   | 'smart-wallet-elite'
   | 'smart-wallet-sniper'
   | 'volume-spike'
@@ -19,7 +19,11 @@ export type SignalSource =
   | 'narrative-new'
   | 'narrative-momentum'
   | 'new-listing'
-  | 'whale-accumulation';
+  | 'new-launch'
+  | 'whale-accumulation'
+  | 'whale-tracker'
+  | 'news-scraper'
+  | 'pump-koth';
 
 // Aggregated Signal
 export interface AggregatedSignal {
@@ -28,21 +32,22 @@ export interface AggregatedSignal {
   token: string;
   symbol: string;
   name: string;
-  
+
   // Composite scoring
   score: number; // 0-100
   confidence: number; // 0-100
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
-  
+
   // Sources that contributed
   sources: {
     source: SignalSource;
     weight: number;
     rawScore: number;
   }[];
-  
+
   // Market data at time of signal
   marketData: {
+    price?: number;
     mcap: number;
     liquidity: number;
     volume5m: number;
@@ -52,7 +57,7 @@ export interface AggregatedSignal {
     holders?: number;
     age: number; // minutes
   };
-  
+
   // AI analysis
   analysis: {
     narrative: string[];
@@ -60,23 +65,32 @@ export interface AggregatedSignal {
     weaknesses: string[];
     recommendation: string;
   };
-  
+
   // On-chain tracking
   onChain?: {
     txSignature: string;
     slot: number;
     published: boolean;
   };
-  
+
   // Performance tracking (filled later)
   performance?: {
-    ath: number;
-    athTimestamp: number;
-    current: number;
+    entryPrice: number;
+    currentPrice: number;
+    current?: number; // alias for currentPrice
+    athPrice: number;
+    ath?: number; // alias for athPrice
+    athTimestamp?: number;
     roi: number;
+    athRoi: number;
     status: 'OPEN' | 'WIN' | 'LOSS';
   };
+
+  // Publishing status
+  published?: boolean;
 }
+
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
 
 // Source Configuration
 export interface SourceConfig {

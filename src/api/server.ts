@@ -27,10 +27,7 @@ import {
   getPrometheusMetrics,
   getMetricsJson,
   incrementRequests,
-  incrementErrors,
-  setWebsocketClients,
-  recordScan,
-  updateMetrics
+  incrementErrors
 } from './metrics';
 import {
   getAllTiers,
@@ -38,6 +35,12 @@ import {
   getTier,
   filterSignalsForTier
 } from '../subscription/manager';
+import { DemoRunner, generateDemoSignal, generateHistoricalSignals } from '../demo/generator';
+
+// Demo mode configuration
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
+const DEMO_SIGNALS_PER_MINUTE = parseInt(process.env.DEMO_SIGNALS_PER_MINUTE || '4');
+let demoRunner: DemoRunner | null = null;
 
 // On-chain publishing state
 let onChainEnabled = false;
@@ -119,7 +122,8 @@ app.use((req, res, next) => {
 });
 
 // Error handler
-app.use((err: any, req: any, res: any, next: any) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: any, _req: any, res: any, _next: any) => {
   console.error('[API] Error:', err.message);
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
@@ -593,6 +597,138 @@ async function autoPublishSignal(signal: AggregatedSignal) {
   }
 }
 
+// === DEMO MODE ENDPOINTS ===
+
+// Toggle demo mode
+app.post('/api/demo/start', (req, res) => {
+  if (demoRunner) {
+    return res.json({ status: 'already_running', message: 'Demo mode is already active' });
+  }
+
+  const signalsPerMinute = req.body?.signalsPerMinute || DEMO_SIGNALS_PER_MINUTE;
+
+  demoRunner = new DemoRunner(signal => {
+    signalStore.unshift(signal);
+    broadcastSignal(signal);
+
+    // Auto-track in demo mode
+    if (signal.score >= 65) {
+      trackSignal(signal).catch(() => {});
+    }
+
+    // Trim store
+    if (signalStore.length > MAX_SIGNALS) {
+      signalStore.length = MAX_SIGNALS;
+    }
+  }, signalsPerMinute);
+
+  demoRunner.start();
+  console.log(`[DEMO] Demo mode STARTED (${signalsPerMinute} signals/min)`);
+
+  res.json({
+    status: 'started',
+    signalsPerMinute,
+    message: `Demo mode started - generating ${signalsPerMinute} signals per minute`
+  });
+});
+
+app.post('/api/demo/stop', (req, res) => {
+  if (!demoRunner) {
+    return res.json({ status: 'not_running', message: 'Demo mode is not active' });
+  }
+
+  demoRunner.stop();
+  demoRunner = null;
+  console.log('[DEMO] Demo mode STOPPED');
+
+  res.json({ status: 'stopped', message: 'Demo mode stopped' });
+});
+
+app.get('/api/demo/status', (req, res) => {
+  res.json({
+    active: !!demoRunner,
+    signalsPerMinute: DEMO_SIGNALS_PER_MINUTE,
+    signalsGenerated: signalStore.filter(s => s.id.includes('-')).length // UUIDs from demo
+  });
+});
+
+// Seed historical data for demo
+app.post('/api/demo/seed', (req, res) => {
+  const count = req.body?.count || 30;
+  const historical = generateHistoricalSignals(count);
+
+  // Add to signal store with performance data
+  for (const h of historical) {
+    const signal: AggregatedSignal = {
+      id: h.id,
+      token: h.token,
+      symbol: h.symbol,
+      name: h.name,
+      sources: h.sources,
+      score: h.score,
+      confidence: h.confidence,
+      riskLevel: h.riskLevel,
+      marketData: h.marketData,
+      analysis: h.analysis,
+      timestamp: h.timestamp,
+      published: h.published,
+      performance: h.closed
+        ? {
+            entryPrice: h.marketData.price || h.marketData.mcap / 1000000000,
+            currentPrice: h.exitPrice || 0,
+            athPrice: h.athPrice || 0,
+            roi: h.roi || 0,
+            athRoi:
+              ((h.athPrice || 0) / (h.marketData.price || h.marketData.mcap / 1000000000) - 1) *
+              100,
+            status: h.result || 'OPEN'
+          }
+        : undefined
+    };
+    signalStore.push(signal);
+  }
+
+  // Sort by timestamp descending
+  signalStore.sort((a, b) => b.timestamp - a.timestamp);
+
+  // Trim if needed
+  if (signalStore.length > MAX_SIGNALS) {
+    signalStore.length = MAX_SIGNALS;
+  }
+
+  const wins = historical.filter(h => h.result === 'WIN').length;
+  const avgRoi = historical.reduce((sum, h) => sum + (h.roi || 0), 0) / historical.length;
+
+  console.log(
+    `[DEMO] Seeded ${count} historical signals (WR: ${((wins / count) * 100).toFixed(1)}%, Avg ROI: ${avgRoi.toFixed(1)}%)`
+  );
+
+  res.json({
+    status: 'seeded',
+    count,
+    winRate: ((wins / count) * 100).toFixed(1) + '%',
+    avgRoi: avgRoi.toFixed(1) + '%',
+    message: `Seeded ${count} historical signals with realistic performance data`
+  });
+});
+
+// Generate a single demo signal on demand
+app.post('/api/demo/signal', (req, res) => {
+  const signal = generateDemoSignal();
+  signalStore.unshift(signal);
+  broadcastSignal(signal);
+
+  res.json({
+    status: 'generated',
+    signal: {
+      id: signal.id,
+      symbol: signal.symbol,
+      score: signal.score,
+      riskLevel: signal.riskLevel
+    }
+  });
+});
+
 // Start server
 server.listen(PORT, async () => {
   console.log(`
@@ -601,7 +737,7 @@ server.listen(PORT, async () => {
 ╠═══════════════════════════════════════════════╣
 ║  REST API: http://localhost:${PORT}/api        ║
 ║  WebSocket: ws://localhost:${PORT}/ws          ║
-╚═══════════════════════════════════════════════╝
+${DEMO_MODE ? '║  🎬 DEMO MODE: ENABLED                         ║\n' : ''}╚═══════════════════════════════════════════════╝
   `);
 
   // Initialize on-chain connection
@@ -612,6 +748,57 @@ server.listen(PORT, async () => {
   if (athEnabled) {
     startAthUpdater();
     console.log('[SERVER] ATH tracking ENABLED');
+  }
+
+  // Auto-start demo mode if enabled
+  if (DEMO_MODE) {
+    // Seed some historical data first
+    const historical = generateHistoricalSignals(30);
+    for (const h of historical) {
+      const signal: AggregatedSignal = {
+        id: h.id,
+        token: h.token,
+        symbol: h.symbol,
+        name: h.name,
+        sources: h.sources,
+        score: h.score,
+        confidence: h.confidence,
+        riskLevel: h.riskLevel,
+        marketData: h.marketData,
+        analysis: h.analysis,
+        timestamp: h.timestamp,
+        published: h.published,
+        performance: h.closed
+          ? {
+              entryPrice: h.marketData.price || h.marketData.mcap / 1000000000,
+              currentPrice: h.exitPrice || 0,
+              athPrice: h.athPrice || 0,
+              roi: h.roi || 0,
+              athRoi:
+                ((h.athPrice || 0) / (h.marketData.price || h.marketData.mcap / 1000000000) - 1) *
+                100,
+              status: h.result || 'OPEN'
+            }
+          : undefined
+      };
+      signalStore.push(signal);
+    }
+    signalStore.sort((a, b) => b.timestamp - a.timestamp);
+    console.log('[DEMO] Seeded 30 historical signals');
+
+    // Start demo runner
+    demoRunner = new DemoRunner(signal => {
+      signalStore.unshift(signal);
+      broadcastSignal(signal);
+      if (signal.score >= 65) {
+        trackSignal(signal).catch(() => {});
+      }
+      if (signalStore.length > MAX_SIGNALS) {
+        signalStore.length = MAX_SIGNALS;
+      }
+    }, DEMO_SIGNALS_PER_MINUTE);
+    demoRunner.start();
+    console.log(`[DEMO] Auto-started demo mode (${DEMO_SIGNALS_PER_MINUTE} signals/min)`);
   }
 });
 

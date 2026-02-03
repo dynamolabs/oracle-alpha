@@ -6,10 +6,13 @@ import { scanNarratives } from '../sources/narrative-detector';
 import { scanNewLaunches } from '../sources/new-launches';
 import { scanWhaleActivity } from '../sources/whale-tracker';
 import { scanNews } from '../sources/news-scraper';
+import { scanPumpKOTH } from '../sources/pump-koth';
 import { batchGetMetadata } from '../utils/token-metadata';
-import { isDuplicate, cleanupSeenSignals } from '../utils/dedup';
-import { calculateAdjustedScore, getRecommendedAction } from '../utils/confidence';
 import { v4 as uuidv4 } from 'uuid';
+
+// Note: dedup and confidence utils available if needed
+// import { isDuplicate, cleanupSeenSignals } from '../utils/dedup';
+// import { calculateAdjustedScore, getRecommendedAction } from '../utils/confidence';
 
 // Source weights (adjusted by historical performance)
 const SOURCE_CONFIGS: SourceConfig[] = [
@@ -66,6 +69,30 @@ const SOURCE_CONFIGS: SourceConfig[] = [
     enabled: true,
     weight: 1.2,
     historicalWinRate: 0.5,
+    totalSignals: 0,
+    lastUpdated: Date.now()
+  },
+  {
+    source: 'pump-koth',
+    enabled: true,
+    weight: 1.3,
+    historicalWinRate: 0.55,
+    totalSignals: 0,
+    lastUpdated: Date.now()
+  },
+  {
+    source: 'whale-tracker',
+    enabled: true,
+    weight: 0.9,
+    historicalWinRate: 0.38,
+    totalSignals: 0,
+    lastUpdated: Date.now()
+  },
+  {
+    source: 'news-scraper',
+    enabled: true,
+    weight: 0.8,
+    historicalWinRate: 0.32,
     totalSignals: 0,
     lastUpdated: Date.now()
   }
@@ -246,6 +273,11 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   rawSignals.push(...newLaunchSignals);
   console.log(`[ORACLE] New launch signals: ${newLaunchSignals.length}`);
 
+  // Pump.fun KOTH signals
+  const pumpKothSignals = await scanPumpKOTH();
+  rawSignals.push(...pumpKothSignals);
+  console.log(`[ORACLE] Pump KOTH signals: ${pumpKothSignals.length}`);
+
   // Whale accumulation signals
   const whaleSignals = await scanWhaleActivity();
   rawSignals.push(...whaleSignals);
@@ -273,7 +305,7 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   // Aggregate signals for each token
   const aggregated: AggregatedSignal[] = [];
 
-  for (const [token, signals] of signalsByToken) {
+  for (const [_token, signals] of signalsByToken) {
     const result = aggregateSignalsForToken(signals);
     if (result) {
       aggregated.push(result);
