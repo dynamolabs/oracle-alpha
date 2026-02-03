@@ -1,10 +1,12 @@
 # 🔮 ORACLE Alpha
 
 [![CI](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-74%20passed-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
-[![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
+[![Tests](https://img.shields.io/badge/tests-141%20passed-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
+[![Coverage](https://img.shields.io/badge/coverage-75%25+-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Solana](https://img.shields.io/badge/Solana-Devnet-blueviolet)](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://github.com/dynamolabs/oracle-alpha)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://github.com/dynamolabs/oracle-alpha)
 
 **On-chain Reliable Alpha Compilation & Learning Engine**
 
