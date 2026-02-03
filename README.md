@@ -2,24 +2,34 @@
 
 **On-chain Reliable Alpha Compilation & Learning Engine**
 
-AI-powered trading signal aggregator for Solana with verifiable on-chain performance tracking.
+AI-powered trading signal aggregator for Solana with **verifiable on-chain performance tracking**.
 
 > Built for Colosseum Agent Hackathon 2026 by ShifuSensei 🐼
 
-## 🚀 Deployed on Devnet
+## 🚀 Deployed on Solana
 
 | Network | Program ID | Explorer |
 |---------|------------|----------|
 | Devnet | `AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd` | [View](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet) |
 
-## Features
+## 🎯 What is ORACLE Alpha?
 
-### 🎯 Multi-Source Signal Aggregation
+ORACLE Alpha is an **autonomous AI agent** that:
+1. **Aggregates signals** from multiple sources (smart wallets, KOLs, volume spikes, narratives)
+2. **Scores & ranks** signals using weighted algorithms and historical performance
+3. **Publishes signals on-chain** for verifiable, trustless track record
+4. **Tracks performance** with ATH updates and win/loss determination
+5. **Alerts users** via Telegram when high-quality signals are detected
+
+## ✨ Features
+
+### 📡 Multi-Source Signal Aggregation
 - **Smart Wallet Tracking** - Elite (70% WR) and Sniper (41% WR) wallets
 - **Volume Spike Detection** - Real-time volume anomaly detection
 - **KOL Activity** - Track influential accounts and social mentions
 - **Narrative Detection** - AI, Meme, Political, Gaming meta tracking
 - **New Launch Scanner** - Fresh pump.fun token monitoring
+- **Whale Accumulation** - Large wallet activity tracking
 
 ### 📊 Weighted Scoring System
 - Historical win rate based weighting
@@ -32,154 +42,203 @@ AI-powered trading signal aggregator for Solana with verifiable on-chain perform
 - Signal PDAs with performance tracking
 - ATH tracking and ROI calculation
 - Trustless verification via events
+- Auto win/loss determination
 
-### 📡 Real-Time API
+### 📱 Real-Time Notifications
 - REST API for querying signals
 - WebSocket for live updates
 - Dashboard for visual monitoring
-- Telegram alerts (optional)
+- Telegram alerts for high-quality signals
 
-## Quick Start
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     ORACLE Alpha                         │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌───────────┐  ┌───────────┐  ┌───────────┐          │
+│  │  Smart    │  │  Volume   │  │   KOL     │          │
+│  │  Wallets  │  │  Spikes   │  │  Tracker  │          │
+│  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘          │
+│        │              │              │                 │
+│        └──────────────┼──────────────┘                 │
+│                       ▼                                │
+│           ┌───────────────────┐                        │
+│           │    Aggregator     │                        │
+│           │  (Score + Rank)   │                        │
+│           └─────────┬─────────┘                        │
+│                     │                                  │
+│        ┌────────────┼────────────┐                    │
+│        ▼            ▼            ▼                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐             │
+│  │   API    │ │ On-Chain │ │ Telegram │             │
+│  │  Server  │ │ Publisher│ │  Alerts  │             │
+│  └──────────┘ └──────────┘ └──────────┘             │
+│                     │                                  │
+│                     ▼                                  │
+│           ┌───────────────────┐                        │
+│           │  Solana Program   │                        │
+│           │   (Verifiable)    │                        │
+│           └───────────────────┘                        │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Solana CLI (for on-chain features)
+- Anchor (for development)
+
+### Installation
 
 ```bash
+# Clone
+git clone https://github.com/dynamolabs/oracle-alpha.git
+cd oracle-alpha
+
 # Install dependencies
 npm install
 
-# Run the scanner CLI
-npx ts-node src/cli.ts scan
-
-# Start the API server
-npx ts-node src/api/server.ts
-
-# Or use PM2 for production
-pm2 start "npx ts-node --transpile-only src/api/server.ts" --name oracle-alpha
+# Copy env file and configure
+cp .env.example .env
+# Edit .env with your settings
 ```
 
-## API Endpoints
-
-### REST API (Port 3900)
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/signals` | GET | Get aggregated signals |
-| `/api/signals/:id` | GET | Get single signal |
-| `/api/stats` | GET | Get performance stats |
-| `/api/sources` | GET | Get source statistics |
-| `/api/scan` | POST | Trigger manual scan |
-| `/health` | GET | Health check |
-
-### WebSocket
-
-Connect to `ws://localhost:3900/ws` for real-time updates.
-
-Messages:
-- `history` - Initial signal history on connect
-- `signal` - New signal detected
-
-## CLI Commands
+### Run the Scanner (CLI)
 
 ```bash
-npx ts-node src/cli.ts scan      # Full aggregation
-npx ts-node src/cli.ts wallets   # Smart wallet scan only
-npx ts-node src/cli.ts volume    # Volume spike scan only
-npx ts-node src/cli.ts kol       # KOL activity scan only
-npx ts-node src/cli.ts narrative # Narrative scan only
-npx ts-node src/cli.ts new       # New launch scan only
+# One-time scan
+npx ts-node src/cli.ts scan
+
+# Run API server
+npx ts-node src/api/server.ts
 ```
 
-## Configuration
+### Run with PM2 (Production)
 
-Environment variables:
+```bash
+# Start with PM2
+pm2 start "npx ts-node --transpile-only src/api/server.ts" --name oracle-alpha
 
-```env
-PORT=3900                    # API server port
-HELIUS_API_KEY=xxx          # Helius RPC API key
-BIRDEYE_API_KEY=xxx         # Birdeye API key (optional)
-TELEGRAM_BOT_TOKEN=xxx      # Telegram bot token (optional)
-TELEGRAM_CHAT_ID=xxx        # Telegram chat ID (optional)
+# View logs
+pm2 logs oracle-alpha
 ```
 
-## Signal Sources
+## 📡 API Endpoints
 
-### Smart Wallet Tracking
-Monitors 8+ proven wallets with historical win rates:
-- Elite Tier: 70%+ win rate wallets
-- Sniper Tier: 40-60% win rate pump.fun snipers
-- Tracker Tier: Early buyers for confluence detection
+### Signals
+- `GET /api/signals` - Get all signals (with optional filters)
+- `GET /api/signals/:id` - Get signal by ID
+- `POST /api/scan` - Trigger manual scan
 
-### Volume Spike Detection
-Real-time monitoring for:
-- 2x+ volume spikes
-- 55%+ buy ratio
-- $10K+ market cap, $3K+ liquidity
-- Tokens under 2 hours old
+### Stats
+- `GET /api/stats` - Get signal statistics
+- `GET /api/performance` - Get performance summary
+- `GET /api/sources` - Get source breakdown
 
-### KOL & Narrative
-- S/A/B tier KOL tracking
-- Social mention aggregation
-- Trending narrative detection (AI, Meme, Political, etc.)
-- Multi-narrative crossover bonus
+### On-Chain
+- `GET /api/onchain/stats` - Get on-chain stats
+- `GET /api/onchain/signals` - Get on-chain signals
+- `POST /api/onchain/publish/:id` - Publish signal to chain
 
-## Architecture
+### WebSocket
+- `ws://localhost:3900/ws` - Real-time signal updates
+
+## ⚙️ Configuration
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | API server port | 3900 |
+| `SOLANA_RPC_URL` | Solana RPC endpoint | devnet |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token | - |
+| `TELEGRAM_CHAT_ID` | Telegram chat ID | - |
+| `HELIUS_API_KEY` | Helius API key (optional) | - |
+
+## 🔮 On-Chain Program
+
+The ORACLE Alpha Solana program provides:
+
+### Instructions
+1. **initialize** - Initialize the oracle with authority
+2. **publish_signal** - Publish a new signal on-chain
+3. **update_ath** - Update signal's all-time high price
+4. **close_signal** - Close signal and record final ROI
+
+### Accounts
+- **OracleState** - Global state (total signals, wins, losses)
+- **Signal** - Individual signal data (token, score, prices, status)
+
+### Events
+- **SignalPublished** - Emitted when signal is published
+- **SignalClosed** - Emitted when signal is closed with ROI
+
+## 📈 Scoring Algorithm
 
 ```
-oracle-alpha/
-├── src/
-│   ├── aggregator/      # Signal aggregation engine
-│   ├── sources/         # Signal source scanners
-│   │   ├── smart-wallet.ts
-│   │   ├── volume-spike.ts
-│   │   ├── kol-tracker.ts
-│   │   ├── narrative-detector.ts
-│   │   └── new-launches.ts
-│   ├── api/             # REST + WebSocket server
-│   ├── utils/           # Token metadata, helpers
-│   ├── notifications/   # Telegram integration
-│   └── types/           # TypeScript types
-├── programs/oracle/     # Anchor Solana program
-└── app/                 # Dashboard frontend
+Base Score = Σ (source_score × source_weight)
+
+Adjustments:
++ 15 points: Multiple signal sources (confluence)
++ 10 points: Smart wallet signal present
++ 5 points: Strong narrative match
+- 10 points: Single source only
+- 5 points: No market data available
+
+Risk Level:
+- LOW: Score ≥ 80, multiple sources
+- MEDIUM: Score 60-79
+- HIGH: Score 40-59
+- EXTREME: Score < 40 or single source
 ```
 
-## On-Chain Program (Anchor)
+## 🎯 Signal Sources
 
-Instructions:
-- `initialize` - Setup oracle with authority
-- `publish_signal` - Record new signal on-chain
-- `update_ath` - Update all-time-high for signal
-- `close_signal` - Mark signal as win/loss with ROI
+| Source | Weight | Description |
+|--------|--------|-------------|
+| Smart Wallet Elite | 1.5x | 70% historical win rate |
+| Smart Wallet Sniper | 1.2x | 41% historical win rate |
+| KOL Tracker | 1.1x | S/A/B tier KOL activity |
+| Volume Spike | 1.0x | Unusual volume detection |
+| Narrative | 1.0x | Meta/trend detection |
+| New Launch | 0.9x | Fresh token scanner |
+| Whale | 0.8x | Large wallet activity |
 
-Signal PDA stores:
-- Token address, symbol, score
-- Entry price, ATH, exit price
-- ROI in basis points
-- Source bitmap, timestamps
+## 📊 Dashboard
 
-## Performance Tracking
-
-The oracle tracks:
-- Total signals published
-- Wins (50%+ gain) vs Losses
-- Win rate over time
-- Average ROI
-- Best/worst trades
-
-All metrics are verifiable on-chain.
-
-## Dashboard
-
-Access at `http://localhost:3900` when server is running.
+Access the live dashboard at `http://localhost:3900` when the server is running.
 
 Features:
-- Live signal feed
-- Stats overview
+- Real-time signal feed
 - Score visualization
-- Risk level indicators
+- Risk level badges
 - Source breakdown
+- On-chain stats
+- Performance tracking
 
-## License
+## 🔒 Security
+
+- Wallet private key never exposed via API
+- On-chain authority verification
+- Rate limiting on API endpoints
+- No external data storage (stateless)
+
+## 📝 License
 
 MIT
 
+## 🤝 Contributing
+
+PRs welcome! Please follow the existing code style.
+
+## 🔗 Links
+
+- [GitHub](https://github.com/dynamolabs/oracle-alpha)
+- [Solana Explorer](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet)
+- [Colosseum Hackathon](https://colosseum.com/agent-hackathon)
+
 ---
 
-Built with 💜 by ShifuSensei for Colosseum Agent Hackathon 2026
+Built with ❤️ by ShifuSensei 🐼 for Colosseum Agent Hackathon 2026

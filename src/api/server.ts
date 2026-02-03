@@ -185,6 +185,59 @@ app.get('/api/sources', (req, res) => {
   res.json(Object.fromEntries(sourceStats));
 });
 
+// Leaderboard - top performing tokens
+app.get('/api/leaderboard', (req, res) => {
+  const tracked = getTrackedSignals();
+  
+  // Sort by current ROI
+  const sorted = tracked
+    .filter(t => t.currentPrice > 0)
+    .sort((a, b) => (b.roi || 0) - (a.roi || 0));
+  
+  const leaderboard = sorted.slice(0, 20).map((t, idx) => ({
+    rank: idx + 1,
+    symbol: t.symbol,
+    token: t.token,
+    entryPrice: t.entryPrice,
+    currentPrice: t.currentPrice,
+    athPrice: t.athPrice,
+    roi: t.roi,
+    athRoi: t.athRoi,
+    status: t.status,
+    age: Math.floor((Date.now() - t.entryTimestamp) / 60000)
+  }));
+  
+  res.json({
+    count: leaderboard.length,
+    totalTracked: tracked.length,
+    leaderboard
+  });
+});
+
+// Top gainers in last hour
+app.get('/api/gainers', (req, res) => {
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  const recent = signalStore.filter(s => s.timestamp >= oneHourAgo);
+  
+  // Get top 10 by score
+  const gainers = recent
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10)
+    .map(s => ({
+      symbol: s.symbol,
+      name: s.name,
+      token: s.token,
+      score: s.score,
+      riskLevel: s.riskLevel,
+      sources: s.sources.map(src => src.source),
+      narratives: s.analysis?.narrative || [],
+      mcap: s.marketData?.mcap || 0,
+      minutesAgo: Math.floor((Date.now() - s.timestamp) / 60000)
+    }));
+  
+  res.json({ count: gainers.length, gainers });
+});
+
 // === PERFORMANCE TRACKING ===
 
 // Get performance summary
