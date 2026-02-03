@@ -13,9 +13,14 @@ const MAX_SIGNALS = 1000;
 // WebSocket clients
 const wsClients = new Set<WebSocket>();
 
+import path from 'path';
+
 // Express app
 const app = express();
 app.use(express.json());
+
+// Serve static files
+app.use(express.static(path.join(__dirname, '../../app')));
 
 // CORS
 app.use((req, res, next) => {
