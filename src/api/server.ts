@@ -3,6 +3,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 import { aggregate } from '../aggregator';
 import { AggregatedSignal, SignalQuery } from '../types';
+import { trackSignal, updateTrackedSignals, getTrackedSignals, getPerformanceSummary, getTrackedSignal } from '../tracker/performance';
 
 const PORT = process.env.PORT || 3900;
 
@@ -128,6 +129,38 @@ app.get('/api/sources', (req, res) => {
   res.json(Object.fromEntries(sourceStats));
 });
 
+// === PERFORMANCE TRACKING ===
+
+// Get performance summary
+app.get('/api/performance', (req, res) => {
+  const summary = getPerformanceSummary();
+  res.json(summary);
+});
+
+// Get all tracked signals with live prices
+app.get('/api/tracked', (req, res) => {
+  const tracked = getTrackedSignals();
+  res.json({
+    count: tracked.length,
+    signals: tracked.sort((a, b) => b.entryTimestamp - a.entryTimestamp)
+  });
+});
+
+// Get single tracked signal
+app.get('/api/tracked/:id', (req, res) => {
+  const tracked = getTrackedSignal(req.params.id);
+  if (!tracked) {
+    return res.status(404).json({ error: 'Signal not tracked' });
+  }
+  res.json(tracked);
+});
+
+// Manually trigger price update
+app.post('/api/performance/update', async (req, res) => {
+  await updateTrackedSignals();
+  res.json({ status: 'updated', tracked: getTrackedSignals().length });
+});
+
 // Manual trigger scan (for testing)
 app.post('/api/scan', async (req, res) => {
   try {
@@ -146,6 +179,11 @@ app.post('/api/scan', async (req, res) => {
         
         // Broadcast to WebSocket clients
         broadcastSignal(signal);
+        
+        // Auto-track high-quality signals (score >= 65)
+        if (signal.score >= 65) {
+          trackSignal(signal).catch(e => console.error('[TRACKER] Failed to track:', e));
+        }
       }
     }
     
@@ -237,6 +275,11 @@ setInterval(async () => {
         signalStore.unshift(signal);
         broadcastSignal(signal);
         console.log(`[${new Date().toLocaleTimeString()}] New signal: ${signal.symbol} (Score: ${signal.score})`);
+        
+        // Auto-track high-quality signals
+        if (signal.score >= 65) {
+          trackSignal(signal).catch(e => console.error('[TRACKER] Failed:', e));
+        }
       }
     }
     
@@ -247,5 +290,18 @@ setInterval(async () => {
     console.error('Auto-scan error:', error);
   }
 }, 30000);
+
+// Update tracked signal prices every 60 seconds
+setInterval(async () => {
+  try {
+    await updateTrackedSignals();
+    const summary = getPerformanceSummary();
+    if (summary.total > 0) {
+      console.log(`[${new Date().toLocaleTimeString()}] Tracking ${summary.total} signals | Win rate: ${summary.winRate.toFixed(1)}% | Avg ROI: ${summary.avgRoi.toFixed(1)}%`);
+    }
+  } catch (error) {
+    console.error('Price update error:', error);
+  }
+}, 60000);
 
 export { app, server };
