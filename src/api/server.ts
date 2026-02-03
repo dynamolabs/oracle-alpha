@@ -1,6 +1,10 @@
 import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
+import path from 'path';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import compression from 'compression';
 import { aggregate } from '../aggregator';
 import { AggregatedSignal, SignalQuery } from '../types';
 import { trackSignal, updateTrackedSignals, getTrackedSignals, getPerformanceSummary, getTrackedSignal } from '../tracker/performance';
@@ -22,10 +26,37 @@ const MAX_SIGNALS = 1000;
 // WebSocket clients
 const wsClients = new Set<WebSocket>();
 
-import path from 'path';
-
 // Express app
 const app = express();
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for dashboard
+  crossOriginEmbedderPolicy: false
+}));
+
+// Compression
+app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10, // 10 requests per minute for expensive endpoints
+  message: { error: 'Rate limit exceeded for this endpoint' }
+});
+
+app.use('/api/', limiter);
+app.use('/api/scan', strictLimiter);
+app.use('/api/onchain/publish', strictLimiter);
+
 app.use(express.json());
 
 // Serve static files
@@ -35,6 +66,10 @@ app.use(express.static(path.join(__dirname, '../../app')));
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
 

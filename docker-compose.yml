@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  oracle-alpha:
+    build: .
+    container_name: oracle-alpha
+    restart: unless-stopped
+    ports:
+      - "3900:3900"
+    environment:
+      - NODE_ENV=production
+      - PORT=3900
+      - SOLANA_CLUSTER=devnet
+      - HELIUS_API_KEY=${HELIUS_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3900/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis for caching (future enhancement)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: oracle-redis
+  #   restart: unless-stopped
+  #   volumes:
+  #     - redis_data:/data
+
+volumes:
+  redis_data:

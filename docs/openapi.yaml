@@ -1,0 +1,390 @@
+openapi: 3.0.3
+info:
+  title: ORACLE Alpha API
+  description: |
+    AI-powered trading signal aggregator for Solana with verifiable on-chain performance tracking.
+    
+    ## Features
+    - Multi-source signal aggregation (smart wallets, KOLs, volume, narratives)
+    - Weighted scoring algorithm
+    - On-chain signal publishing
+    - Real-time WebSocket updates
+    
+    ## Authentication
+    Currently no authentication required. Rate limited to 100 req/min.
+  version: 1.0.0
+  contact:
+    name: ShifuSensei
+    url: https://github.com/dynamolabs/oracle-alpha
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3900
+    description: Local development
+  - url: https://oracle-alpha.example.com
+    description: Production (example)
+
+tags:
+  - name: Signals
+    description: Trading signal operations
+  - name: Stats
+    description: Performance statistics
+  - name: On-Chain
+    description: Solana on-chain operations
+  - name: System
+    description: Health and status
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  signals:
+                    type: integer
+                    example: 47
+                  uptime:
+                    type: number
+                    example: 3600.5
+
+  /api/info:
+    get:
+      tags: [System]
+      summary: Project information
+      responses:
+        '200':
+          description: Project metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectInfo'
+
+  /api/signals:
+    get:
+      tags: [Signals]
+      summary: Get trading signals
+      parameters:
+        - name: minScore
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+          description: Minimum score filter
+        - name: maxAge
+          in: query
+          schema:
+            type: integer
+          description: Maximum age in minutes
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Number of results
+      responses:
+        '200':
+          description: List of signals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  signals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Signal'
+
+  /api/signals/{id}:
+    get:
+      tags: [Signals]
+      summary: Get signal by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Signal details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Signal'
+        '404':
+          description: Signal not found
+
+  /api/stats:
+    get:
+      tags: [Stats]
+      summary: Get performance statistics
+      responses:
+        '200':
+          description: Performance stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+
+  /api/leaderboard:
+    get:
+      tags: [Stats]
+      summary: Get top performing signals
+      responses:
+        '200':
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  totalTracked:
+                    type: integer
+                  leaderboard:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaderboardEntry'
+
+  /api/gainers:
+    get:
+      tags: [Stats]
+      summary: Get recent top gainers
+      responses:
+        '200':
+          description: Top gainers in last hour
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  gainers:
+                    type: array
+                    items:
+                      type: object
+
+  /api/sources:
+    get:
+      tags: [Stats]
+      summary: Get signal source breakdown
+      responses:
+        '200':
+          description: Source statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    count:
+                      type: integer
+                    avgScore:
+                      type: number
+                    wins:
+                      type: integer
+
+  /api/onchain/stats:
+    get:
+      tags: [On-Chain]
+      summary: Get on-chain statistics
+      responses:
+        '200':
+          description: On-chain stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  totalSignals:
+                    type: integer
+                  wins:
+                    type: integer
+                  losses:
+                    type: integer
+                  winRate:
+                    type: string
+
+  /api/onchain/signals:
+    get:
+      tags: [On-Chain]
+      summary: Get on-chain published signals
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: On-chain signals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  signals:
+                    type: array
+                    items:
+                      type: object
+
+  /api/scan:
+    post:
+      tags: [Signals]
+      summary: Trigger manual scan
+      description: Rate limited to 10 requests per minute
+      responses:
+        '200':
+          description: Scan results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newSignals:
+                    type: integer
+                  totalStored:
+                    type: integer
+
+components:
+  schemas:
+    Signal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: integer
+        token:
+          type: string
+          description: Solana token address
+        symbol:
+          type: string
+        name:
+          type: string
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        confidence:
+          type: integer
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, EXTREME]
+        sources:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                type: string
+              weight:
+                type: number
+              rawScore:
+                type: integer
+        marketData:
+          type: object
+          properties:
+            mcap:
+              type: number
+            liquidity:
+              type: number
+            volume5m:
+              type: number
+            age:
+              type: integer
+        analysis:
+          type: object
+          properties:
+            narrative:
+              type: array
+              items:
+                type: string
+            strengths:
+              type: array
+              items:
+                type: string
+            weaknesses:
+              type: array
+              items:
+                type: string
+            recommendation:
+              type: string
+
+    Stats:
+      type: object
+      properties:
+        totalSignals:
+          type: integer
+        openSignals:
+          type: integer
+        closedSignals:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        winRate:
+          type: string
+        avgScore:
+          type: string
+        avgRoi:
+          type: string
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        symbol:
+          type: string
+        token:
+          type: string
+        roi:
+          type: number
+        status:
+          type: string
+          enum: [OPEN, WIN, LOSS]
+
+    ProjectInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        author:
+          type: string
+        programId:
+          type: string
+        network:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
