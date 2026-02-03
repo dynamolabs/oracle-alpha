@@ -36,6 +36,7 @@ import {
   filterSignalsForTier
 } from '../subscription/manager';
 import { DemoRunner, generateDemoSignal, generateHistoricalSignals } from '../demo/generator';
+import { generateTextCard, generateHtmlCard, generateSvgCard } from './share-card';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -450,6 +451,69 @@ app.get('/api/gainers', (req, res) => {
     }));
 
   res.json({ count: gainers.length, gainers });
+});
+
+// === SHARE CARD ENDPOINTS ===
+
+// Get text share card for a signal
+app.get('/api/share/:id/text', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  const text = generateTextCard(signal);
+  res.type('text/plain').send(text);
+});
+
+// Get HTML share card for a signal
+app.get('/api/share/:id/html', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  const html = generateHtmlCard(signal);
+  res.type('text/html').send(html);
+});
+
+// Get SVG share card for a signal (can be converted to PNG)
+app.get('/api/share/:id/svg', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  const svg = generateSvgCard(signal);
+  res.type('image/svg+xml').send(svg);
+});
+
+// Generate OG image for social sharing (SVG-based)
+app.get('/api/og', (req, res) => {
+  const { symbol, score, risk } = req.query;
+
+  // Create a simple OG image SVG
+  const scoreNum = parseInt(score as string) || 75;
+  const scoreColor = scoreNum >= 70 ? '#22c55e' : scoreNum >= 50 ? '#eab308' : '#ef4444';
+
+  const svg = `
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="100%" style="stop-color:#1a1a3a"/>
+    </linearGradient>
+    <linearGradient id="logo" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d9ff"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="600" y="200" font-family="monospace" font-size="48" fill="url(#logo)" text-anchor="middle">🔮 ORACLE Alpha Signal</text>
+  <text x="600" y="320" font-family="monospace" font-size="96" fill="#fff" text-anchor="middle" font-weight="bold">$${symbol || 'TOKEN'}</text>
+  <circle cx="600" cy="450" r="60" fill="${scoreColor}"/>
+  <text x="600" y="470" font-family="monospace" font-size="40" fill="#000" text-anchor="middle" font-weight="bold">${scoreNum}</text>
+  <text x="600" y="560" font-family="monospace" font-size="24" fill="#888" text-anchor="middle">Verifiable on-chain signals on Solana</text>
+</svg>`.trim();
+
+  res.type('image/svg+xml').send(svg);
 });
 
 // === PERFORMANCE TRACKING ===
