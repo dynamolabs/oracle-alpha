@@ -5,6 +5,8 @@ import { scanKOLActivity } from '../sources/kol-tracker';
 import { scanNarratives } from '../sources/narrative-detector';
 import { scanNewLaunches } from '../sources/new-launches';
 import { batchGetMetadata } from '../utils/token-metadata';
+import { isDuplicate, cleanupSeenSignals } from '../utils/dedup';
+import { calculateAdjustedScore, getRecommendedAction } from '../utils/confidence';
 import { v4 as uuidv4 } from 'uuid';
 
 // Source weights (adjusted by historical performance)
