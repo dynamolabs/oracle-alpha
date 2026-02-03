@@ -2,3 +2,27 @@ node_modules/
 coverage/
 dist/
 *.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Anchor/Solana
+target/
+.anchor/
+test-ledger/
+
+# Data
+data/
+*.db
