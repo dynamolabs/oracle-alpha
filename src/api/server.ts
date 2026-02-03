@@ -4,6 +4,7 @@ import http from 'http';
 import { aggregate } from '../aggregator';
 import { AggregatedSignal, SignalQuery } from '../types';
 import { trackSignal, updateTrackedSignals, getTrackedSignals, getPerformanceSummary, getTrackedSignal } from '../tracker/performance';
+import { getOracleStatus, formatStatusMessage } from './status';
 
 const PORT = process.env.PORT || 3900;
 
@@ -39,6 +40,16 @@ app.get('/health', (req, res) => {
     signals: signalStore.length,
     uptime: process.uptime()
   });
+});
+
+// Full status endpoint
+app.get('/api/status', (req, res) => {
+  res.json(getOracleStatus());
+});
+
+// Text status (for CLI/agents)
+app.get('/api/status/text', (req, res) => {
+  res.type('text/plain').send(formatStatusMessage());
 });
 
 // Get signals with filtering
