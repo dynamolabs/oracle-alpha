@@ -6,6 +6,8 @@ import { AggregatedSignal, SignalQuery } from '../types';
 import { trackSignal, updateTrackedSignals, getTrackedSignals, getPerformanceSummary, getTrackedSignal } from '../tracker/performance';
 import { getOracleStatus, formatStatusMessage } from './status';
 import { initPublisher, publishSignalOnChain, getOnChainStats, fetchOnChainSignals } from '../onchain/publisher';
+import { sendTelegramAlert, shouldAlert } from '../notifications/telegram';
+import { initAthUpdater, startAthUpdater } from '../onchain/ath-updater';
 
 // On-chain publishing state
 let onChainEnabled = false;
@@ -340,6 +342,13 @@ server.listen(PORT, async () => {
   
   // Initialize on-chain connection
   await initOnChain();
+  
+  // Initialize ATH updater
+  const athEnabled = await initAthUpdater();
+  if (athEnabled) {
+    startAthUpdater();
+    console.log('[SERVER] ATH tracking ENABLED');
+  }
 });
 
 // Auto-scan every 30 seconds
@@ -364,6 +373,11 @@ setInterval(async () => {
         
         // Auto-publish to on-chain (score >= 70)
         autoPublishSignal(signal).catch(e => console.error('[ONCHAIN] Failed:', e));
+        
+        // Send Telegram alert for high-quality signals
+        if (shouldAlert(signal)) {
+          sendTelegramAlert(signal).catch(e => console.error('[TELEGRAM] Failed:', e));
+        }
       }
     }
     
