@@ -1,7 +1,7 @@
 # 🔮 ORACLE Alpha
 
 [![CI](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-141%20passed-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
+[![Tests](https://img.shields.io/badge/tests-193%20passed-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
 [![Coverage](https://img.shields.io/badge/coverage-75%25+-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Solana](https://img.shields.io/badge/Solana-Devnet-blueviolet)](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet)
@@ -124,6 +124,28 @@ npx ts-node src/cli.ts scan
 # Run API server
 npx ts-node src/api/server.ts
 ```
+
+### 🎬 Demo Mode (for Presentations)
+
+```bash
+# Start server with demo mode (generates realistic signals)
+DEMO_MODE=true npm start
+
+# Or start demo mode via API
+curl -X POST http://localhost:3900/api/demo/start
+
+# Seed historical data (for track record display)
+curl -X POST http://localhost:3900/api/demo/seed -H "Content-Type: application/json" -d '{"count": 30}'
+
+# Stop demo mode
+curl -X POST http://localhost:3900/api/demo/stop
+```
+
+Demo mode generates realistic trading signals with:
+- Multiple signal sources (smart wallets, volume spikes, KOLs)
+- Varied scores and risk levels
+- Market data that looks real
+- Historical signals with win/loss outcomes
 
 ### Run with PM2 (Production)
 
