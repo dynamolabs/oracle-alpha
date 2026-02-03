@@ -129,6 +129,23 @@
         .sound-toggle:hover { border-color: #00d9ff; color: #00d9ff; }
         .sound-toggle.active { background: #00d9ff; color: #000; border-color: #00d9ff; }
         
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            color: #888;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: #a855f7; color: #a855f7; }
+        .filter-btn.active { background: #a855f7; color: #000; border-color: #a855f7; }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -540,6 +557,11 @@
             <div class="section-header">
                 <h2 class="section-title">📡 Live Signals</h2>
                 <div class="header-controls">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" onclick="setFilter('all')">All</button>
+                        <button class="filter-btn" onclick="setFilter('high')">🔥 High</button>
+                        <button class="filter-btn" onclick="setFilter('smart')">👑 Smart Wallet</button>
+                    </div>
                     <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()">🔇 Sound</button>
                     <span class="live-badge" id="live-status">● CONNECTING</span>
                 </div>
@@ -612,6 +634,7 @@
         let ws;
         const signals = [];
         let soundEnabled = false;
+        let currentFilter = 'all';
         
         // Sound toggle
         function toggleSound() {
@@ -717,10 +740,49 @@
             }
         }
         
-        // Close modal on Escape key
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // Escape to close modal
             if (e.key === 'Escape') closeExplanationModal();
+            
+            // Don't trigger shortcuts if typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            // 's' to toggle sound
+            if (e.key === 's') toggleSound();
+            
+            // '1', '2', '3' for filters
+            if (e.key === '1') { currentFilter = 'all'; document.querySelectorAll('.filter-btn')[0]?.click(); }
+            if (e.key === '2') { currentFilter = 'high'; document.querySelectorAll('.filter-btn')[1]?.click(); }
+            if (e.key === '3') { currentFilter = 'smart'; document.querySelectorAll('.filter-btn')[2]?.click(); }
+            
+            // 'r' to refresh
+            if (e.key === 'r') { fetchStats(); fetchLeaderboard(); showToast('🔄 Refreshed!'); }
+            
+            // '?' to show shortcuts help
+            if (e.key === '?') {
+                showToast('Shortcuts: S=Sound, 1/2/3=Filters, R=Refresh, ?=Help');
+            }
         });
+        
+        // Filter functions
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderSignals();
+        }
+        
+        function filterSignals(sigs) {
+            if (currentFilter === 'all') return sigs;
+            if (currentFilter === 'high') return sigs.filter(s => s.score >= 70);
+            if (currentFilter === 'smart') return sigs.filter(s => 
+                s.sources.some(src => src.source.includes('smart-wallet'))
+            );
+            return sigs;
+        }
         
         function getSourceIcon(source) {
             if (source.includes('elite')) return '👑';
@@ -778,13 +840,16 @@
         // Render signals
         function renderSignals() {
             const container = document.getElementById('signal-list');
+            const filtered = filterSignals(signals);
             
-            if (signals.length === 0) {
-                container.innerHTML = '<div class="empty-state">Waiting for signals...</div>';
+            if (filtered.length === 0) {
+                container.innerHTML = signals.length === 0 
+                    ? '<div class="empty-state">Waiting for signals...</div>'
+                    : '<div class="empty-state">No signals match the current filter</div>';
                 return;
             }
             
-            container.innerHTML = signals.slice(0, 15).map((signal, idx) => {
+            container.innerHTML = filtered.slice(0, 15).map((signal, idx) => {
                 const scoreClass = signal.score >= 70 ? 'score-high' : signal.score >= 50 ? 'score-medium' : 'score-low';
                 const sources = signal.sources.map(s => getSourceIcon(s.source)).join('');
                 const narratives = (signal.analysis?.narrative || ['General']).map(n => 
