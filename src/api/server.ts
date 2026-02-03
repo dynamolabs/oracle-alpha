@@ -38,6 +38,7 @@ import {
 import { DemoRunner, generateDemoSignal, generateHistoricalSignals } from '../demo/generator';
 import { generateTextCard, generateHtmlCard, generateSvgCard } from './share-card';
 import { exportSignals, exportPerformanceReport } from '../export/data-export';
+import { explainSignal, formatExplanation } from '../analysis/explainer';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -515,6 +516,38 @@ app.get('/api/og', (req, res) => {
 </svg>`.trim();
 
   res.type('image/svg+xml').send(svg);
+});
+
+// === SIGNAL ANALYSIS ===
+
+// Get AI-style explanation for a signal
+app.get('/api/explain/:id', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+
+  const explanation = explainSignal(signal);
+  res.json({
+    signal: {
+      id: signal.id,
+      symbol: signal.symbol,
+      score: signal.score,
+      riskLevel: signal.riskLevel
+    },
+    explanation
+  });
+});
+
+// Get formatted text explanation
+app.get('/api/explain/:id/text', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+
+  const text = formatExplanation(signal);
+  res.type('text/plain').send(text);
 });
 
 // === DATA EXPORT ===

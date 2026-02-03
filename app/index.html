@@ -363,6 +363,103 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
+        /* Explanation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        .modal {
+            background: linear-gradient(135deg, #1a1a3a, #0a0a1a);
+            border: 1px solid #444;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.active .modal { transform: scale(1); }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        .modal-title { font-size: 1.3em; color: #a855f7; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: #fff; }
+        
+        .explanation-section {
+            margin-bottom: 20px;
+        }
+        .explanation-section h4 {
+            color: #00d9ff;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        .explanation-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .explanation-section li {
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .explanation-section li:before {
+            content: "• ";
+            color: #a855f7;
+        }
+        .explanation-summary {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .explanation-action {
+            background: linear-gradient(90deg, #00d9ff20, #a855f720);
+            border-left: 3px solid #a855f7;
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin-top: 15px;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .confidence-HIGH { background: #22c55e; color: #000; }
+        .confidence-MEDIUM { background: #eab308; color: #000; }
+        .confidence-LOW { background: #ef4444; color: #fff; }
+        
         /* Mobile Responsive */
         @media (max-width: 1024px) {
             .stats-grid { grid-template-columns: repeat(3, 1fr); }
@@ -492,6 +589,17 @@
         ● Disconnected
     </div>
     
+    <!-- Explanation Modal -->
+    <div class="modal-overlay" id="explanation-modal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">🧠 Signal Analysis</span>
+                <button class="modal-close" onclick="closeExplanationModal()">&times;</button>
+            </div>
+            <div id="explanation-content">Loading...</div>
+        </div>
+    </div>
+    
     <!-- Audio for notifications -->
     <audio id="notification-sound" preload="auto">
         <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp2ZjHdxdH2IkY+GfHZ1eIGJjImDfXp6fYSKjIqFgH19gIaLjYuHg4B/goaKjIuIhYKBgoWIiouKiIWDgoOFh4mKiYeFhIOEhYeIiYmIhoWEhIWGh4iIiIeGhYWFhoeHiIiHhoaFhYaGh4eHh4aGhYaGhoeHh4eGhoaGhoaGh4eHhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhg==" type="audio/wav">
@@ -539,6 +647,80 @@
                 showToast('📋 Copied to clipboard!');
             });
         }
+        
+        // Explanation modal functions
+        async function showExplanation(signalId) {
+            const modal = document.getElementById('explanation-modal');
+            const content = document.getElementById('explanation-content');
+            
+            modal.classList.add('active');
+            content.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Loading analysis...</div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/explain/${signalId}`);
+                const data = await res.json();
+                
+                if (data.error) {
+                    content.innerHTML = `<div style="color: #ef4444;">Error: ${data.error}</div>`;
+                    return;
+                }
+                
+                const exp = data.explanation;
+                content.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span style="font-size: 1.5em; font-weight: bold;">$${data.signal.symbol}</span>
+                        <span class="confidence-badge confidence-${exp.confidence}">${exp.confidence} Confidence</span>
+                    </div>
+                    
+                    <div class="explanation-summary">${exp.summary}</div>
+                    
+                    <div class="explanation-section">
+                        <h4>✅ Bullish Factors</h4>
+                        <ul>
+                            ${exp.bullishFactors.map(f => `<li>${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    ${exp.bearishFactors.length > 0 ? `
+                    <div class="explanation-section">
+                        <h4>⚠️ Risk Factors</h4>
+                        <ul>
+                            ${exp.bearishFactors.map(f => `<li>${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="explanation-section">
+                        <h4>🛡️ Risk Warnings</h4>
+                        <ul>
+                            ${exp.riskWarnings.map(f => `<li style="color: #f97316;">${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="explanation-action">
+                        <strong>💡 Actionable Insight:</strong><br>
+                        ${exp.actionableInsight}
+                    </div>
+                `;
+            } catch (e) {
+                content.innerHTML = `<div style="color: #ef4444;">Failed to load analysis</div>`;
+            }
+        }
+        
+        function closeExplanationModal() {
+            document.getElementById('explanation-modal').classList.remove('active');
+        }
+        
+        function closeModal(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                closeExplanationModal();
+            }
+        }
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeExplanationModal();
+        });
         
         function getSourceIcon(source) {
             if (source.includes('elite')) return '👑';
@@ -612,6 +794,7 @@
                 return `
                 <div class="signal-card ${idx === 0 ? 'new' : ''}">
                     <div class="signal-actions">
+                        <button class="action-btn" onclick="showExplanation('${signal.id}')" title="Explain">🧠</button>
                         <button class="action-btn" onclick="copyToClipboard('${signal.token}')" title="Copy CA">📋</button>
                         <a class="action-btn" href="https://dexscreener.com/solana/${signal.token}" target="_blank" title="DexScreener">📊</a>
                     </div>
