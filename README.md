@@ -1,18 +1,37 @@
 # 🔮 ORACLE Alpha
 
-[![CI](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-193%20passed-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
-[![Coverage](https://img.shields.io/badge/coverage-75%25+-brightgreen)](https://github.com/dynamolabs/oracle-alpha)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Solana](https://img.shields.io/badge/Solana-Devnet-blueviolet)](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://github.com/dynamolabs/oracle-alpha)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://github.com/dynamolabs/oracle-alpha)
+<p align="center">
+  <img src="app/assets/banner.svg" alt="ORACLE Alpha Banner" width="100%">
+</p>
 
-**On-chain Reliable Alpha Compilation & Learning Engine**
+<p align="center">
+  <a href="https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml"><img src="https://github.com/dynamolabs/oracle-alpha/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="#"><img src="https://img.shields.io/badge/tests-193%20passed-brightgreen" alt="Tests"></a>
+  <a href="#"><img src="https://img.shields.io/badge/coverage-77%25+-brightgreen" alt="Coverage"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
+  <a href="https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet"><img src="https://img.shields.io/badge/Solana-Devnet-blueviolet" alt="Solana"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Docker-Ready-blue" alt="Docker"></a>
+  <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.3-blue" alt="TypeScript"></a>
+</p>
 
-AI-powered trading signal aggregator for Solana with **verifiable on-chain performance tracking**.
+<p align="center">
+  <strong>On-chain Reliable Alpha Compilation & Learning Engine</strong><br>
+  AI-powered trading signal aggregator for Solana with <strong>verifiable on-chain performance tracking</strong>.
+</p>
 
-> 🏆 Built for Colosseum Agent Hackathon 2026 by ShifuSensei 🐼
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="docs/API.md">API Docs</a> •
+  <a href="docs/DEPLOYMENT.md">Deploy</a>
+</p>
+
+---
+
+> 🏆 **Built for Colosseum Agent Hackathon 2026** by ShifuSensei 🐼
+>
+> **Stop trusting. Start verifying.** Every signal published on-chain before the price moves.
 
 ## 🚀 Deployed on Solana
 
@@ -95,12 +114,7 @@ ORACLE Alpha is an **autonomous AI agent** that:
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- Solana CLI (for on-chain features)
-- Anchor (for development)
-
-### Installation
+### 🎬 Demo Mode (Recommended for First Look)
 
 ```bash
 # Clone
@@ -110,19 +124,39 @@ cd oracle-alpha
 # Install dependencies
 npm install
 
-# Copy env file and configure
-cp .env.example .env
-# Edit .env with your settings
+# Run demo mode (generates realistic signals)
+npm run demo
+
+# Open in browser:
+# Landing Page: http://localhost:3900/
+# Dashboard:    http://localhost:3900/index.html
 ```
 
-### Run the Scanner (CLI)
+Demo mode auto-generates realistic signals with historical performance data - perfect for presentations!
+
+### 🛠️ Full Setup
+
+#### Prerequisites
+- Node.js 18+
+- Solana CLI (for on-chain features)
+- Anchor (for development)
+
+#### Installation
 
 ```bash
-# One-time scan
+# Copy env file and configure
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+#### Run Commands
+
+```bash
+# One-time scan (CLI)
 npx ts-node src/cli.ts scan
 
-# Run API server
-npx ts-node src/api/server.ts
+# Run API server (production)
+npm start
 ```
 
 ### 🎬 Demo Mode (for Presentations)

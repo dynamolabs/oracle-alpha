@@ -96,6 +96,11 @@ app.use(express.json());
 // Serve static files
 app.use(express.static(path.join(__dirname, '../../app')));
 
+// Redirect root to landing page
+app.get('/', (req, res) => {
+  res.redirect('/landing.html');
+});
+
 // CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
