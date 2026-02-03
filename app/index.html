@@ -284,9 +284,27 @@
             </div>
         </div>
         
+        <!-- Leaderboard Section -->
+        <div class="signals-section" style="margin-top: 30px;">
+            <div class="section-header">
+                <h2 class="section-title">🏆 Performance Leaderboard</h2>
+                <span class="live-badge" style="background: #a855f7;">TRACKING</span>
+            </div>
+            
+            <div id="leaderboard" style="display: grid; gap: 10px;">
+                <div class="empty-state">Loading leaderboard...</div>
+            </div>
+        </div>
+        
         <footer>
             <p>Built by ShifuSensei 🐼 for Colosseum Agent Hackathon 2026</p>
-            <p style="margin-top: 10px;">Verifiable track record on Solana</p>
+            <p style="margin-top: 10px;">
+                <a href="https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet" 
+                   target="_blank" style="color: #a855f7; text-decoration: none;">
+                   View On-Chain Program ⛓️
+                </a>
+            </p>
+            <p style="margin-top: 5px; color: #666;">Verifiable track record on Solana</p>
         </footer>
     </div>
     
@@ -431,10 +449,53 @@
             };
         }
         
+        // Fetch leaderboard
+        async function fetchLeaderboard() {
+            try {
+                const res = await fetch(`${API_BASE}/api/leaderboard`);
+                const data = await res.json();
+                
+                const container = document.getElementById('leaderboard');
+                
+                if (data.leaderboard.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No signals being tracked yet</div>';
+                    return;
+                }
+                
+                container.innerHTML = data.leaderboard.slice(0, 10).map((entry, idx) => {
+                    const roiColor = entry.roi >= 0 ? '#22c55e' : '#ef4444';
+                    const roiSign = entry.roi >= 0 ? '+' : '';
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; 
+                                    padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px;
+                                    border-left: 3px solid ${roiColor};">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="font-size: 1.2em; color: #888; width: 25px;">#${entry.rank}</span>
+                                <span style="font-weight: bold; color: #fff;">$${entry.symbol}</span>
+                            </div>
+                            <div style="display: flex; gap: 30px; align-items: center;">
+                                <span style="color: ${roiColor}; font-weight: bold;">
+                                    ${roiSign}${entry.roi?.toFixed(1) || 0}%
+                                </span>
+                                <span style="color: #888; font-size: 0.85em;">
+                                    ATH: +${entry.athRoi?.toFixed(1) || 0}%
+                                </span>
+                                <span style="color: #666; font-size: 0.8em;">${entry.age}m ago</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Failed to fetch leaderboard:', e);
+            }
+        }
+        
         // Initialize
         fetchStats();
+        fetchLeaderboard();
         connectWebSocket();
         setInterval(fetchStats, 30000);
+        setInterval(fetchLeaderboard, 60000);
     </script>
 </body>
 </html>
