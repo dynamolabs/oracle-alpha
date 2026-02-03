@@ -12,6 +12,7 @@ import { getOracleStatus, formatStatusMessage } from './status';
 import { initPublisher, publishSignalOnChain, getOnChainStats, fetchOnChainSignals } from '../onchain/publisher';
 import { sendTelegramAlert, shouldAlert } from '../notifications/telegram';
 import { initAthUpdater, startAthUpdater } from '../onchain/ath-updater';
+import { getPrometheusMetrics, getMetricsJson, incrementRequests, incrementErrors, setWebsocketClients, recordScan, updateMetrics } from './metrics';
 
 // On-chain publishing state
 let onChainEnabled = false;
@@ -73,11 +74,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Request logging
+// Request logging and metrics
 app.use((req, res, next) => {
+  incrementRequests();
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
+    if (res.statusCode >= 400) {
+      incrementErrors();
+    }
     if (duration > 1000) { // Log slow requests
       console.log(`[API] ${req.method} ${req.path} - ${duration}ms (slow)`);
     }
@@ -100,6 +105,16 @@ app.get('/health', (req, res) => {
     signals: signalStore.length,
     uptime: process.uptime()
   });
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics', (req, res) => {
+  res.type('text/plain').send(getPrometheusMetrics());
+});
+
+// JSON metrics endpoint
+app.get('/api/metrics', (req, res) => {
+  res.json(getMetricsJson());
 });
 
 // Project info
