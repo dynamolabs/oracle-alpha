@@ -96,8 +96,8 @@
             padding: 20px;
             display: grid;
             grid-template-columns: 1fr 2fr 1fr;
-            gap: 20px;
-            align-items: center;
+            gap: 15px;
+            align-items: start;
             transition: all 0.3s ease;
         }
         
@@ -183,6 +183,35 @@
             margin-top: 5px;
         }
         
+        .signal-meta {
+            grid-column: span 3;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+            margin-top: 10px;
+        }
+        
+        .narratives {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        
+        .narrative-tag {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid #a855f7;
+            color: #a855f7;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75em;
+        }
+        
+        .recommendation {
+            color: #888;
+            font-size: 0.85em;
+            font-style: italic;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 50px;
@@ -266,6 +295,17 @@
         let ws;
         const signals = [];
         
+        function getSourceIcon(source) {
+            if (source.includes('elite')) return '👑';
+            if (source.includes('sniper')) return '🎯';
+            if (source.includes('smart-wallet')) return '💰';
+            if (source.includes('volume')) return '📈';
+            if (source.includes('kol')) return '📢';
+            if (source.includes('narrative')) return '📰';
+            if (source.includes('new')) return '🆕';
+            return '•';
+        }
+        
         // Fetch stats
         async function fetchStats() {
             try {
@@ -308,13 +348,17 @@
                             <div class="detail-label">Vol 5m</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-value">${signal.marketData.age}m</div>
+                            <div class="detail-value">${signal.marketData.age || 0}m</div>
                             <div class="detail-label">Age</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-value">${signal.sources.length}</div>
+                            <div class="detail-value">${signal.sources.map(s => getSourceIcon(s.source)).join('')}</div>
                             <div class="detail-label">Sources</div>
                         </div>
+                    </div>
+                    <div class="signal-meta">
+                        <div class="narratives">${(signal.analysis?.narrative || ['General']).map(n => '<span class="narrative-tag">' + n + '</span>').join('')}</div>
+                        <div class="recommendation">${signal.analysis?.recommendation || ''}</div>
                     </div>
                     
                     <div class="signal-score">
