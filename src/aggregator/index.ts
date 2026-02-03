@@ -3,6 +3,7 @@ import { scanSmartWallets } from '../sources/smart-wallet';
 import { scanVolumeSpikes } from '../sources/volume-spike';
 import { scanKOLActivity } from '../sources/kol-tracker';
 import { scanNarratives } from '../sources/narrative-detector';
+import { scanNewLaunches } from '../sources/new-launches';
 import { batchGetMetadata } from '../utils/token-metadata';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -232,6 +233,11 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   const narrativeSignals = await scanNarratives();
   rawSignals.push(...narrativeSignals);
   console.log(`[ORACLE] Narrative signals: ${narrativeSignals.length}`);
+  
+  // New launch signals
+  const newLaunchSignals = await scanNewLaunches();
+  rawSignals.push(...newLaunchSignals);
+  console.log(`[ORACLE] New launch signals: ${newLaunchSignals.length}`);
   
   // Group signals by token
   const signalsByToken = new Map<string, RawSignal[]>();

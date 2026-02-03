@@ -31,28 +31,41 @@ interface DexScreenerToken {
   };
 }
 
-// Volume spike detection thresholds
+// Volume spike detection thresholds (relaxed for more signals)
 const THRESHOLDS = {
-  minVol5m: 10000,      // $10K minimum 5m volume
-  minVolSpike: 3,       // 3x normal volume
-  minBuyRatio: 0.6,     // 60% buys
-  minMcap: 15000,       // $15K minimum mcap
-  maxMcap: 500000,      // $500K maximum mcap
-  maxAge: 60,           // 60 minutes max age
-  minLiquidity: 5000,   // $5K minimum liquidity
+  minVol5m: 5000,       // $5K minimum 5m volume
+  minVolSpike: 2,       // 2x normal volume
+  minBuyRatio: 0.55,    // 55% buys
+  minMcap: 10000,       // $10K minimum mcap
+  maxMcap: 2000000,     // $2M maximum mcap (increased)
+  maxAge: 120,          // 120 minutes max age (increased)
+  minLiquidity: 3000,   // $3K minimum liquidity
 };
 
 async function fetchTrendingTokens(): Promise<DexScreenerToken[]> {
   try {
-    // Fetch from token boosts (trending)
-    const response = await fetch(`${DEXSCREENER_API}/token-boosts/latest/v1`);
-    const boosts = await response.json();
-    
-    // Fetch details for each token
     const tokens: DexScreenerToken[] = [];
     
-    for (const boost of boosts.slice(0, 30)) { // Limit to 30
-      if (!boost.tokenAddress?.endsWith('pump')) continue;
+    // Method 1: Token boosts (trending)
+    const boostRes = await fetch(`${DEXSCREENER_API}/token-boosts/latest/v1`);
+    const boosts = await boostRes.json();
+    
+    // Method 2: Top boosts (most promoted)
+    const topBoostRes = await fetch(`${DEXSCREENER_API}/token-boosts/top/v1`);
+    const topBoosts = await topBoostRes.json();
+    
+    // Combine and dedupe
+    const allBoosts = [...boosts, ...topBoosts];
+    const seen = new Set<string>();
+    
+    for (const boost of allBoosts) {
+      if (!boost.tokenAddress) continue;
+      if (boost.chainId !== 'solana') continue;
+      if (seen.has(boost.tokenAddress)) continue;
+      seen.add(boost.tokenAddress);
+      
+      // Fetch details (limit to 40 total)
+      if (tokens.length >= 40) break;
       
       try {
         const detailRes = await fetch(`${DEXSCREENER_API}/latest/dex/tokens/${boost.tokenAddress}`);

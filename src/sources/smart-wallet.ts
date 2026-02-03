@@ -4,16 +4,55 @@ const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '5d079301-97d2-4ae9-81fd-e5
 
 // Tracked wallets with their win rates
 const TRACKED_WALLETS: { address: string; label: string; winRate: number; source: SignalSource }[] = [
+  // ELITE TIER - 70%+ Win Rate
+  {
+    address: '2VjYBeVsFhN4AmmHBWyorn6jAYMtvAUytsAEBnECgcuW',
+    label: 'ELITE SNIPER (70% WR)',
+    winRate: 0.70,
+    source: 'smart-wallet-elite'
+  },
   {
     address: '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P',
     label: 'ELITE WALLET',
     winRate: 0.70,
     source: 'smart-wallet-elite'
   },
+  // SNIPER TIER - 40-60% Win Rate
   {
-    address: 'pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA',
-    label: 'PUMP SNIPER',
+    address: '7Swrq9DbxXJDVavHYA7zSqchA97gRRSbBjfafbCayCHt',
+    label: 'PUMP SNIPER (41% WR)',
     winRate: 0.41,
+    source: 'smart-wallet-sniper'
+  },
+  {
+    address: 'FqtJiuwr1d4XqMAtjBYquFgg9mKkVnJFzsiH6JNUCycr',
+    label: 'FIRST BUYER (+1s)',
+    winRate: 0.45,
+    source: 'smart-wallet-sniper'
+  },
+  {
+    address: 'ARu4n5mFdZogZAravu7CcizaojWnS6oqka37gdLT5SZn',
+    label: 'OKX DEX SNIPER',
+    winRate: 0.40,
+    source: 'smart-wallet-sniper'
+  },
+  {
+    address: 'EvErUDffH6fdYAB8zZjRxcr8obD4sNko9udQMYo2pfrn',
+    label: 'EARLY BUYER +1s',
+    winRate: 0.38,
+    source: 'smart-wallet-sniper'
+  },
+  // TRACKER TIER - Useful for confluence
+  {
+    address: 'BndkmUnVgesmZBBpZZTBbmwQtHkPsQhQStqh5wg5nH7B',
+    label: 'EARLY +8s',
+    winRate: 0.35,
+    source: 'smart-wallet-sniper'
+  },
+  {
+    address: '6PZFxEGNrqCoUEuZMbFE37Ma2F7gCQFBmCfsu7XUxyh7',
+    label: 'EARLY +9s',
+    winRate: 0.35,
     source: 'smart-wallet-sniper'
   }
 ];
