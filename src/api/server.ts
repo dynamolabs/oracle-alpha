@@ -37,6 +37,7 @@ import {
 } from '../subscription/manager';
 import { DemoRunner, generateDemoSignal, generateHistoricalSignals } from '../demo/generator';
 import { generateTextCard, generateHtmlCard, generateSvgCard } from './share-card';
+import { exportSignals, exportPerformanceReport } from '../export/data-export';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -514,6 +515,45 @@ app.get('/api/og', (req, res) => {
 </svg>`.trim();
 
   res.type('image/svg+xml').send(svg);
+});
+
+// === DATA EXPORT ===
+
+// Export signals in various formats
+app.get('/api/export/signals', (req, res) => {
+  const format = (req.query.format as string) || 'json';
+  const minScore = req.query.minScore ? parseInt(req.query.minScore as string) : undefined;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+
+  const config = {
+    format: format as 'json' | 'csv' | 'markdown',
+    includePerformance: req.query.performance !== 'false',
+    includeMetadata: req.query.metadata !== 'false',
+    minScore,
+    maxSignals: limit
+  };
+
+  const data = exportSignals(signalStore, config);
+
+  if (format === 'csv') {
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=oracle-signals.csv');
+  } else if (format === 'markdown') {
+    res.setHeader('Content-Type', 'text/markdown');
+    res.setHeader('Content-Disposition', 'attachment; filename=oracle-signals.md');
+  } else {
+    res.setHeader('Content-Type', 'application/json');
+  }
+
+  res.send(data);
+});
+
+// Export performance report
+app.get('/api/export/performance', (req, res) => {
+  const report = exportPerformanceReport(signalStore);
+  res.setHeader('Content-Type', 'text/markdown');
+  res.setHeader('Content-Disposition', 'attachment; filename=oracle-performance.md');
+  res.send(report);
 });
 
 // === PERFORMANCE TRACKING ===

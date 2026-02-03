@@ -20,23 +20,32 @@ export async function sendTelegramAlert(signal: AggregatedSignal): Promise<boole
   }
 
   const riskEmoji = {
-    'LOW': '🟢',
-    'MEDIUM': '🟡', 
-    'HIGH': '🟠',
-    'EXTREME': '🔴'
+    LOW: '🟢',
+    MEDIUM: '🟡',
+    HIGH: '🟠',
+    EXTREME: '🔴'
   };
 
-  const scoreEmoji = signal.score >= 80 ? '🔥' : signal.score >= 70 ? '⚡' : signal.score >= 60 ? '✨' : '📊';
+  const scoreEmoji =
+    signal.score >= 80 ? '🔥' : signal.score >= 70 ? '⚡' : signal.score >= 60 ? '✨' : '📊';
 
   // Format sources
-  const sources = signal.sources.map(s => {
-    const emoji = s.source.includes('elite') ? '👑' : 
-                  s.source.includes('sniper') ? '🎯' :
-                  s.source.includes('kol') ? '📢' :
-                  s.source.includes('volume') ? '📈' :
-                  s.source.includes('narrative') ? '📰' : '•';
-    return `${emoji} ${s.source}`;
-  }).join('\n');
+  const sources = signal.sources
+    .map(s => {
+      const emoji = s.source.includes('elite')
+        ? '👑'
+        : s.source.includes('sniper')
+          ? '🎯'
+          : s.source.includes('kol')
+            ? '📢'
+            : s.source.includes('volume')
+              ? '📈'
+              : s.source.includes('narrative')
+                ? '📰'
+                : '•';
+      return `${emoji} ${s.source}`;
+    })
+    .join('\n');
 
   // Format narratives
   const narratives = signal.analysis?.narrative?.join(', ') || 'General';
@@ -66,6 +75,20 @@ ${sources}
 🔮 <i>ORACLE Alpha - Verifiable Alpha</i>
 `.trim();
 
+  // Inline keyboard with quick action buttons
+  const inlineKeyboard = {
+    inline_keyboard: [
+      [
+        { text: '📊 DexScreener', url: `https://dexscreener.com/solana/${signal.token}` },
+        { text: '🦅 Birdeye', url: `https://birdeye.so/token/${signal.token}?chain=solana` }
+      ],
+      [
+        { text: '🎰 Pump.fun', url: `https://pump.fun/${signal.token}` },
+        { text: '⛓️ Solscan', url: `https://solscan.io/token/${signal.token}` }
+      ]
+    ]
+  };
+
   try {
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -74,12 +97,13 @@ ${sources}
         chat_id: TELEGRAM_CHAT_ID,
         text: message,
         parse_mode: 'HTML',
-        disable_web_page_preview: true
-      } as TelegramMessage)
+        disable_web_page_preview: true,
+        reply_markup: inlineKeyboard
+      })
     });
 
     const result = await response.json();
-    
+
     if (result.ok) {
       console.log(`[TG] Alert sent for ${signal.symbol}`);
       return true;
@@ -97,18 +121,16 @@ ${sources}
 export function shouldAlert(signal: AggregatedSignal): boolean {
   // Only alert for score >= 65
   if (signal.score < 65) return false;
-  
+
   // Skip if no sources
   if (signal.sources.length === 0) return false;
-  
+
   // Prefer signals with elite/sniper wallets
-  const hasSmartWallet = signal.sources.some(s => 
-    s.source.includes('smart-wallet')
-  );
-  
+  const hasSmartWallet = signal.sources.some(s => s.source.includes('smart-wallet'));
+
   // Lower threshold for smart wallet signals
   if (hasSmartWallet) return signal.score >= 60;
-  
+
   // Higher threshold for other signals
   return signal.score >= 70;
 }
@@ -118,16 +140,16 @@ export async function sendBatchSummary(signals: AggregatedSignal[]): Promise<voi
   if (signals.length === 0) return;
 
   const topSignals = signals.slice(0, 5);
-  
+
   const message = `
 📊 <b>ORACLE Alpha - Signal Summary</b>
 
 Found ${signals.length} signals this scan
 
 <b>Top 5:</b>
-${topSignals.map((s, i) => 
-  `${i+1}. <b>$${s.symbol}</b> - Score: ${s.score} (${s.riskLevel})`
-).join('\n')}
+${topSignals
+  .map((s, i) => `${i + 1}. <b>$${s.symbol}</b> - Score: ${s.score} (${s.riskLevel})`)
+  .join('\n')}
 
 🔮 <i>Live at dashboard</i>
 `.trim();
