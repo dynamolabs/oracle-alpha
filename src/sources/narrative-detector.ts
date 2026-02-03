@@ -132,7 +132,12 @@ function calculateNarrativeScore(token: TokenData, narratives: Narrative[]): num
 async function fetchNewTokens(): Promise<TokenData[]> {
   try {
     // Use DexScreener's new pairs endpoint instead of pump.fun
-    const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/solana?order=createdAt');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/solana?order=createdAt', {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
     
     if (!response.ok) {
       // Fallback: use boosted tokens
@@ -170,7 +175,12 @@ async function fetchNewTokens(): Promise<TokenData[]> {
 // Fetch trending tokens to analyze
 async function fetchTrendingForNarrative(): Promise<TokenData[]> {
   try {
-    const response = await fetch('https://api.dexscreener.com/token-boosts/top/v1');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const response = await fetch('https://api.dexscreener.com/token-boosts/top/v1', {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
     const data = await response.json();
     
     return data
