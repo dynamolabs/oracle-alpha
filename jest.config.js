@@ -22,9 +22,10 @@ module.exports = {
     }]
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)'
+    'node_modules/(?!(uuid|@solana)/)'
   ],
   moduleNameMapper: {
-    '^uuid$': '<rootDir>/node_modules/uuid/dist-cjs/index.js'
+    '^uuid$': 'uuid',
+    '^@solana/web3.js$': '<rootDir>/tests/__mocks__/solana-web3.ts'
   }
 };

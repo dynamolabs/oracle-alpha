@@ -5,6 +5,7 @@ import { scanKOLActivity } from '../sources/kol-tracker';
 import { scanNarratives } from '../sources/narrative-detector';
 import { scanNewLaunches } from '../sources/new-launches';
 import { scanWhaleActivity } from '../sources/whale-tracker';
+import { scanNews } from '../sources/news-scraper';
 import { batchGetMetadata } from '../utils/token-metadata';
 import { isDuplicate, cleanupSeenSignals } from '../utils/dedup';
 import { calculateAdjustedScore, getRecommendedAction } from '../utils/confidence';
@@ -16,7 +17,7 @@ const SOURCE_CONFIGS: SourceConfig[] = [
     source: 'smart-wallet-elite',
     enabled: true,
     weight: 1.5,
-    historicalWinRate: 0.70,
+    historicalWinRate: 0.7,
     totalSignals: 0,
     lastUpdated: Date.now()
   },
@@ -56,7 +57,7 @@ const SOURCE_CONFIGS: SourceConfig[] = [
     source: 'narrative-new',
     enabled: true,
     weight: 1.0,
-    historicalWinRate: 0.40,
+    historicalWinRate: 0.4,
     totalSignals: 0,
     lastUpdated: Date.now()
   },
@@ -64,7 +65,7 @@ const SOURCE_CONFIGS: SourceConfig[] = [
     source: 'narrative-momentum',
     enabled: true,
     weight: 1.2,
-    historicalWinRate: 0.50,
+    historicalWinRate: 0.5,
     totalSignals: 0,
     lastUpdated: Date.now()
   }
@@ -82,23 +83,26 @@ function getSourceConfig(source: SignalSource): SourceConfig | undefined {
 function calculateCompositeScore(signals: RawSignal[]): number {
   let totalWeight = 0;
   let weightedSum = 0;
-  
+
   for (const signal of signals) {
     const config = getSourceConfig(signal.source);
     if (!config) continue;
-    
+
     const weight = config.weight * config.historicalWinRate;
     weightedSum += signal.confidence * weight;
     totalWeight += weight;
   }
-  
+
   return totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0;
 }
 
 // Determine risk level
-function calculateRiskLevel(score: number, signals: RawSignal[]): 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' {
+function calculateRiskLevel(
+  score: number,
+  signals: RawSignal[]
+): 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' {
   const hasElite = signals.some(s => s.source === 'smart-wallet-elite');
-  
+
   if (score >= 80 && hasElite) return 'LOW';
   if (score >= 70) return 'MEDIUM';
   if (score >= 50) return 'HIGH';
@@ -109,22 +113,22 @@ function calculateRiskLevel(score: number, signals: RawSignal[]): 'LOW' | 'MEDIU
 function detectNarratives(name: string, symbol: string): string[] {
   const narratives: string[] = [];
   const text = `${name} ${symbol}`.toLowerCase();
-  
+
   const NARRATIVE_KEYWORDS = {
     'AI/Agents': ['ai', 'agent', 'gpt', 'claude', 'neural', 'deep', 'auto'],
-    'Political': ['trump', 'biden', 'maga', 'vote', 'election', 'president'],
-    'Animals': ['dog', 'cat', 'pepe', 'frog', 'doge', 'shib', 'inu', 'wif'],
-    'DeFi': ['swap', 'yield', 'stake', 'lend', 'borrow', 'vault'],
-    'Gaming': ['game', 'play', 'nft', 'meta', 'verse'],
-    'Meme': ['meme', 'moon', 'rocket', 'lambo', 'wagmi', 'gm']
+    Political: ['trump', 'biden', 'maga', 'vote', 'election', 'president'],
+    Animals: ['dog', 'cat', 'pepe', 'frog', 'doge', 'shib', 'inu', 'wif'],
+    DeFi: ['swap', 'yield', 'stake', 'lend', 'borrow', 'vault'],
+    Gaming: ['game', 'play', 'nft', 'meta', 'verse'],
+    Meme: ['meme', 'moon', 'rocket', 'lambo', 'wagmi', 'gm']
   };
-  
+
   for (const [narrative, keywords] of Object.entries(NARRATIVE_KEYWORDS)) {
     if (keywords.some(kw => text.includes(kw))) {
       narratives.push(narrative);
     }
   }
-  
+
   return narratives.length > 0 ? narratives : ['General'];
 }
 
@@ -132,20 +136,20 @@ function detectNarratives(name: string, symbol: string): string[] {
 function generateAnalysis(signals: RawSignal[], score: number): AggregatedSignal['analysis'] {
   const strengths: string[] = [];
   const weaknesses: string[] = [];
-  
+
   // Check signal sources
   const hasElite = signals.some(s => s.source === 'smart-wallet-elite');
   const hasSniper = signals.some(s => s.source === 'smart-wallet-sniper');
   const hasVolume = signals.some(s => s.source === 'volume-spike');
-  
+
   if (hasElite) strengths.push('Elite wallet accumulating (70% WR)');
   if (hasSniper) strengths.push('Sniper wallet detected');
   if (hasVolume) strengths.push('Volume spike detected');
   if (signals.length >= 2) strengths.push('Multiple signal sources');
-  
+
   if (!hasElite && !hasSniper) weaknesses.push('No smart wallet signal');
   if (signals.length === 1) weaknesses.push('Single signal source');
-  
+
   // Get market data from metadata
   const volumeSignal = signals.find(s => s.source === 'volume-spike');
   if (volumeSignal?.metadata) {
@@ -155,34 +159,34 @@ function generateAnalysis(signals: RawSignal[], score: number): AggregatedSignal
     if (meta.age <= 10) strengths.push('Fresh token');
     if (meta.age > 30) weaknesses.push('Getting old');
   }
-  
+
   // Get narratives
   const firstSignal = signals[0];
   const narratives = detectNarratives(firstSignal.name || '', firstSignal.symbol || '');
-  
+
   // Generate recommendation
   let recommendation = '';
   if (score >= 80) recommendation = 'STRONG BUY - Multiple high-quality signals';
   else if (score >= 70) recommendation = 'BUY - Good signal confluence';
   else if (score >= 60) recommendation = 'SPECULATIVE - Moderate confidence';
   else recommendation = 'WATCH - Needs more confirmation';
-  
+
   return { narrative: narratives, strengths, weaknesses, recommendation };
 }
 
 // Aggregate signals for a token
 function aggregateSignalsForToken(signals: RawSignal[]): AggregatedSignal | null {
   if (signals.length === 0) return null;
-  
+
   const firstSignal = signals[0];
   const score = calculateCompositeScore(signals);
-  
+
   if (score < 50) return null; // Filter low-quality signals
-  
+
   // Get market data from volume spike signal or use defaults
   const volumeSignal = signals.find(s => s.source === 'volume-spike');
   const marketData = volumeSignal?.metadata || {};
-  
+
   return {
     id: uuidv4(),
     timestamp: Math.max(...signals.map(s => s.timestamp)),
@@ -213,73 +217,78 @@ function aggregateSignalsForToken(signals: RawSignal[]): AggregatedSignal | null
 // Main aggregation function
 export async function aggregate(): Promise<AggregatedSignal[]> {
   console.log('[ORACLE] Starting signal aggregation...');
-  
+
   // Collect raw signals from all sources
   const rawSignals: RawSignal[] = [];
-  
+
   // Smart wallet signals
   const smartWalletSignals = await scanSmartWallets();
   rawSignals.push(...smartWalletSignals);
   console.log(`[ORACLE] Smart wallet signals: ${smartWalletSignals.length}`);
-  
+
   // Volume spike signals
   const volumeSignals = await scanVolumeSpikes();
   rawSignals.push(...volumeSignals);
   console.log(`[ORACLE] Volume spike signals: ${volumeSignals.length}`);
-  
+
   // KOL activity signals
   const kolSignals = await scanKOLActivity();
   rawSignals.push(...kolSignals);
   console.log(`[ORACLE] KOL signals: ${kolSignals.length}`);
-  
+
   // Narrative detection signals
   const narrativeSignals = await scanNarratives();
   rawSignals.push(...narrativeSignals);
   console.log(`[ORACLE] Narrative signals: ${narrativeSignals.length}`);
-  
+
   // New launch signals
   const newLaunchSignals = await scanNewLaunches();
   rawSignals.push(...newLaunchSignals);
   console.log(`[ORACLE] New launch signals: ${newLaunchSignals.length}`);
-  
+
   // Whale accumulation signals
   const whaleSignals = await scanWhaleActivity();
   rawSignals.push(...whaleSignals);
   console.log(`[ORACLE] Whale signals: ${whaleSignals.length}`);
-  
+
+  // News/trending signals
+  const newsSignals = await scanNews();
+  rawSignals.push(...newsSignals);
+  console.log(`[ORACLE] News signals: ${newsSignals.length}`);
+
   // Group signals by token
   const signalsByToken = new Map<string, RawSignal[]>();
-  
+
   for (const signal of rawSignals) {
     // Skip if we've already seen this exact signal
     const signalKey = `${signal.source}:${signal.token}:${signal.timestamp}`;
     if (knownSignals.has(signalKey)) continue;
     knownSignals.add(signalKey);
-    
+
     const existing = signalsByToken.get(signal.token) || [];
     existing.push(signal);
     signalsByToken.set(signal.token, existing);
   }
-  
+
   // Aggregate signals for each token
   const aggregated: AggregatedSignal[] = [];
-  
+
   for (const [token, signals] of signalsByToken) {
     const result = aggregateSignalsForToken(signals);
     if (result) {
       aggregated.push(result);
     }
   }
-  
+
   // Sort by score descending
   aggregated.sort((a, b) => b.score - a.score);
-  
+
   // Enrich with token metadata
   if (aggregated.length > 0) {
     console.log(`[ORACLE] Enriching ${aggregated.length} signals with metadata...`);
     const addresses = aggregated.map(s => s.token);
     const metadata = await batchGetMetadata(addresses);
-    
+
     for (const signal of aggregated) {
       const meta = metadata.get(signal.token);
       if (meta && meta.symbol !== 'UNKNOWN') {
@@ -290,9 +299,9 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
       }
     }
   }
-  
+
   console.log(`[ORACLE] Aggregated signals: ${aggregated.length}`);
-  
+
   return aggregated;
 }
 
