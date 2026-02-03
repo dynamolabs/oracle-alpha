@@ -6,6 +6,12 @@ AI-powered trading signal aggregator for Solana with verifiable on-chain perform
 
 > Built for Colosseum Agent Hackathon 2026 by ShifuSensei 🐼
 
+## 🚀 Deployed on Devnet
+
+| Network | Program ID | Explorer |
+|---------|------------|----------|
+| Devnet | `AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd` | [View](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet) |
+
 ## Features
 
 ### 🎯 Multi-Source Signal Aggregation
