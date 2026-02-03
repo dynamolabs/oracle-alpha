@@ -5,6 +5,11 @@ import { aggregate } from '../aggregator';
 import { AggregatedSignal, SignalQuery } from '../types';
 import { trackSignal, updateTrackedSignals, getTrackedSignals, getPerformanceSummary, getTrackedSignal } from '../tracker/performance';
 import { getOracleStatus, formatStatusMessage } from './status';
+import { initPublisher, publishSignalOnChain, getOnChainStats, fetchOnChainSignals } from '../onchain/publisher';
+
+// On-chain publishing state
+let onChainEnabled = false;
+const publishedTokens = new Set<string>(); // Track which tokens we've published
 
 const PORT = process.env.PORT || 3900;
 
@@ -121,6 +126,44 @@ app.get('/api/stats', (req, res) => {
     avgRoi: avgRoi.toFixed(2),
     lastSignalAt: signalStore[0]?.timestamp || null
   });
+});
+
+// === ON-CHAIN ENDPOINTS ===
+
+// Get on-chain stats
+app.get('/api/onchain/stats', async (req, res) => {
+  const stats = await getOnChainStats();
+  if (!stats) {
+    return res.json({ enabled: false, message: 'On-chain publishing not available' });
+  }
+  res.json({ enabled: true, ...stats });
+});
+
+// Get on-chain signals
+app.get('/api/onchain/signals', async (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+  const signals = await fetchOnChainSignals(limit);
+  res.json({ count: signals.length, signals });
+});
+
+// Manually publish a signal
+app.post('/api/onchain/publish/:id', async (req, res) => {
+  if (!onChainEnabled) {
+    return res.status(503).json({ error: 'On-chain publishing not enabled' });
+  }
+  
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const tx = await publishSignalOnChain(signal);
+  if (tx) {
+    publishedTokens.add(signal.token);
+    res.json({ success: true, tx });
+  } else {
+    res.status(500).json({ error: 'Failed to publish' });
+  }
 });
 
 // Get signals by source
@@ -260,8 +303,32 @@ wss.on('connection', (ws) => {
   });
 });
 
+// Initialize on-chain publisher
+async function initOnChain() {
+  onChainEnabled = await initPublisher();
+  if (onChainEnabled) {
+    console.log('[SERVER] On-chain publishing ENABLED');
+  } else {
+    console.log('[SERVER] On-chain publishing disabled (no wallet or not deployed)');
+  }
+}
+
+// Auto-publish high-confidence signals
+async function autoPublishSignal(signal: AggregatedSignal) {
+  if (!onChainEnabled) return;
+  
+  // Only publish high-quality signals we haven't published before
+  if (signal.score >= 70 && !publishedTokens.has(signal.token)) {
+    const tx = await publishSignalOnChain(signal);
+    if (tx) {
+      publishedTokens.add(signal.token);
+      console.log(`[ONCHAIN] Published ${signal.symbol} (Score: ${signal.score})`);
+    }
+  }
+}
+
 // Start server
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`
 ╔═══════════════════════════════════════════════╗
 ║  🔮 ORACLE Alpha API Server                    ║
@@ -270,6 +337,9 @@ server.listen(PORT, () => {
 ║  WebSocket: ws://localhost:${PORT}/ws          ║
 ╚═══════════════════════════════════════════════╝
   `);
+  
+  // Initialize on-chain connection
+  await initOnChain();
 });
 
 // Auto-scan every 30 seconds
@@ -291,6 +361,9 @@ setInterval(async () => {
         if (signal.score >= 65) {
           trackSignal(signal).catch(e => console.error('[TRACKER] Failed:', e));
         }
+        
+        // Auto-publish to on-chain (score >= 70)
+        autoPublishSignal(signal).catch(e => console.error('[ONCHAIN] Failed:', e));
       }
     }
     
