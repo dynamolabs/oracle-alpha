@@ -49,6 +49,33 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Project info
+app.get('/api/info', async (req, res) => {
+  const onchain = await getOnChainStats();
+  res.json({
+    name: 'ORACLE Alpha',
+    version: '1.0.0',
+    description: 'On-chain Reliable Alpha Compilation & Learning Engine',
+    author: 'ShifuSensei 🐼',
+    hackathon: 'Colosseum Agent Hackathon 2026',
+    programId: 'AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd',
+    network: 'devnet',
+    features: [
+      '8 signal sources (smart wallets, KOLs, volume, narratives, etc.)',
+      'Weighted scoring algorithm',
+      'On-chain signal publishing',
+      'ATH tracking & performance verification',
+      'Real-time WebSocket updates',
+      'Telegram alerts'
+    ],
+    onChain: onchain || { enabled: false },
+    links: {
+      github: 'https://github.com/dynamolabs/oracle-alpha',
+      explorer: 'https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet'
+    }
+  });
+});
+
 // Full status endpoint
 app.get('/api/status', (req, res) => {
   res.json(getOracleStatus());
@@ -211,6 +238,38 @@ app.get('/api/leaderboard', (req, res) => {
     count: leaderboard.length,
     totalTracked: tracked.length,
     leaderboard
+  });
+});
+
+// Generate shareable summary text
+app.get('/api/summary', (req, res) => {
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  const recent = signalStore.filter(s => s.timestamp >= oneHourAgo);
+  const topSignals = recent.sort((a, b) => b.score - a.score).slice(0, 5);
+  
+  if (topSignals.length === 0) {
+    return res.json({ text: 'No signals in the last hour.' });
+  }
+  
+  let text = '🔮 ORACLE Alpha - Signal Summary\n\n';
+  text += `Found ${recent.length} signals in the last hour\n\n`;
+  text += '📊 Top Picks:\n';
+  
+  for (const s of topSignals) {
+    const riskEmoji = s.riskLevel === 'LOW' ? '🟢' : s.riskLevel === 'MEDIUM' ? '🟡' : '🟠';
+    text += `${riskEmoji} $${s.symbol} - Score: ${s.score}\n`;
+  }
+  
+  text += '\n⛓️ Verifiable on Solana devnet';
+  
+  res.json({ 
+    text,
+    signalCount: recent.length,
+    topSignals: topSignals.map(s => ({
+      symbol: s.symbol,
+      score: s.score,
+      token: s.token
+    }))
   });
 });
 
