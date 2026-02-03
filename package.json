@@ -5,11 +5,13 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsx src/index.ts",
-    "dev": "tsx watch src/index.ts",
-    "test": "jest",
-    "aggregator": "tsx src/aggregator/index.ts",
-    "api": "tsx src/api/server.ts"
+    "start": "ts-node --transpile-only src/api/server.ts",
+    "dev": "ts-node --transpile-only src/api/server.ts",
+    "scan": "ts-node --transpile-only src/cli.ts scan",
+    "status": "ts-node --transpile-only src/cli.ts status",
+    "leaderboard": "ts-node --transpile-only src/cli.ts leaderboard",
+    "test": "ts-node --transpile-only scripts/test-onchain.ts",
+    "deploy": "anchor deploy --provider.cluster devnet"
   },
   "keywords": [
     "solana",
