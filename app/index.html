@@ -252,16 +252,16 @@
                 <div class="stat-label">Total Signals</div>
             </div>
             <div class="stat-card">
+                <div class="stat-value" id="tracking">-</div>
+                <div class="stat-label">Tracking</div>
+            </div>
+            <div class="stat-card">
                 <div class="stat-value" id="win-rate">-</div>
                 <div class="stat-label">Win Rate</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="avg-score">-</div>
-                <div class="stat-label">Avg Score</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="open-signals">-</div>
-                <div class="stat-label">Open Signals</div>
+                <div class="stat-value" id="avg-roi">-</div>
+                <div class="stat-label">Avg ROI</div>
             </div>
         </div>
         
@@ -309,13 +309,17 @@
         // Fetch stats
         async function fetchStats() {
             try {
-                const res = await fetch(`${API_BASE}/api/stats`);
-                const data = await res.json();
+                const [statsRes, perfRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/stats`),
+                    fetch(`${API_BASE}/api/performance`)
+                ]);
+                const stats = await statsRes.json();
+                const perf = await perfRes.json();
                 
-                document.getElementById('total-signals').textContent = data.totalSignals;
-                document.getElementById('win-rate').textContent = data.winRate + '%';
-                document.getElementById('avg-score').textContent = data.avgScore;
-                document.getElementById('open-signals').textContent = data.openSignals;
+                document.getElementById('total-signals').textContent = stats.totalSignals;
+                document.getElementById('tracking').textContent = perf.total || 0;
+                document.getElementById('win-rate').textContent = (perf.winRate || 0).toFixed(1) + '%';
+                document.getElementById('avg-roi').textContent = (perf.avgRoi >= 0 ? '+' : '') + (perf.avgRoi || 0).toFixed(1) + '%';
             } catch (e) {
                 console.error('Failed to fetch stats:', e);
             }
