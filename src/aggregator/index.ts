@@ -4,6 +4,7 @@ import { scanVolumeSpikes } from '../sources/volume-spike';
 import { scanKOLActivity } from '../sources/kol-tracker';
 import { scanNarratives } from '../sources/narrative-detector';
 import { scanNewLaunches } from '../sources/new-launches';
+import { scanWhaleActivity } from '../sources/whale-tracker';
 import { batchGetMetadata } from '../utils/token-metadata';
 import { isDuplicate, cleanupSeenSignals } from '../utils/dedup';
 import { calculateAdjustedScore, getRecommendedAction } from '../utils/confidence';
@@ -240,6 +241,11 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   const newLaunchSignals = await scanNewLaunches();
   rawSignals.push(...newLaunchSignals);
   console.log(`[ORACLE] New launch signals: ${newLaunchSignals.length}`);
+  
+  // Whale accumulation signals
+  const whaleSignals = await scanWhaleActivity();
+  rawSignals.push(...whaleSignals);
+  console.log(`[ORACLE] Whale signals: ${whaleSignals.length}`);
   
   // Group signals by token
   const signalsByToken = new Map<string, RawSignal[]>();
