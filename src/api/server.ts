@@ -38,6 +38,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// Request logging
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 1000) { // Log slow requests
+      console.log(`[API] ${req.method} ${req.path} - ${duration}ms (slow)`);
+    }
+  });
+  next();
+});
+
+// Error handler
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error('[API] Error:', err.message);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
+
 // === REST ENDPOINTS ===
 
 // Health check
