@@ -248,7 +248,8 @@ export function generateHistoricalSignals(count: number = 50): (AggregatedSignal
     signal.timestamp = now - age * dayMs - Math.floor(Math.random() * dayMs);
 
     // Simulate outcome based on score (higher score = more likely to win)
-    const winProbability = (signal.score / 100) * 0.8; // Max 80% win rate
+    // Good signal systems achieve 65-75% win rate on high-score calls
+    const winProbability = 0.5 + (signal.score / 100) * 0.35; // 50-85% based on score
     const isWin = Math.random() < winProbability;
 
     const entryPrice = signal.marketData.price || signal.marketData.mcap / 1000000000;
