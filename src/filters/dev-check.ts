@@ -53,6 +53,12 @@ export interface SafetyAnalysis {
     website?: string;
   };
   timestamp: number;
+  
+  // Bundle/Insider detection (optional)
+  bundleScore?: number;
+  bundleRiskLevel?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
+  bundledPercentage?: number;
+  insiderCount?: number;
 }
 
 // Cache for safety analysis

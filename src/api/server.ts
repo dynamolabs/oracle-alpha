@@ -98,6 +98,45 @@ import {
 } from '../learning';
 import { getWeightsSummary, invalidateWeightsCache } from '../aggregator/weights';
 import {
+  recordPrice,
+  getPriceHistory,
+  calculateCorrelation,
+  getCorrelatedTokens,
+  analyzeLeadLag,
+  getSectorCorrelation,
+  getAllSectorCorrelations,
+  getRelatedTokens,
+  recordTrade,
+  closeTrade,
+  updateTradePeak,
+  getTradeHistory as getCorrelationTradeHistory,
+  getOpenTrades,
+  getPerformanceStats,
+  getHourlyPerformance,
+  getSourcePnLStats,
+  getPnLChartData,
+  getWinLossDistribution,
+  seedDemoData,
+  tokenPriceHistory
+} from '../analytics/correlation';
+import {
+  analyzeBundles,
+  getQuickBundleScore,
+  getCachedBundleAnalysis,
+  formatBundleAnalysis,
+  getBundleWarning,
+  BundleAnalysis
+} from '../detection/bundle-detector';
+import {
+  detectHoneypot,
+  batchDetectHoneypot,
+  getQuickHoneypotStatus,
+  clearHoneypotCache,
+  formatHoneypotResult,
+  getHoneypotEmoji,
+  HoneypotResult
+} from '../detection/honeypot';
+import {
   calculateRisk,
   formatRiskCalculation,
   quickPositionSize,
@@ -145,6 +184,28 @@ import {
   ConditionGroup,
   RuleAction
 } from '../alerts/rules';
+import {
+  initDiscordBot,
+  setSignalStore as setDiscordSignalStore,
+  broadcastSignal as broadcastDiscordSignal,
+  getBotStatus as getDiscordBotStatus,
+  testWebhook as testDiscordWebhook,
+  getAllSubscriptions as getDiscordSubscriptions,
+  DISCORD_WEBHOOK_URL,
+  DISCORD_BOT_TOKEN
+} from '../integrations/discord-bot';
+import {
+  getSignalsLeaderboard,
+  getSourcesLeaderboard,
+  getRiskRewardLeaderboard,
+  getStreakLeaders,
+  getLeaderboardStats,
+  syncFromTrackedSignals,
+  trackForLeaderboard,
+  updateLeaderboardPrice,
+  generateDemoLeaderboard,
+  Timeframe
+} from '../analytics/leaderboard';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -844,7 +905,7 @@ app.get('/api/sources', (req, res) => {
   res.json(Object.fromEntries(sourceStats));
 });
 
-// Leaderboard - top performing tokens
+// Leaderboard - top performing tokens (legacy endpoint)
 app.get('/api/leaderboard', (req, res) => {
   const tracked = getTrackedSignals();
 
@@ -871,6 +932,138 @@ app.get('/api/leaderboard', (req, res) => {
     totalTracked: tracked.length,
     leaderboard
   });
+});
+
+// === ENHANCED LEADERBOARD API ===
+
+// Sync leaderboard with tracked signals
+function syncLeaderboardData() {
+  const tracked = getTrackedSignals();
+  syncFromTrackedSignals(tracked, signalStore);
+}
+
+// Get signals leaderboard with full details
+app.get('/api/leaderboard/signals', (req, res) => {
+  // Sync data first
+  syncLeaderboardData();
+  
+  const timeframe = (req.query.timeframe as Timeframe) || '24h';
+  const limit = parseInt(req.query.limit as string) || 10;
+  const sortBy = (req.query.sortBy as 'roi' | 'athRoi' | 'score') || 'roi';
+  
+  const leaderboard = getSignalsLeaderboard(timeframe, limit, sortBy);
+  const stats = getLeaderboardStats(timeframe);
+  
+  res.json({
+    timeframe,
+    count: leaderboard.length,
+    stats: {
+      totalTracked: stats.totalTracked,
+      totalWins: stats.totalWins,
+      totalLosses: stats.totalLosses,
+      winRate: stats.overallWinRate,
+      avgRoi: stats.avgRoi,
+      hotStreaks: stats.hotStreaks,
+      topPerformers: stats.topPerformers
+    },
+    leaderboard,
+    generatedAt: Date.now()
+  });
+});
+
+// Get source performance leaderboard
+app.get('/api/leaderboard/sources', (req, res) => {
+  syncLeaderboardData();
+  
+  const timeframe = (req.query.timeframe as Timeframe) || '7d';
+  const sortBy = (req.query.sortBy as 'winRate' | 'avgRoi' | 'totalSignals') || 'winRate';
+  
+  const leaderboard = getSourcesLeaderboard(timeframe, sortBy);
+  
+  res.json({
+    timeframe,
+    count: leaderboard.length,
+    leaderboard,
+    generatedAt: Date.now()
+  });
+});
+
+// Get risk/reward leaderboard (best risk-adjusted returns)
+app.get('/api/leaderboard/risk-reward', (req, res) => {
+  syncLeaderboardData();
+  
+  const timeframe = (req.query.timeframe as Timeframe) || '7d';
+  const limit = parseInt(req.query.limit as string) || 10;
+  
+  const leaderboard = getRiskRewardLeaderboard(timeframe, limit);
+  
+  res.json({
+    timeframe,
+    count: leaderboard.length,
+    description: 'Signals ranked by risk-adjusted returns (higher score + lower risk + higher ROI)',
+    leaderboard,
+    generatedAt: Date.now()
+  });
+});
+
+// Get streak leaders
+app.get('/api/leaderboard/streaks', (req, res) => {
+  syncLeaderboardData();
+  
+  const limit = parseInt(req.query.limit as string) || 10;
+  const streakLeaders = getStreakLeaders(limit);
+  
+  res.json({
+    count: streakLeaders.length,
+    description: 'Sources with consecutive winning signals',
+    leaders: streakLeaders,
+    generatedAt: Date.now()
+  });
+});
+
+// Get overall leaderboard stats
+app.get('/api/leaderboard/stats', (req, res) => {
+  syncLeaderboardData();
+  
+  const timeframe = (req.query.timeframe as Timeframe) || '7d';
+  const stats = getLeaderboardStats(timeframe);
+  
+  res.json(stats);
+});
+
+// Combined leaderboard endpoint for dashboard
+app.get('/api/leaderboard/dashboard', (req, res) => {
+  syncLeaderboardData();
+  
+  const timeframe = (req.query.timeframe as Timeframe) || '24h';
+  
+  const signalsLeaderboard = getSignalsLeaderboard(timeframe, 10, 'roi');
+  const sourcesLeaderboard = getSourcesLeaderboard(timeframe, 'winRate');
+  const riskRewardLeaderboard = getRiskRewardLeaderboard(timeframe, 5);
+  const streakLeaders = getStreakLeaders(5);
+  const stats = getLeaderboardStats(timeframe);
+  
+  res.json({
+    timeframe,
+    stats,
+    topSignals: signalsLeaderboard,
+    topSources: sourcesLeaderboard.slice(0, 5),
+    bestRiskReward: riskRewardLeaderboard,
+    hotStreaks: streakLeaders.filter(s => s.isActive),
+    highlights: {
+      bestPerformer: signalsLeaderboard[0] || null,
+      mostReliableSource: sourcesLeaderboard[0] || null,
+      longestStreak: streakLeaders[0] || null,
+      totalBadges: signalsLeaderboard.reduce((sum, s) => sum + s.badges.length, 0)
+    },
+    generatedAt: Date.now()
+  });
+});
+
+// Generate demo leaderboard data (for testing)
+app.post('/api/leaderboard/demo', (req, res) => {
+  generateDemoLeaderboard();
+  res.json({ success: true, message: 'Demo leaderboard data generated' });
 });
 
 // Generate shareable summary text
@@ -1799,6 +1992,356 @@ app.get('/api/backtest', (req, res) => {
   });
 });
 
+// === CORRELATION & ANALYTICS ===
+
+// Get correlation for a specific token
+app.get('/api/analytics/correlation/:token', (req, res) => {
+  const { token } = req.params;
+  const minCorrelation = parseFloat(req.query.minCorrelation as string) || 0.4;
+
+  // Check if we have data for this token
+  const priceHistory = getPriceHistory(token);
+  if (priceHistory.length === 0) {
+    return res.json({
+      token,
+      hasData: false,
+      message: 'No price history for this token yet',
+      correlations: []
+    });
+  }
+
+  const correlations = getCorrelatedTokens(token, minCorrelation);
+
+  // Also get lead/lag analysis for top correlations
+  const withLeadLag = correlations.slice(0, 5).map(corr => {
+    const leadLag = analyzeLeadLag(token, corr.tokenB);
+    return {
+      ...corr,
+      leadLag: leadLag ? {
+        pattern: leadLag.pattern,
+        lagMinutes: leadLag.lagMinutes,
+        confidence: leadLag.confidence
+      } : null
+    };
+  });
+
+  res.json({
+    token,
+    hasData: true,
+    priceHistoryPoints: priceHistory.length,
+    correlations: [...withLeadLag, ...correlations.slice(5).map(c => ({ ...c, leadLag: null }))],
+    timestamp: Date.now()
+  });
+});
+
+// Get related tokens (same sector, correlated, follows/leads)
+app.get('/api/analytics/related/:token', (req, res) => {
+  const { token } = req.params;
+  const related = getRelatedTokens(token);
+
+  // Get sector info from signalStore
+  const signal = signalStore.find(s => s.token === token);
+  const tokenInfo = signal ? {
+    symbol: signal.symbol,
+    name: signal.name,
+    narratives: signal.analysis?.narrative || []
+  } : null;
+
+  res.json({
+    token,
+    tokenInfo,
+    relatedCount: related.length,
+    related,
+    sectors: [...new Set(related.flatMap(r => r.sector))],
+    timestamp: Date.now()
+  });
+});
+
+// Get sector correlations
+app.get('/api/analytics/sectors', (req, res) => {
+  const sectors = getAllSectorCorrelations();
+
+  res.json({
+    count: sectors.length,
+    sectors: sectors.map(s => ({
+      sector: s.sector,
+      tokenCount: s.tokens.length,
+      avgCorrelation: Math.round(s.avgCorrelation * 1000) / 1000,
+      performance24h: Math.round(s.performance24h * 100) / 100,
+      leadingTokens: s.leadingTokens.slice(0, 3)
+    })),
+    timestamp: Date.now()
+  });
+});
+
+// Get specific sector correlation
+app.get('/api/analytics/sectors/:sector', (req, res) => {
+  const { sector } = req.params;
+  const correlation = getSectorCorrelation(sector.toUpperCase());
+
+  if (!correlation) {
+    return res.status(404).json({ error: 'Sector not found or insufficient data' });
+  }
+
+  res.json({
+    sector: correlation.sector,
+    tokenCount: correlation.tokens.length,
+    tokens: correlation.tokens,
+    avgCorrelation: correlation.avgCorrelation,
+    performance24h: correlation.performance24h,
+    leadingTokens: correlation.leadingTokens,
+    timestamp: Date.now()
+  });
+});
+
+// Get overall performance stats
+app.get('/api/analytics/performance', (req, res) => {
+  const stats = getPerformanceStats();
+  const hourlyPerf = getHourlyPerformance();
+  const sourceStats = getSourcePnLStats();
+
+  // Find best trading hours
+  const bestHours = hourlyPerf
+    .filter(h => h.trades >= 3)
+    .sort((a, b) => b.winRate - a.winRate)
+    .slice(0, 3)
+    .map(h => ({ hour: `${h.hour.toString().padStart(2, '0')}:00 UTC`, winRate: h.winRate, avgPnl: h.avgPnl }));
+
+  res.json({
+    summary: {
+      totalTrades: stats.totalTrades,
+      openTrades: stats.openTrades,
+      closedTrades: stats.closedTrades,
+      wins: stats.wins,
+      losses: stats.losses,
+      winRate: Math.round(stats.winRate * 10) / 10,
+      totalPnl: Math.round(stats.totalPnl * 100) / 100,
+      avgPnlPercent: Math.round(stats.avgPnlPercent * 100) / 100,
+      avgHoldingTimeMinutes: Math.round(stats.avgHoldingTime),
+      profitFactor: Math.round(stats.profitFactor * 100) / 100,
+      sharpeRatio: Math.round(stats.sharpeRatio * 100) / 100
+    },
+    bestTrade: stats.bestTrade ? {
+      symbol: stats.bestTrade.symbol,
+      pnlPercent: stats.bestTrade.pnlPercent,
+      source: stats.bestTrade.source
+    } : null,
+    worstTrade: stats.worstTrade ? {
+      symbol: stats.worstTrade.symbol,
+      pnlPercent: stats.worstTrade.pnlPercent,
+      source: stats.worstTrade.source
+    } : null,
+    bestHours,
+    bySource: sourceStats.slice(0, 8),
+    timestamp: Date.now()
+  });
+});
+
+// Get hourly performance breakdown
+app.get('/api/analytics/performance/hourly', (req, res) => {
+  const hourly = getHourlyPerformance();
+
+  res.json({
+    data: hourly.map(h => ({
+      hour: h.hour,
+      label: `${h.hour.toString().padStart(2, '0')}:00`,
+      trades: h.trades,
+      wins: h.wins,
+      losses: h.losses,
+      winRate: Math.round(h.winRate * 10) / 10,
+      avgPnl: Math.round(h.avgPnl * 100) / 100
+    })),
+    bestHour: hourly.reduce((best, h) => h.winRate > best.winRate && h.trades >= 3 ? h : best, hourly[0]),
+    worstHour: hourly.reduce((worst, h) => h.winRate < worst.winRate && h.trades >= 3 ? h : worst, hourly[0]),
+    timestamp: Date.now()
+  });
+});
+
+// Get performance by source
+app.get('/api/analytics/performance/sources', (req, res) => {
+  const sources = getSourcePnLStats();
+
+  res.json({
+    count: sources.length,
+    sources,
+    bestSource: sources[0] || null,
+    worstSource: sources[sources.length - 1] || null,
+    timestamp: Date.now()
+  });
+});
+
+// Get PnL chart data
+app.get('/api/analytics/charts/pnl', (req, res) => {
+  const days = parseInt(req.query.days as string) || 30;
+  const chartData = getPnLChartData(days);
+
+  // Also calculate summary stats
+  const totalPnl = chartData.length > 0 ? chartData[chartData.length - 1].cumulativePnl : 0;
+  const tradingDays = chartData.filter(d => d.tradeCount > 0).length;
+  const avgDailyPnl = tradingDays > 0 ? totalPnl / tradingDays : 0;
+
+  res.json({
+    days,
+    dataPoints: chartData.length,
+    summary: {
+      totalPnl: Math.round(totalPnl * 100) / 100,
+      tradingDays,
+      avgDailyPnl: Math.round(avgDailyPnl * 100) / 100,
+      bestDay: chartData.reduce((best, d) => d.dailyPnl > best.dailyPnl ? d : best, chartData[0]),
+      worstDay: chartData.reduce((worst, d) => d.dailyPnl < worst.dailyPnl ? d : worst, chartData[0])
+    },
+    data: chartData,
+    timestamp: Date.now()
+  });
+});
+
+// Get win/loss distribution
+app.get('/api/analytics/distribution', (req, res) => {
+  const distribution = getWinLossDistribution();
+
+  res.json({
+    ranges: distribution.ranges,
+    stats: {
+      avgWin: Math.round(distribution.avgWin * 100) / 100,
+      avgLoss: Math.round(distribution.avgLoss * 100) / 100,
+      largestWin: Math.round(distribution.largestWin * 100) / 100,
+      largestLoss: Math.round(distribution.largestLoss * 100) / 100,
+      riskRewardRatio: distribution.avgLoss !== 0 
+        ? Math.round(Math.abs(distribution.avgWin / distribution.avgLoss) * 100) / 100 
+        : 0
+    },
+    timestamp: Date.now()
+  });
+});
+
+// Get trade history
+app.get('/api/analytics/trades', (req, res) => {
+  const limit = parseInt(req.query.limit as string) || 50;
+  const status = req.query.status as string;
+
+  let trades = getCorrelationTradeHistory(limit);
+
+  if (status === 'open') {
+    trades = trades.filter(t => t.status === 'open');
+  } else if (status === 'closed') {
+    trades = trades.filter(t => t.status !== 'open');
+  }
+
+  res.json({
+    count: trades.length,
+    trades: trades.map(t => ({
+      id: t.id,
+      symbol: t.symbol,
+      token: t.token,
+      source: t.source,
+      entryTime: t.entryTime,
+      entryPrice: t.entryPrice,
+      exitTime: t.exitTime,
+      exitPrice: t.exitPrice,
+      pnlPercent: t.pnlPercent ? Math.round(t.pnlPercent * 100) / 100 : null,
+      peakPnlPercent: t.peakPnlPercent ? Math.round(t.peakPnlPercent * 100) / 100 : null,
+      holdingTimeMinutes: t.holdingTimeMinutes ? Math.round(t.holdingTimeMinutes) : null,
+      status: t.status
+    })),
+    timestamp: Date.now()
+  });
+});
+
+// Get open trades
+app.get('/api/analytics/trades/open', (req, res) => {
+  const openTrades = getOpenTrades();
+
+  res.json({
+    count: openTrades.length,
+    trades: openTrades.map(t => ({
+      id: t.id,
+      symbol: t.symbol,
+      token: t.token,
+      source: t.source,
+      entryTime: t.entryTime,
+      entryPrice: t.entryPrice,
+      peakPrice: t.peakPrice,
+      peakPnlPercent: t.peakPnlPercent ? Math.round(t.peakPnlPercent * 100) / 100 : null,
+      holdingTimeMinutes: Math.round((Date.now() - t.entryTime) / 60000)
+    })),
+    timestamp: Date.now()
+  });
+});
+
+// Correlation matrix for dashboard (all tracked tokens)
+app.get('/api/analytics/correlation/matrix', (req, res) => {
+  const tokens: string[] = [];
+  const symbols: string[] = [];
+
+  // Get all tracked tokens with enough data
+  for (const [token, tracking] of tokenPriceHistory) {
+    if (tracking.priceHistory.length >= 10) {
+      tokens.push(token);
+      symbols.push(tracking.symbol);
+    }
+  }
+
+  // Limit to 10 tokens for reasonable matrix size
+  const maxTokens = 10;
+  const selectedTokens = tokens.slice(0, maxTokens);
+  const selectedSymbols = symbols.slice(0, maxTokens);
+
+  // Build correlation matrix
+  const matrix: number[][] = [];
+
+  for (let i = 0; i < selectedTokens.length; i++) {
+    const row: number[] = [];
+    for (let j = 0; j < selectedTokens.length; j++) {
+      if (i === j) {
+        row.push(1.0);
+      } else {
+        const corr = calculateCorrelation(selectedTokens[i], selectedTokens[j]);
+        row.push(corr ? Math.round(corr.coefficient * 1000) / 1000 : 0);
+      }
+    }
+    matrix.push(row);
+  }
+
+  res.json({
+    tokens: selectedTokens,
+    symbols: selectedSymbols,
+    matrix,
+    size: selectedTokens.length,
+    timestamp: Date.now()
+  });
+});
+
+// Seed demo data for analytics
+app.post('/api/analytics/seed-demo', (req, res) => {
+  seedDemoData();
+
+  res.json({
+    status: 'seeded',
+    message: 'Demo correlation and trade data seeded successfully',
+    trackedTokens: tokenPriceHistory.size,
+    timestamp: Date.now()
+  });
+});
+
+// Record price update (for internal use or webhooks)
+app.post('/api/analytics/price', (req, res) => {
+  const { token, symbol, price, mcap, volume, narratives } = req.body;
+
+  if (!token || !symbol || !price) {
+    return res.status(400).json({ error: 'Missing required fields: token, symbol, price' });
+  }
+
+  recordPrice(token, symbol, price, mcap || price * 1e9, volume, narratives);
+
+  res.json({
+    status: 'recorded',
+    token,
+    symbol,
+    price,
+    timestamp: Date.now()
+  });
+});
+
 // === DATA EXPORT ===
 
 // Export signals in various formats
@@ -2658,6 +3201,387 @@ app.post('/api/risk/batch', (req, res) => {
   });
 });
 
+// === BUNDLE/INSIDER DETECTION API ===
+
+// Analyze token for bundle/insider activity
+app.get('/api/detection/bundle/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  // Validate token address
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    const analysis = await analyzeBundles(token);
+    
+    res.json({
+      token,
+      bundleScore: analysis.bundleScore,
+      riskLevel: analysis.riskLevel,
+      summary: {
+        totalBundledWallets: analysis.totalBundledWallets,
+        bundledPercentage: analysis.bundledPercentage,
+        sameBlockBuys: analysis.sameBlockBuys,
+        newWalletBuys: analysis.newWalletBuys,
+        insiderCount: analysis.insiders.length
+      },
+      redFlags: analysis.redFlags,
+      warnings: analysis.warnings,
+      clusters: analysis.clusters.map(c => ({
+        walletCount: c.wallets.length,
+        fundingSource: c.fundingSource,
+        percentageOfSupply: c.percentageOfSupply,
+        suspicionLevel: c.suspicionLevel,
+        reason: c.reason
+      })),
+      cached: analysis.cached,
+      analyzedAt: analysis.analyzedAt
+    });
+  } catch (error) {
+    console.error('[DETECTION] Bundle analysis failed:', error);
+    res.status(500).json({ error: 'Bundle analysis failed' });
+  }
+});
+
+// Get suspected insiders for a token
+app.get('/api/detection/insiders/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    const analysis = await analyzeBundles(token);
+    
+    res.json({
+      token,
+      insiderCount: analysis.insiders.length,
+      insiders: analysis.insiders.map(i => ({
+        address: i.address,
+        suspicionScore: i.suspicionScore,
+        flags: i.flags,
+        percentageHeld: i.percentageHeld,
+        isLikelyDev: i.isLikelyDev,
+        fundingSource: i.fundingSource,
+        walletAge: i.walletAge,
+        buyWithinBlocks: i.buyWithinBlocks
+      })),
+      bundleScore: analysis.bundleScore,
+      riskLevel: analysis.riskLevel,
+      cached: analysis.cached
+    });
+  } catch (error) {
+    console.error('[DETECTION] Insider detection failed:', error);
+    res.status(500).json({ error: 'Insider detection failed' });
+  }
+});
+
+// Get full bundle analysis (detailed)
+app.get('/api/detection/bundle/:token/full', async (req, res) => {
+  const { token } = req.params;
+  
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    const analysis = await analyzeBundles(token);
+    res.json(analysis);
+  } catch (error) {
+    console.error('[DETECTION] Full analysis failed:', error);
+    res.status(500).json({ error: 'Analysis failed' });
+  }
+});
+
+// Get formatted text analysis (for Telegram/CLI)
+app.get('/api/detection/bundle/:token/text', async (req, res) => {
+  const { token } = req.params;
+  
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).send('Invalid token address');
+  }
+  
+  try {
+    const analysis = await analyzeBundles(token);
+    res.type('text/plain').send(formatBundleAnalysis(analysis));
+  } catch (error) {
+    res.status(500).send('Analysis failed');
+  }
+});
+
+// Quick bundle score check (cached only, no new API calls)
+app.get('/api/detection/quick/:token', (req, res) => {
+  const { token } = req.params;
+  
+  const cached = getCachedBundleAnalysis(token);
+  
+  if (!cached) {
+    return res.json({
+      token,
+      cached: false,
+      bundleScore: null,
+      message: 'No cached data available. Call /api/detection/bundle/:token first.'
+    });
+  }
+  
+  res.json({
+    token,
+    bundleScore: cached.bundleScore,
+    riskLevel: cached.riskLevel,
+    bundledWallets: cached.totalBundledWallets,
+    bundledPercentage: cached.bundledPercentage,
+    redFlags: cached.redFlags.length,
+    cached: true,
+    analyzedAt: cached.analyzedAt
+  });
+});
+
+// Get bundle warning message (for signal display)
+app.get('/api/detection/warning/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  try {
+    const analysis = await analyzeBundles(token);
+    const warning = getBundleWarning(analysis);
+    
+    res.json({
+      token,
+      hasWarning: warning !== null,
+      warning,
+      bundleScore: analysis.bundleScore,
+      riskLevel: analysis.riskLevel
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Analysis failed' });
+  }
+});
+
+// === HONEYPOT DETECTION API ===
+
+// Full honeypot check for a token
+app.get('/api/detection/honeypot/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  // Validate token address format
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address format' });
+  }
+  
+  try {
+    const result = await detectHoneypot(token);
+    
+    res.json({
+      success: true,
+      token,
+      symbol: result.symbol,
+      name: result.name,
+      
+      // Core honeypot status
+      isHoneypot: result.isHoneypot,
+      honeypotReason: result.honeypotReason,
+      canSell: result.canSell,
+      
+      // Tax analysis
+      taxes: {
+        buy: result.buyTax,
+        sell: result.sellTax,
+        transfer: result.transferTax
+      },
+      
+      // Price impact
+      priceImpact: {
+        buy: result.buyPriceImpact,
+        sell: result.sellPriceImpact,
+        difference: result.priceImpactDiff
+      },
+      
+      // Contract features
+      contract: {
+        hasBlacklist: result.hasBlacklist,
+        hasTradingPause: result.hasTradingPause
+      },
+      
+      // LP status
+      liquidity: {
+        isLocked: result.lpOwnership.isLocked,
+        ownerPercentage: result.lpOwnership.ownerPercentage
+      },
+      
+      // Transaction analysis
+      transactions: {
+        buyCount: result.buyTxCount,
+        sellCount: result.sellTxCount,
+        sellRatio: result.sellRatio
+      },
+      
+      // Overall risk
+      risk: {
+        score: result.riskScore,
+        level: result.riskLevel
+      },
+      
+      // Warnings
+      warnings: result.warnings,
+      
+      // Metadata
+      checkedAt: result.checkedAt,
+      cached: result.cached
+    });
+  } catch (error) {
+    console.error('[HONEYPOT API] Error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to check honeypot status',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get honeypot check as formatted text
+app.get('/api/detection/honeypot/:token/text', async (req, res) => {
+  const { token } = req.params;
+  
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).send('Invalid token address format');
+  }
+  
+  try {
+    const result = await detectHoneypot(token);
+    res.type('text/plain').send(formatHoneypotResult(result));
+  } catch (error) {
+    res.status(500).send('Failed to check honeypot status');
+  }
+});
+
+// Batch honeypot check for multiple tokens
+app.post('/api/detection/honeypot/batch', async (req, res) => {
+  const { tokens } = req.body;
+  
+  if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
+    return res.status(400).json({ error: 'tokens array is required' });
+  }
+  
+  if (tokens.length > 10) {
+    return res.status(400).json({ error: 'Maximum 10 tokens per batch' });
+  }
+  
+  // Validate all tokens
+  for (const token of tokens) {
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+      return res.status(400).json({ error: `Invalid token address: ${token}` });
+    }
+  }
+  
+  try {
+    const results = await batchDetectHoneypot(tokens);
+    
+    const response: Record<string, any> = {};
+    for (const [token, result] of results) {
+      response[token] = {
+        isHoneypot: result.isHoneypot,
+        canSell: result.canSell,
+        sellTax: result.sellTax,
+        buyTax: result.buyTax,
+        riskScore: result.riskScore,
+        riskLevel: result.riskLevel,
+        warnings: result.warnings.length
+      };
+    }
+    
+    res.json({
+      success: true,
+      count: tokens.length,
+      results: response
+    });
+  } catch (error) {
+    console.error('[HONEYPOT BATCH API] Error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to batch check honeypot status'
+    });
+  }
+});
+
+// Quick honeypot check (cached only, no API calls)
+app.get('/api/detection/honeypot/:token/quick', (req, res) => {
+  const { token } = req.params;
+  
+  const cached = getQuickHoneypotStatus(token);
+  
+  if (!cached) {
+    return res.status(404).json({ 
+      success: false,
+      error: 'No cached honeypot data. Use /api/detection/honeypot/:token for full check.' 
+    });
+  }
+  
+  res.json({
+    success: true,
+    token,
+    isHoneypot: cached.isHoneypot,
+    canSell: cached.canSell,
+    sellTax: cached.sellTax,
+    riskLevel: cached.riskLevel,
+    cached: true,
+    checkedAt: cached.checkedAt
+  });
+});
+
+// Clear honeypot cache
+app.post('/api/detection/honeypot/cache/clear', (req, res) => {
+  clearHoneypotCache();
+  res.json({
+    success: true,
+    message: 'Honeypot cache cleared'
+  });
+});
+
+// Check honeypot for a signal by ID
+app.get('/api/signals/:id/honeypot', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  try {
+    const result = await detectHoneypot(signal.token);
+    
+    res.json({
+      success: true,
+      signal: {
+        id: signal.id,
+        symbol: signal.symbol,
+        token: signal.token,
+        score: signal.score
+      },
+      honeypot: {
+        isHoneypot: result.isHoneypot,
+        canSell: result.canSell,
+        buyTax: result.buyTax,
+        sellTax: result.sellTax,
+        riskScore: result.riskScore,
+        riskLevel: result.riskLevel,
+        warnings: result.warnings
+      },
+      recommendation: result.isHoneypot 
+        ? '🚨 DO NOT BUY - Token is likely a honeypot'
+        : result.riskLevel === 'HIGH_RISK'
+        ? '⚠️ HIGH RISK - Proceed with extreme caution'
+        : result.riskLevel === 'MEDIUM_RISK'
+        ? '⚡ CAUTION - Some risk factors detected'
+        : '✅ LIKELY SAFE - No major honeypot indicators'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to check honeypot status'
+    });
+  }
+});
+
 // === AUTO-COPY TRADING API ===
 
 // Get auto-copy settings
@@ -3179,6 +4103,74 @@ async function notifyWebhooks(signal: any) {
   }
 }
 
+// === DISCORD BOT API ===
+
+// Get Discord bot status
+app.get('/api/discord/status', (req, res) => {
+  const status = getDiscordBotStatus();
+  res.json({
+    ...status,
+    webhookConfigured: !!DISCORD_WEBHOOK_URL,
+    botTokenConfigured: !!DISCORD_BOT_TOKEN
+  });
+});
+
+// Get Discord subscribed channels
+app.get('/api/discord/subscriptions', (req, res) => {
+  const subscriptions = getDiscordSubscriptions();
+  res.json({
+    count: subscriptions.length,
+    subscriptions
+  });
+});
+
+// Test Discord webhook
+app.post('/api/discord/webhook', async (req, res) => {
+  const { webhookUrl } = req.body;
+  const url = webhookUrl || DISCORD_WEBHOOK_URL;
+  
+  if (!url) {
+    return res.status(400).json({ 
+      error: 'No webhook URL provided',
+      hint: 'Provide webhookUrl in request body or set DISCORD_WEBHOOK_URL env var'
+    });
+  }
+  
+  const result = await testDiscordWebhook(url);
+  
+  if (result.success) {
+    res.json({
+      success: true,
+      message: 'Test message sent successfully to Discord webhook'
+    });
+  } else {
+    res.status(400).json({
+      success: false,
+      error: result.error
+    });
+  }
+});
+
+// Manually send signal to Discord
+app.post('/api/discord/send/:signalId', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const count = await broadcastDiscordSignal(signal);
+  
+  res.json({
+    success: count > 0,
+    channelsSent: count,
+    signal: {
+      id: signal.id,
+      symbol: signal.symbol,
+      score: signal.score
+    }
+  });
+});
+
 // Manual trigger scan (for testing)
 app.post('/api/scan', async (req, res) => {
   try {
@@ -3478,6 +4470,20 @@ ${DEMO_MODE ? '║  🎬 DEMO MODE: ENABLED                         ║\n' : ''}
     console.log('[SERVER] Telegram bot disabled (no token)');
   }
 
+  // Initialize Discord bot
+  setDiscordSignalStore(signalStore);
+  if (DISCORD_BOT_TOKEN || DISCORD_WEBHOOK_URL) {
+    const discordInit = await initDiscordBot();
+    if (discordInit) {
+      const mode = DISCORD_BOT_TOKEN ? 'full bot' : 'webhook-only';
+      console.log(`[SERVER] Discord integration ENABLED (${mode})`);
+    } else {
+      console.log('[SERVER] Discord initialization failed');
+    }
+  } else {
+    console.log('[SERVER] Discord integration disabled (no token/webhook)');
+  }
+
   // Initialize ATH updater
   const athEnabled = await initAthUpdater();
   if (athEnabled) {
@@ -3521,10 +4527,27 @@ ${DEMO_MODE ? '║  🎬 DEMO MODE: ENABLED                         ║\n' : ''}
     signalStore.sort((a, b) => b.timestamp - a.timestamp);
     console.log('[DEMO] Seeded 30 historical signals');
 
+    // Seed correlation demo data
+    seedDemoData();
+    console.log('[DEMO] Seeded correlation analytics data');
+
     // Start demo runner
     demoRunner = new DemoRunner(signal => {
       signalStore.unshift(signal);
       broadcastSignal(signal);
+      
+      // Track price for correlation analytics
+      if (signal.marketData?.price || signal.marketData?.mcap) {
+        recordPrice(
+          signal.token,
+          signal.symbol,
+          signal.marketData.price || signal.marketData.mcap / 1e9,
+          signal.marketData.mcap,
+          signal.marketData.volume1h,
+          signal.analysis?.narrative
+        );
+      }
+      
       if (signal.score >= 65) {
         trackSignal(signal).catch(() => {});
       }
@@ -3553,6 +4576,18 @@ setInterval(async () => {
           `[${new Date().toLocaleTimeString()}] New signal: ${signal.symbol} (Score: ${signal.score})`
         );
 
+        // Track price for correlation analytics
+        if (signal.marketData?.price || signal.marketData?.mcap) {
+          recordPrice(
+            signal.token,
+            signal.symbol,
+            signal.marketData.price || signal.marketData.mcap / 1e9,
+            signal.marketData.mcap,
+            signal.marketData.volume1h,
+            signal.analysis?.narrative
+          );
+        }
+
         // Auto-track high-quality signals
         if (signal.score >= 65) {
           trackSignal(signal).catch(e => console.error('[TRACKER] Failed:', e));
@@ -3566,6 +4601,11 @@ setInterval(async () => {
           sendTelegramAlert(signal).catch(e => console.error('[TELEGRAM] Failed:', e));
           // Also broadcast to all subscribers via the bot
           broadcastTelegramSignal(signal).catch(e => console.error('[TELEGRAM-BOT] Broadcast failed:', e));
+        }
+
+        // Send Discord alert for high-quality signals (score >= 70)
+        if (signal.score >= 70) {
+          broadcastDiscordSignal(signal).catch(e => console.error('[DISCORD] Broadcast failed:', e));
         }
       }
     }

@@ -12,6 +12,7 @@ import { scanTwitterSentiment } from '../sources/twitter-sentiment';
 import { scanDexVolumeAnomalies } from '../sources/dex-volume-anomaly';
 import { batchGetMetadata } from '../utils/token-metadata';
 import { batchAnalyzeSafety, SafetyAnalysis } from '../filters/dev-check';
+import { batchDetectHoneypot, HoneypotResult } from '../detection/honeypot';
 import { v4 as uuidv4 } from 'uuid';
 
 // Note: dedup and confidence utils available if needed
@@ -436,15 +437,16 @@ export async function aggregate(options?: { minSources?: number }): Promise<Aggr
   // Sort by score descending
   aggregated.sort((a, b) => b.score - a.score);
 
-  // Enrich with token metadata and safety analysis
+  // Enrich with token metadata, safety analysis, and honeypot detection
   if (aggregated.length > 0) {
     console.log(`[ORACLE] Enriching ${aggregated.length} signals with metadata...`);
     const addresses = aggregated.map(s => s.token);
     
-    // Fetch metadata and safety in parallel
-    const [metadata, safetyResults] = await Promise.all([
+    // Fetch metadata, safety, and honeypot checks in parallel
+    const [metadata, safetyResults, honeypotResults] = await Promise.all([
       batchGetMetadata(addresses),
-      batchAnalyzeSafety(addresses)
+      batchAnalyzeSafety(addresses),
+      batchDetectHoneypot(addresses)
     ]);
 
     for (const signal of aggregated) {
@@ -492,6 +494,63 @@ export async function aggregate(options?: { minSources?: number }): Promise<Aggr
         }
         if (!safety.mintAuthorityEnabled && !safety.freezeAuthorityEnabled) {
           signal.analysis.strengths.push('✅ Authorities revoked');
+        }
+      }
+      
+      // Apply honeypot detection
+      const honeypot = honeypotResults.get(signal.token);
+      if (honeypot) {
+        // Add honeypot data to safety
+        if (!signal.safety) {
+          signal.safety = {
+            safetyScore: 50,
+            riskCategory: 'CAUTION',
+            redFlags: [],
+            devHoldings: 0,
+            topHolderPercentage: 0,
+            liquidityLocked: false,
+            mintAuthorityEnabled: false,
+            freezeAuthorityEnabled: false,
+            tokenAge: 0,
+            bundledWallets: 0
+          };
+        }
+        
+        signal.safety.honeypotRisk = {
+          isHoneypot: honeypot.isHoneypot,
+          canSell: honeypot.canSell,
+          buyTax: honeypot.buyTax,
+          sellTax: honeypot.sellTax,
+          riskScore: honeypot.riskScore,
+          riskLevel: honeypot.riskLevel,
+          hasBlacklist: honeypot.hasBlacklist,
+          lpLocked: honeypot.lpOwnership.isLocked,
+          warnings: honeypot.warnings.map(w => w.message)
+        };
+        
+        // Add honeypot-based analysis adjustments
+        if (honeypot.isHoneypot) {
+          signal.analysis.weaknesses.push('🍯 HONEYPOT DETECTED - Cannot sell!');
+          signal.analysis.recommendation = '🚨 DO NOT BUY - Honeypot token';
+          // Severely penalize score for honeypots
+          signal.score = Math.max(0, signal.score - 50);
+          signal.riskLevel = 'EXTREME';
+        } else if (honeypot.riskLevel === 'HIGH_RISK') {
+          signal.analysis.weaknesses.push(`⚠️ High honeypot risk (${honeypot.riskScore}/100)`);
+          signal.score = Math.max(0, signal.score - 20);
+        } else if (honeypot.riskLevel === 'MEDIUM_RISK') {
+          signal.analysis.weaknesses.push(`⚡ Moderate honeypot risk (${honeypot.riskScore}/100)`);
+          signal.score = Math.max(0, signal.score - 10);
+        } else if (honeypot.sellTax > 5) {
+          signal.analysis.weaknesses.push(`💰 Sell tax: ${honeypot.sellTax.toFixed(1)}%`);
+        }
+        
+        // Add honeypot-related strengths
+        if (honeypot.riskLevel === 'SAFE' && honeypot.canSell) {
+          signal.analysis.strengths.push('✅ No honeypot indicators');
+        }
+        if (honeypot.lpOwnership.isLocked) {
+          signal.analysis.strengths.push('🔒 LP is locked');
         }
       }
     }

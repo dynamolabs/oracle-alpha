@@ -52,6 +52,25 @@ export interface SafetyData {
   freezeAuthorityEnabled: boolean;
   tokenAge: number;
   bundledWallets: number;
+  
+  // Bundle/Insider detection (optional for backwards compatibility)
+  bundleScore?: number;        // 0-100, higher = more suspicious
+  bundleRiskLevel?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
+  bundledPercentage?: number;  // % of supply held by detected bundles
+  insiderCount?: number;       // Number of suspected insider wallets
+  
+  // Honeypot detection (optional for backwards compatibility)
+  honeypotRisk?: {
+    isHoneypot: boolean;
+    canSell: boolean;
+    buyTax: number;
+    sellTax: number;
+    riskScore: number;         // 0-100
+    riskLevel: 'SAFE' | 'LOW_RISK' | 'MEDIUM_RISK' | 'HIGH_RISK' | 'HONEYPOT';
+    hasBlacklist: boolean;
+    lpLocked: boolean;
+    warnings: string[];
+  };
 }
 
 // Aggregated Signal

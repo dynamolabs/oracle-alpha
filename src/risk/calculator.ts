@@ -294,6 +294,26 @@ export function calculateRisk(input: RiskCalculationInput): RiskCalculationResul
     warnings.push('Low signal score - proceed with extra caution');
   }
   
+  // Bundle/insider detection warnings
+  const bundleScore = signal?.safety?.bundleScore;
+  if (bundleScore !== undefined) {
+    if (bundleScore >= 80) {
+      warnings.push('🚨 CRITICAL BUNDLE SCORE - likely coordinated rug pull!');
+      // Reduce position significantly
+      finalPosition = finalPosition * 0.25;
+    } else if (bundleScore >= 60) {
+      warnings.push('⚠️ HIGH BUNDLE SCORE - potential insider coordination');
+      finalPosition = finalPosition * 0.5;
+    } else if (bundleScore >= 40) {
+      warnings.push('Bundle activity detected - exercise caution');
+      finalPosition = finalPosition * 0.75;
+    }
+  }
+  
+  if (signal?.safety?.insiderCount && signal.safety.insiderCount >= 3) {
+    warnings.push(`${signal.safety.insiderCount} suspected insider wallets detected`);
+  }
+  
   // Generate recommendations
   const recommendations: string[] = [];
   if (score >= 75) {
@@ -309,12 +329,27 @@ export function calculateRisk(input: RiskCalculationInput): RiskCalculationResul
     recommendations.push('Excellent R:R ratio - favorable setup');
   }
   
+  // Bundle-related recommendations
+  if (bundleScore !== undefined && bundleScore < 20) {
+    recommendations.push('✅ Low bundle score - no coordinated buying detected');
+  }
+  if (bundleScore !== undefined && bundleScore >= 60) {
+    recommendations.push('Consider waiting for bundle wallets to exit before entering');
+  }
+  
   // Determine confidence level
   let confidence: 'LOW' | 'MEDIUM' | 'HIGH' = 'MEDIUM';
   if (score >= 70 && riskLevel !== 'EXTREME' && kellyPercent > 0.05) {
     confidence = 'HIGH';
   } else if (score < 50 || riskLevel === 'EXTREME' || kellyPercent <= 0) {
     confidence = 'LOW';
+  }
+  
+  // Reduce confidence if high bundle score
+  if (bundleScore !== undefined && bundleScore >= 60) {
+    confidence = 'LOW';
+  } else if (bundleScore !== undefined && bundleScore >= 40 && confidence === 'HIGH') {
+    confidence = 'MEDIUM';
   }
   
   return {

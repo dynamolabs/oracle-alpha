@@ -443,6 +443,37 @@ function generateRiskFactors(signal: AggregatedSignal): RiskFactor[] {
     });
   }
   
+  // Bundle detection
+  if (signal.safety?.bundleScore !== undefined) {
+    let status: 'SAFE' | 'CAUTION' | 'RISKY' | 'OK' = 'OK';
+    const bundleScore = signal.safety.bundleScore;
+    
+    if (bundleScore >= 60) status = 'RISKY';
+    else if (bundleScore >= 40) status = 'CAUTION';
+    else if (bundleScore >= 20) status = 'OK';
+    else status = 'SAFE';
+    
+    const riskLabel = signal.safety.bundleRiskLevel || 
+      (bundleScore >= 80 ? 'CRITICAL' : bundleScore >= 60 ? 'HIGH' : bundleScore >= 40 ? 'MEDIUM' : 'LOW');
+    
+    factors.push({
+      factor: 'Bundle Score',
+      value: `${bundleScore} (${riskLabel})`,
+      status,
+      icon: status === 'SAFE' ? '✅' : status === 'OK' ? '👌' : status === 'CAUTION' ? '⚠️' : '🚨'
+    });
+  }
+  
+  // Insider wallets
+  if (signal.safety?.insiderCount !== undefined && signal.safety.insiderCount > 0) {
+    factors.push({
+      factor: 'Suspected Insiders',
+      value: `${signal.safety.insiderCount} wallet${signal.safety.insiderCount > 1 ? 's' : ''}`,
+      status: signal.safety.insiderCount >= 3 ? 'RISKY' : 'CAUTION',
+      icon: signal.safety.insiderCount >= 3 ? '🚨' : '⚠️'
+    });
+  }
+  
   // Confluence/sources check
   const sourceCount = signal.sources.length;
   factors.push({
@@ -451,6 +482,74 @@ function generateRiskFactors(signal: AggregatedSignal): RiskFactor[] {
     status: sourceCount >= 3 ? 'SAFE' : sourceCount >= 2 ? 'OK' : 'CAUTION',
     icon: sourceCount >= 3 ? '✅' : sourceCount >= 2 ? '👌' : '⚠️'
   });
+  
+  // Honeypot detection
+  if (signal.safety?.honeypotRisk) {
+    const hp = signal.safety.honeypotRisk;
+    
+    // Main honeypot status
+    if (hp.isHoneypot) {
+      factors.push({
+        factor: '🍯 HONEYPOT',
+        value: 'DETECTED!',
+        status: 'RISKY',
+        icon: '🚨'
+      });
+    } else {
+      let hpStatus: 'SAFE' | 'CAUTION' | 'RISKY' | 'OK' = 'SAFE';
+      if (hp.riskLevel === 'HIGH_RISK') hpStatus = 'CAUTION';
+      else if (hp.riskLevel === 'MEDIUM_RISK') hpStatus = 'OK';
+      
+      factors.push({
+        factor: 'Honeypot Risk',
+        value: hp.riskLevel.replace(/_/g, ' '),
+        status: hpStatus,
+        icon: hpStatus === 'SAFE' ? '✅' : hpStatus === 'OK' ? '👌' : '⚠️'
+      });
+    }
+    
+    // Can sell check
+    factors.push({
+      factor: 'Can Sell',
+      value: hp.canSell ? 'YES' : 'NO',
+      status: hp.canSell ? 'SAFE' : 'RISKY',
+      icon: hp.canSell ? '✅' : '🚨'
+    });
+    
+    // Sell tax
+    if (hp.sellTax > 0) {
+      let taxStatus: 'SAFE' | 'CAUTION' | 'RISKY' | 'OK' = 'OK';
+      if (hp.sellTax >= 50) taxStatus = 'RISKY';
+      else if (hp.sellTax >= 10) taxStatus = 'CAUTION';
+      else if (hp.sellTax >= 5) taxStatus = 'OK';
+      else taxStatus = 'SAFE';
+      
+      factors.push({
+        factor: 'Sell Tax',
+        value: `${hp.sellTax.toFixed(1)}%`,
+        status: taxStatus,
+        icon: taxStatus === 'SAFE' ? '✅' : taxStatus === 'OK' ? '👌' : taxStatus === 'CAUTION' ? '⚠️' : '🚨'
+      });
+    }
+    
+    // Blacklist
+    if (hp.hasBlacklist) {
+      factors.push({
+        factor: 'Blacklist',
+        value: 'ACTIVE',
+        status: 'CAUTION',
+        icon: '⚠️'
+      });
+    }
+    
+    // LP Lock
+    factors.push({
+      factor: 'LP Locked',
+      value: hp.lpLocked ? 'Yes' : 'No',
+      status: hp.lpLocked ? 'SAFE' : 'CAUTION',
+      icon: hp.lpLocked ? '🔒' : '⚠️'
+    });
+  }
   
   return factors;
 }
@@ -520,6 +619,24 @@ function generateConclusion(
     conclusion += `⚠️ ${riskyFactors} risk factor${riskyFactors > 1 ? 's' : ''} detected - exercise caution.`;
   } else if (safeFactors >= 3) {
     conclusion += 'Risk profile appears acceptable for the signal strength.';
+  }
+  
+  // Honeypot warning - CRITICAL
+  if (signal.safety?.honeypotRisk?.isHoneypot) {
+    conclusion = `🍯🚨 HONEYPOT DETECTED! This token cannot be sold. DO NOT BUY under any circumstances. ` + conclusion;
+  } else if (signal.safety?.honeypotRisk?.riskLevel === 'HIGH_RISK') {
+    conclusion += ` 🍯⚠️ HIGH HONEYPOT RISK - possible sell restrictions or high taxes. Proceed with extreme caution!`;
+  } else if (!signal.safety?.honeypotRisk?.canSell) {
+    conclusion += ` 🍯⚠️ Cannot confirm sellability - potential honeypot.`;
+  } else if (signal.safety?.honeypotRisk?.sellTax !== undefined && signal.safety.honeypotRisk.sellTax >= 10) {
+    conclusion += ` 💰 High sell tax (${signal.safety.honeypotRisk.sellTax.toFixed(1)}%) will significantly impact profits.`;
+  }
+  
+  // Bundle warning
+  if (signal.safety?.bundleScore !== undefined && signal.safety.bundleScore >= 60) {
+    conclusion += ` 🚨 HIGH BUNDLE SCORE (${signal.safety.bundleScore}) - potential coordinated buying detected!`;
+  } else if (signal.safety?.bundleScore !== undefined && signal.safety.bundleScore >= 40) {
+    conclusion += ` ⚠️ Moderate bundle activity detected (score: ${signal.safety.bundleScore}).`;
   }
   
   // Confluence
