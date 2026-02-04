@@ -1,148 +1,196 @@
 {
   "name": "oracle-alpha",
   "version": "1.0.0",
-  "description": "On-chain verifiable signal aggregator for Solana memecoin trading. Get AI-powered trading signals with cryptographic proof of performance.",
-  "homepage": "https://github.com/dynamolabs/oracle-alpha",
+  "description": "AI-powered trading signal aggregator for Solana with verifiable on-chain performance tracking. Consumes multi-source signals, scores them, and publishes verified predictions.",
+  "homepage": "https://oracle-alpha.dynamolabs.xyz",
+  "author": "ShifuSensei",
   "metadata": {
     "category": "trading",
-    "chain": "solana",
-    "program": "AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd",
-    "api_base": "http://45.77.42.204:3900/api"
-  },
-  "endpoints": {
-    "signals": {
-      "method": "GET",
-      "path": "/api/signals",
-      "description": "Get recent trading signals",
-      "parameters": {
-        "limit": {
-          "type": "number",
-          "default": 20,
-          "description": "Number of signals to return (max 100)"
-        },
-        "minScore": {
-          "type": "number",
-          "default": 0,
-          "description": "Minimum signal score (0-100)"
-        },
-        "risk": {
-          "type": "string",
-          "enum": ["LOW", "MEDIUM", "HIGH", "EXTREME"],
-          "description": "Filter by risk level"
-        }
-      },
-      "response": {
-        "signals": [
-          {
-            "id": "string",
-            "token": "string",
-            "symbol": "string",
-            "entryPrice": "number",
-            "score": "number (0-100)",
-            "risk": "LOW|MEDIUM|HIGH|EXTREME",
-            "sources": ["string"],
-            "reasoning": "string",
-            "reasoningHash": "string (sha256)",
-            "timestamp": "ISO8601",
-            "onChainTx": "string (solana tx signature)"
-          }
-        ]
-      }
-    },
-    "signal": {
-      "method": "GET",
-      "path": "/api/signals/:id",
-      "description": "Get a specific signal with full details",
-      "response": {
-        "signal": {
-          "id": "string",
-          "token": "string",
-          "symbol": "string",
-          "name": "string",
-          "entryPrice": "number",
-          "currentPrice": "number",
-          "athPrice": "number",
-          "athMultiple": "number",
-          "score": "number",
-          "risk": "string",
-          "sources": [
-            {
-              "name": "string",
-              "weight": "number",
-              "contribution": "number"
-            }
-          ],
-          "reasoning": "string",
-          "reasoningHash": "string",
-          "reasoningRevealed": "boolean",
-          "outcome": "PENDING|WIN|LOSS",
-          "roi": "number (percentage)",
-          "timestamp": "ISO8601",
-          "onChainPda": "string",
-          "onChainTx": "string"
-        }
-      }
-    },
-    "performance": {
-      "method": "GET",
-      "path": "/api/performance",
-      "description": "Get overall signal performance stats",
-      "response": {
-        "totalSignals": "number",
-        "wins": "number",
-        "losses": "number",
-        "pending": "number",
-        "winRate": "number (percentage)",
-        "avgRoi": "number (percentage)",
-        "bestSignal": {
-          "symbol": "string",
-          "roi": "number"
-        }
-      }
-    },
-    "subscribe": {
-      "method": "POST",
-      "path": "/api/subscribe",
-      "description": "Subscribe to real-time signals via webhook",
-      "body": {
-        "webhookUrl": "string (required)",
-        "minScore": "number (optional, default 50)",
-        "risks": ["LOW", "MEDIUM"]
-      },
-      "response": {
-        "subscriptionId": "string",
-        "status": "active"
-      }
-    },
-    "sources": {
-      "method": "GET",
-      "path": "/api/sources",
-      "description": "Get list of signal sources and their stats",
-      "response": {
-        "sources": [
-          {
-            "name": "string",
-            "type": "smart_wallet|kol|volume|narrative|launch|whale|news|social|koth",
-            "weight": "number",
-            "signals": "number",
-            "winRate": "number"
-          }
-        ]
-      }
-    }
-  },
-  "examples": {
-    "getTopSignals": "curl 'http://45.77.42.204:3900/api/signals?minScore=70&limit=10'",
-    "getPerformance": "curl 'http://45.77.42.204:3900/api/performance'",
-    "subscribeWebhook": "curl -X POST 'http://45.77.42.204:3900/api/subscribe' -H 'Content-Type: application/json' -d '{\"webhookUrl\": \"https://your-agent.com/webhook\", \"minScore\": 60}'"
+    "tags": ["solana", "trading", "signals", "ai", "defi", "oracle"],
+    "api_base": "https://oracle-alpha.dynamolabs.xyz/api",
+    "program_id": "AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd",
+    "network": "devnet",
+    "hackathon": "Colosseum Agent Hackathon 2026"
   },
   "authentication": {
-    "type": "api_key",
-    "header": "X-API-Key",
-    "note": "Contact @ShifuSensei for API key"
+    "type": "none",
+    "note": "Public endpoints - no API key required"
   },
   "rateLimit": {
     "requests": 100,
     "window": "1 minute"
+  },
+  "endpoints": {
+    "signals": {
+      "realtime": {
+        "method": "GET",
+        "path": "/api/agent/signals",
+        "description": "Get real-time trading signals optimized for agent consumption",
+        "parameters": {
+          "minScore": {
+            "type": "number",
+            "description": "Minimum signal score (0-100)",
+            "default": 60
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max signals to return",
+            "default": 10
+          },
+          "riskLevel": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "EXTREME"],
+            "description": "Filter by risk level"
+          }
+        },
+        "response": {
+          "count": "number",
+          "timestamp": "unix_ms",
+          "signals": [{
+            "id": "string",
+            "token": "solana_address",
+            "symbol": "string",
+            "score": "0-100",
+            "confidence": "0-100",
+            "riskLevel": "LOW|MEDIUM|HIGH|EXTREME",
+            "sources": [{"type": "string", "score": "number", "weight": "number"}],
+            "marketData": {"price": "number", "mcap": "number", "volume1h": "number"},
+            "narratives": ["string"],
+            "age_minutes": "number",
+            "onchain_published": "boolean"
+          }]
+        }
+      },
+      "latest": {
+        "method": "GET",
+        "path": "/api/agent/signals/latest",
+        "description": "Get the single highest-scoring active signal for quick decisions",
+        "response": {
+          "signal": {
+            "id": "string",
+            "token": "string",
+            "symbol": "string",
+            "score": "number",
+            "riskLevel": "string",
+            "sources": ["string"],
+            "price": "number",
+            "mcap": "number",
+            "action": "STRONG_BUY|BUY|WATCH"
+          }
+        }
+      },
+      "by_token": {
+        "method": "GET",
+        "path": "/api/agent/signals/token/:address",
+        "description": "Get signal for a specific token address",
+        "parameters": {
+          "address": {
+            "type": "string",
+            "description": "Solana token mint address",
+            "required": true
+          }
+        }
+      }
+    },
+    "performance": {
+      "summary": {
+        "method": "GET",
+        "path": "/api/agent/performance",
+        "description": "Get historical performance metrics",
+        "response": {
+          "totalSignals": "number",
+          "openSignals": "number",
+          "closedSignals": "number",
+          "wins": "number",
+          "losses": "number",
+          "winRate": "percentage",
+          "avgRoi": "percentage",
+          "bestRoi": "percentage",
+          "worstRoi": "percentage"
+        }
+      },
+      "history": {
+        "method": "GET",
+        "path": "/api/agent/performance/history",
+        "description": "Get historical signal outcomes",
+        "parameters": {
+          "days": {
+            "type": "number",
+            "default": 7,
+            "description": "Number of days of history"
+          },
+          "limit": {
+            "type": "number",
+            "default": 50
+          }
+        }
+      },
+      "leaderboard": {
+        "method": "GET",
+        "path": "/api/agent/leaderboard",
+        "description": "Top performing signals by ROI",
+        "parameters": {
+          "limit": {
+            "type": "number",
+            "default": 20
+          }
+        }
+      }
+    },
+    "sources": {
+      "list": {
+        "method": "GET",
+        "path": "/api/agent/sources",
+        "description": "Get breakdown of signal sources and their reliability",
+        "response": {
+          "sources": [{
+            "source": "string",
+            "signalCount": "number",
+            "avgScore": "number",
+            "winRate": "percentage",
+            "reliability": "HIGH|MEDIUM|LOW|INSUFFICIENT_DATA"
+          }]
+        }
+      }
+    },
+    "onchain": {
+      "verified": {
+        "method": "GET",
+        "path": "/api/agent/onchain/verified",
+        "description": "Get on-chain verified signals with immutable timestamps",
+        "parameters": {
+          "limit": {
+            "type": "number",
+            "default": 20
+          }
+        }
+      },
+      "stats": {
+        "method": "GET",
+        "path": "/api/agent/onchain/stats",
+        "description": "Get on-chain oracle statistics"
+      }
+    },
+    "websocket": {
+      "url": "wss://oracle-alpha.dynamolabs.xyz/ws",
+      "description": "Real-time signal stream via WebSocket",
+      "events": {
+        "signal": "New signal detected - {type: 'signal', data: SignalObject}",
+        "history": "Recent signals sent on connect - {type: 'history', data: SignalObject[]}",
+        "pong": "Response to ping keepalive"
+      }
+    }
+  },
+  "examples": {
+    "get_signals": "curl 'https://oracle-alpha.dynamolabs.xyz/api/agent/signals?minScore=70&limit=5'",
+    "get_latest": "curl 'https://oracle-alpha.dynamolabs.xyz/api/agent/signals/latest'",
+    "get_performance": "curl 'https://oracle-alpha.dynamolabs.xyz/api/agent/performance'",
+    "get_sources": "curl 'https://oracle-alpha.dynamolabs.xyz/api/agent/sources'",
+    "verify_onchain": "curl 'https://oracle-alpha.dynamolabs.xyz/api/agent/onchain/verified'"
+  },
+  "trust": {
+    "verification": "All high-confidence signals (score >= 70) are published on-chain BEFORE price moves, creating an immutable, verifiable track record",
+    "transparency": "Full source breakdown, scoring algorithm, and historical performance publicly available",
+    "program_explorer": "https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet"
   }
 }
