@@ -1618,6 +1618,187 @@
                 bottom: max(10px, env(safe-area-inset-bottom));
             }
         }
+        
+        /* ====== MARKET CONDITION WIDGET ====== */
+        .market-condition-widget {
+            background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(20,20,40,0.4) 100%);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .market-condition-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .market-condition-header h3 {
+            font-size: 1em;
+            font-weight: 600;
+            color: #888;
+            margin: 0;
+        }
+        
+        .market-refresh-btn {
+            cursor: pointer;
+            font-size: 0.9em;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.3s;
+        }
+        
+        .market-refresh-btn:hover {
+            opacity: 1;
+            transform: rotate(180deg);
+        }
+        
+        .market-condition-content {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 25px;
+            flex: 1;
+        }
+        
+        .market-indicator-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .market-indicator-emoji {
+            font-size: 1.8em;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+        
+        .market-indicator-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .market-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .market-detail-row {
+            display: flex;
+            gap: 5px;
+            font-size: 0.85em;
+        }
+        
+        .market-detail-label {
+            color: #666;
+        }
+        
+        .market-detail-value {
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+        
+        .market-detail-value.bullish { color: #22c55e; }
+        .market-detail-value.bearish { color: #ef4444; }
+        .market-detail-value.neutral { color: #eab308; }
+        .market-detail-value.high { color: #f97316; }
+        .market-detail-value.optimal { color: #22c55e; }
+        .market-detail-value.low { color: #eab308; }
+        .market-detail-value.positive { color: #22c55e; }
+        .market-detail-value.negative { color: #ef4444; }
+        
+        .market-prices {
+            display: flex;
+            gap: 15px;
+            margin-left: auto;
+        }
+        
+        .market-price {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+        
+        .market-price-symbol {
+            color: #888;
+            font-weight: 600;
+        }
+        
+        .market-price-value {
+            color: #fff;
+        }
+        
+        .market-price-change {
+            font-size: 0.85em;
+        }
+        
+        .market-price-change.positive { color: #22c55e; }
+        .market-price-change.negative { color: #ef4444; }
+        
+        .market-trading-status {
+            width: 100%;
+            text-align: center;
+            font-size: 0.85em;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+        
+        .market-trading-status.optimal {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .market-trading-status.suboptimal {
+            background: rgba(234, 179, 8, 0.15);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+        
+        .market-trading-status.caution {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .market-condition-widget {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .market-condition-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .market-prices {
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .market-details {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1683,6 +1864,53 @@
             <div class="stat-card" style="border-color: #22c55e;">
                 <div class="stat-value" id="onchain-winrate" style="color: #22c55e;">-</div>
                 <div class="stat-label">Verified WR</div>
+            </div>
+        </div>
+        
+        <!-- Market Condition Widget -->
+        <div class="market-condition-widget" id="market-condition">
+            <div class="market-condition-header">
+                <h3>📊 Market Condition</h3>
+                <span class="market-refresh-btn" onclick="refreshMarketCondition()" title="Refresh">🔄</span>
+            </div>
+            <div class="market-condition-content">
+                <div class="market-indicator-main">
+                    <span class="market-indicator-emoji" id="market-emoji">🟡</span>
+                    <span class="market-indicator-label" id="market-label">Loading...</span>
+                </div>
+                <div class="market-details">
+                    <div class="market-detail-row">
+                        <span class="market-detail-label">Trend:</span>
+                        <span class="market-detail-value" id="market-trend">-</span>
+                    </div>
+                    <div class="market-detail-row">
+                        <span class="market-detail-label">Volatility:</span>
+                        <span class="market-detail-value" id="market-volatility">-</span>
+                    </div>
+                    <div class="market-detail-row">
+                        <span class="market-detail-label">Liquidity:</span>
+                        <span class="market-detail-value" id="market-liquidity">-</span>
+                    </div>
+                    <div class="market-detail-row">
+                        <span class="market-detail-label">Score Mod:</span>
+                        <span class="market-detail-value" id="market-modifier">-</span>
+                    </div>
+                </div>
+                <div class="market-prices">
+                    <div class="market-price">
+                        <span class="market-price-symbol">BTC</span>
+                        <span class="market-price-value" id="btc-price">$-</span>
+                        <span class="market-price-change" id="btc-change">-</span>
+                    </div>
+                    <div class="market-price">
+                        <span class="market-price-symbol">SOL</span>
+                        <span class="market-price-value" id="sol-price">$-</span>
+                        <span class="market-price-change" id="sol-change">-</span>
+                    </div>
+                </div>
+                <div class="market-trading-status" id="market-trading-status">
+                    ⏳ Checking optimal trading time...
+                </div>
             </div>
         </div>
         

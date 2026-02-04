@@ -72,6 +72,25 @@ import {
   SOL_MINT,
   USDC_MINT
 } from '../trading/jupiter';
+import {
+  getMarketCondition,
+  formatMarketCondition,
+  getMarketIndicator,
+  applyMarketModifier,
+  clearMarketCache,
+  getCacheStatus,
+  MarketCondition
+} from '../filters/market-condition';
+import {
+  syncWithPandaAlpha,
+  getSourcePerformance,
+  getLearningSummary,
+  getPerformanceDashboard,
+  submitResult,
+  getSourceStats,
+  loadLearningState
+} from '../learning';
+import { getWeightsSummary, invalidateWeightsCache } from '../aggregator/weights';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -393,6 +412,87 @@ app.get('/api/status/text', (req, res) => {
   res.type('text/plain').send(formatStatusMessage());
 });
 
+// === MARKET CONDITION ENDPOINTS ===
+
+// Get current market condition
+app.get('/api/market/condition', async (req, res) => {
+  try {
+    const condition = await getMarketCondition();
+    const indicator = getMarketIndicator(condition);
+    
+    res.json({
+      ...condition,
+      indicator,
+      formatted: formatMarketCondition(condition)
+    });
+  } catch (error) {
+    console.error('[MARKET] Error getting condition:', error);
+    res.status(500).json({ error: 'Failed to get market condition' });
+  }
+});
+
+// Get market condition summary (for widgets)
+app.get('/api/market/summary', async (req, res) => {
+  try {
+    const condition = await getMarketCondition();
+    const indicator = getMarketIndicator(condition);
+    
+    res.json({
+      trend: condition.overall.trend,
+      volatility: condition.overall.volatility,
+      liquidityPeriod: condition.overall.liquidityPeriod,
+      isOptimalTrading: condition.overall.isOptimalTrading,
+      scoreModifier: condition.scoring.totalModifier,
+      indicator,
+      btc: {
+        price: condition.btc.price,
+        change24h: condition.btc.change24h
+      },
+      sol: {
+        price: condition.sol.price,
+        change24h: condition.sol.change24h
+      },
+      cached: condition.cached,
+      timestamp: condition.timestamp
+    });
+  } catch (error) {
+    console.error('[MARKET] Error getting summary:', error);
+    res.status(500).json({ error: 'Failed to get market summary' });
+  }
+});
+
+// Get text-formatted market condition
+app.get('/api/market/condition/text', async (req, res) => {
+  try {
+    const condition = await getMarketCondition();
+    res.type('text/plain').send(formatMarketCondition(condition));
+  } catch (error) {
+    res.status(500).send('Failed to get market condition');
+  }
+});
+
+// Clear market cache (force refresh)
+app.post('/api/market/refresh', async (req, res) => {
+  clearMarketCache();
+  const condition = await getMarketCondition();
+  const indicator = getMarketIndicator(condition);
+  
+  res.json({
+    message: 'Market condition cache cleared and refreshed',
+    condition: {
+      trend: condition.overall.trend,
+      volatility: condition.overall.volatility,
+      scoreModifier: condition.scoring.totalModifier,
+      indicator
+    }
+  });
+});
+
+// Get cache status
+app.get('/api/market/cache', (req, res) => {
+  res.json(getCacheStatus());
+});
+
 // === SUBSCRIPTION ENDPOINTS ===
 
 // Get all subscription tiers
@@ -447,13 +547,15 @@ app.get('/api/subscription/:wallet/signals', async (req, res) => {
   });
 });
 
-// Get signals with filtering
+// Get signals with filtering (including confluence)
 app.get('/api/signals', (req, res) => {
   const query: SignalQuery = {
     minScore: req.query.minScore ? parseInt(req.query.minScore as string) : undefined,
     maxAge: req.query.maxAge ? parseInt(req.query.maxAge as string) : undefined,
     limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
-    includePerformance: req.query.includePerformance === 'true'
+    includePerformance: req.query.includePerformance === 'true',
+    minSources: req.query.minSources ? parseInt(req.query.minSources as string) : undefined,
+    convictionLevel: req.query.convictionLevel as any
   };
 
   let signals = [...signalStore];
@@ -469,11 +571,33 @@ app.get('/api/signals', (req, res) => {
     signals = signals.filter(s => s.timestamp >= cutoff);
   }
 
+  // Filter by minimum source confluence
+  if (query.minSources) {
+    signals = signals.filter(s => s.confluence && s.confluence.uniqueSources >= query.minSources!);
+  }
+
+  // Filter by conviction level
+  if (query.convictionLevel) {
+    const level = query.convictionLevel.toUpperCase();
+    if (level === 'ULTRA') {
+      signals = signals.filter(s => s.confluence?.convictionLevel === 'ULTRA');
+    } else if (level === 'HIGH_CONVICTION') {
+      signals = signals.filter(s => s.confluence?.convictionLevel === 'HIGH_CONVICTION' || s.confluence?.convictionLevel === 'ULTRA');
+    }
+    // STANDARD includes all
+  }
+
   // Limit results
   signals = signals.slice(0, query.limit);
 
   res.json({
     count: signals.length,
+    filters: {
+      minScore: query.minScore,
+      minSources: query.minSources,
+      convictionLevel: query.convictionLevel,
+      maxAge: query.maxAge
+    },
     signals
   });
 });
@@ -1537,16 +1661,34 @@ const getExplorerUrl = (address: string) => {
   return `https://explorer.solana.com/address/${address}${cluster}`;
 };
 
-// Agent-optimized real-time signals
+// Agent-optimized real-time signals with confluence
 app.get('/api/agent/signals', (req, res) => {
-  const minScore = req.query.minScore ? parseInt(req.query.minScore as string) : 60;
+  const minScore = req.query.minScore ? parseInt(req.query.minScore as string) : 70; // Higher default
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
   const riskLevel = req.query.riskLevel as string | undefined;
+  const minSources = req.query.minSources ? parseInt(req.query.minSources as string) : 2;
+  const convictionLevel = req.query.convictionLevel as string | undefined;
 
   let signals = signalStore.filter(s => s.score >= minScore);
 
+  // Filter by risk level
   if (riskLevel) {
     signals = signals.filter(s => s.riskLevel === riskLevel.toUpperCase());
+  }
+
+  // Filter by minimum source confluence
+  if (minSources) {
+    signals = signals.filter(s => s.confluence && s.confluence.uniqueSources >= minSources);
+  }
+
+  // Filter by conviction level
+  if (convictionLevel) {
+    const level = convictionLevel.toUpperCase();
+    if (level === 'ULTRA') {
+      signals = signals.filter(s => s.confluence?.convictionLevel === 'ULTRA');
+    } else if (level === 'HIGH_CONVICTION') {
+      signals = signals.filter(s => s.confluence?.convictionLevel === 'HIGH_CONVICTION' || s.confluence?.convictionLevel === 'ULTRA');
+    }
   }
 
   const agentSignals = signals.slice(0, limit).map(s => ({
@@ -1557,6 +1699,12 @@ app.get('/api/agent/signals', (req, res) => {
     score: s.score,
     confidence: s.confidence,
     riskLevel: s.riskLevel,
+    confluence: s.confluence ? {
+      uniqueSources: s.confluence.uniqueSources,
+      sourceTypes: s.confluence.sourceTypes,
+      confluenceBoost: s.confluence.confluenceBoost,
+      convictionLevel: s.confluence.convictionLevel
+    } : null,
     sources: s.sources.map(src => ({
       type: src.source,
       score: src.rawScore,
@@ -1578,6 +1726,7 @@ app.get('/api/agent/signals', (req, res) => {
   res.json({
     count: agentSignals.length,
     timestamp: Date.now(),
+    filters: { minScore, minSources, convictionLevel, riskLevel },
     signals: agentSignals
   });
 });

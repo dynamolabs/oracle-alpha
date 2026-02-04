@@ -1,4 +1,4 @@
-import { RawSignal, AggregatedSignal, SignalSource, SourceConfig } from '../types';
+import { RawSignal, AggregatedSignal, SignalSource, SourceConfig, ConvictionLevel, SafetyData } from '../types';
 import { scanSmartWallets } from '../sources/smart-wallet';
 import { scanVolumeSpikes } from '../sources/volume-spike';
 import { scanKOLActivity } from '../sources/kol-tracker';
@@ -11,6 +11,7 @@ import { scanDexScreener } from '../sources/dexscreener';
 import { scanTwitterSentiment } from '../sources/twitter-sentiment';
 import { scanDexVolumeAnomalies } from '../sources/dex-volume-anomaly';
 import { batchGetMetadata } from '../utils/token-metadata';
+import { batchAnalyzeSafety, SafetyAnalysis } from '../filters/dev-check';
 import { v4 as uuidv4 } from 'uuid';
 
 // Note: dedup and confidence utils available if needed
@@ -124,6 +125,55 @@ const SOURCE_CONFIGS: SourceConfig[] = [
   }
 ];
 
+// Confluence configuration
+const CONFLUENCE_CONFIG = {
+  minSources: 2, // Default: require 2+ unique source types
+  minScoreThreshold: 70, // Higher default threshold (was 60)
+  boosts: {
+    twoSources: 5,
+    threeSources: 10,
+    fourPlusSources: 15
+  },
+  convictionThresholds: {
+    highConviction: 85, // Score >= 85 = HIGH_CONVICTION
+    ultra: 95 // Score >= 95 with 3+ sources = ULTRA
+  }
+};
+
+// Get source type category (to ensure different source types, not same wallet twice)
+function getSourceCategory(source: SignalSource): string {
+  // Group related sources into categories
+  if (source.includes('smart-wallet')) return 'smart-wallet';
+  if (source.includes('whale')) return 'whale';
+  if (source.includes('kol')) return 'kol';
+  if (source.includes('narrative')) return 'narrative';
+  if (source.includes('volume') || source === 'dex-volume-anomaly') return 'volume';
+  if (source.includes('pump') || source === 'pump-koth') return 'pump';
+  if (source.includes('dex') || source === 'dexscreener') return 'dex';
+  if (source.includes('news')) return 'news';
+  if (source.includes('launch') || source.includes('listing')) return 'launch';
+  return source; // Use source name as its own category
+}
+
+// Calculate confluence boost based on unique source count
+function calculateConfluenceBoost(uniqueSourceCount: number): number {
+  if (uniqueSourceCount >= 4) return CONFLUENCE_CONFIG.boosts.fourPlusSources;
+  if (uniqueSourceCount >= 3) return CONFLUENCE_CONFIG.boosts.threeSources;
+  if (uniqueSourceCount >= 2) return CONFLUENCE_CONFIG.boosts.twoSources;
+  return 0;
+}
+
+// Determine conviction level based on score and source count
+function determineConvictionLevel(score: number, uniqueSourceCount: number): ConvictionLevel {
+  if (score >= CONFLUENCE_CONFIG.convictionThresholds.ultra && uniqueSourceCount >= 3) {
+    return 'ULTRA';
+  }
+  if (score >= CONFLUENCE_CONFIG.convictionThresholds.highConviction) {
+    return 'HIGH_CONVICTION';
+  }
+  return 'STANDARD';
+}
+
 // Known signals cache (to avoid duplicates)
 const knownSignals = new Set<string>();
 
@@ -213,7 +263,11 @@ function generateAnalysis(signals: RawSignal[], score: number): AggregatedSignal
   if (signals.length >= 2) strengths.push('Multiple signal sources');
 
   if (!hasElite && !hasSniper) weaknesses.push('No smart wallet signal');
-  if (signals.length === 1) weaknesses.push('Single signal source');
+  
+  // Count unique source categories
+  const categories = new Set(signals.map(s => getSourceCategory(s.source)));
+  if (categories.size === 1) weaknesses.push('Single source type');
+  if (categories.size >= 3) strengths.push(`Strong confluence (${categories.size}x sources)`);
 
   // Get market data from metadata
   const volumeSignal = signals.find(s => s.source === 'volume-spike');
@@ -239,14 +293,37 @@ function generateAnalysis(signals: RawSignal[], score: number): AggregatedSignal
   return { narrative: narratives, strengths, weaknesses, recommendation };
 }
 
-// Aggregate signals for a token
-function aggregateSignalsForToken(signals: RawSignal[]): AggregatedSignal | null {
+// Aggregate signals for a token with confluence filtering
+function aggregateSignalsForToken(signals: RawSignal[], minSources: number = CONFLUENCE_CONFIG.minSources): AggregatedSignal | null {
   if (signals.length === 0) return null;
 
   const firstSignal = signals[0];
-  const score = calculateCompositeScore(signals);
+  
+  // Calculate unique source categories (not just source names)
+  const sourceCategories = new Set<string>();
+  for (const signal of signals) {
+    sourceCategories.add(getSourceCategory(signal.source));
+  }
+  const uniqueSourceCount = sourceCategories.size;
+  const sourceTypes = Array.from(sourceCategories);
+  
+  // Apply confluence filter: require minimum unique source types
+  if (uniqueSourceCount < minSources) {
+    return null; // Not enough different sources agree
+  }
+  
+  // Calculate base score
+  let score = calculateCompositeScore(signals);
+  
+  // Apply confluence boost
+  const confluenceBoost = calculateConfluenceBoost(uniqueSourceCount);
+  score = Math.min(100, score + confluenceBoost); // Cap at 100
+  
+  // Higher minimum threshold (70 instead of 60)
+  if (score < CONFLUENCE_CONFIG.minScoreThreshold) return null;
 
-  if (score < 50) return null; // Filter low-quality signals
+  // Determine conviction level
+  const convictionLevel = determineConvictionLevel(score, uniqueSourceCount);
 
   // Get market data from volume spike signal or use defaults
   const volumeSignal = signals.find(s => s.source === 'volume-spike');
@@ -261,6 +338,12 @@ function aggregateSignalsForToken(signals: RawSignal[]): AggregatedSignal | null
     score,
     confidence: Math.round(signals.reduce((sum, s) => sum + s.confidence, 0) / signals.length),
     riskLevel: calculateRiskLevel(score, signals),
+    confluence: {
+      uniqueSources: uniqueSourceCount,
+      sourceTypes,
+      confluenceBoost,
+      convictionLevel
+    },
     sources: signals.map(s => ({
       source: s.source,
       weight: getSourceConfig(s.source)?.weight || 1,
@@ -280,7 +363,8 @@ function aggregateSignalsForToken(signals: RawSignal[]): AggregatedSignal | null
 }
 
 // Main aggregation function
-export async function aggregate(): Promise<AggregatedSignal[]> {
+export async function aggregate(options?: { minSources?: number }): Promise<AggregatedSignal[]> {
+  const minSources = options?.minSources ?? CONFLUENCE_CONFIG.minSources;
   console.log('[ORACLE] Starting signal aggregation...');
 
   // Collect raw signals from all sources (run in parallel batches for speed)
@@ -343,7 +427,7 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   const aggregated: AggregatedSignal[] = [];
 
   for (const [_token, signals] of signalsByToken) {
-    const result = aggregateSignalsForToken(signals);
+    const result = aggregateSignalsForToken(signals, minSources);
     if (result) {
       aggregated.push(result);
     }
@@ -352,19 +436,63 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   // Sort by score descending
   aggregated.sort((a, b) => b.score - a.score);
 
-  // Enrich with token metadata
+  // Enrich with token metadata and safety analysis
   if (aggregated.length > 0) {
     console.log(`[ORACLE] Enriching ${aggregated.length} signals with metadata...`);
     const addresses = aggregated.map(s => s.token);
-    const metadata = await batchGetMetadata(addresses);
+    
+    // Fetch metadata and safety in parallel
+    const [metadata, safetyResults] = await Promise.all([
+      batchGetMetadata(addresses),
+      batchAnalyzeSafety(addresses)
+    ]);
 
     for (const signal of aggregated) {
+      // Apply metadata
       const meta = metadata.get(signal.token);
       if (meta && meta.symbol !== 'UNKNOWN') {
         signal.symbol = meta.symbol;
         signal.name = meta.name;
         // Re-detect narratives with actual name
         signal.analysis.narrative = detectNarratives(meta.name, meta.symbol);
+      }
+      
+      // Apply safety analysis
+      const safety = safetyResults.get(signal.token);
+      if (safety) {
+        signal.safety = {
+          safetyScore: safety.safetyScore,
+          riskCategory: safety.riskCategory,
+          redFlags: safety.redFlags,
+          devHoldings: safety.devHoldings,
+          topHolderPercentage: safety.topHolderPercentage,
+          liquidityLocked: safety.liquidityLocked,
+          mintAuthorityEnabled: safety.mintAuthorityEnabled,
+          freezeAuthorityEnabled: safety.freezeAuthorityEnabled,
+          tokenAge: safety.tokenAge,
+          bundledWallets: safety.bundledWallets
+        };
+        
+        // Add safety-based weaknesses to analysis
+        if (safety.redFlags.length > 0) {
+          const criticalFlags = safety.redFlags.filter(f => f.severity === 'CRITICAL');
+          const highFlags = safety.redFlags.filter(f => f.severity === 'HIGH');
+          
+          if (criticalFlags.length > 0) {
+            signal.analysis.weaknesses.push(`🚨 ${criticalFlags.length} critical safety flag(s)`);
+          }
+          if (highFlags.length > 0) {
+            signal.analysis.weaknesses.push(`⚠️ ${highFlags.length} high-risk flag(s)`);
+          }
+        }
+        
+        // Add safety strengths
+        if (safety.safetyScore >= 70) {
+          signal.analysis.strengths.push('🛡️ High safety score');
+        }
+        if (!safety.mintAuthorityEnabled && !safety.freezeAuthorityEnabled) {
+          signal.analysis.strengths.push('✅ Authorities revoked');
+        }
       }
     }
   }
@@ -374,5 +502,13 @@ export async function aggregate(): Promise<AggregatedSignal[]> {
   return aggregated;
 }
 
-// Export for testing
-export { SOURCE_CONFIGS, calculateCompositeScore, detectNarratives };
+// Export for testing and external use
+export { 
+  SOURCE_CONFIGS, 
+  calculateCompositeScore, 
+  detectNarratives,
+  CONFLUENCE_CONFIG,
+  getSourceCategory,
+  calculateConfluenceBoost,
+  determineConvictionLevel
+};
