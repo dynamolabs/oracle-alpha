@@ -1422,6 +1422,279 @@
         
         setInterval(updateTicker, 5000);
         setTimeout(updateTicker, 2000);
+        
+        // ===== INTERACTIVE ONBOARDING TOUR =====
+        const tourSteps = [
+            {
+                target: '.stats-grid',
+                title: '📊 Live Statistics',
+                content: 'Real-time metrics updated every 15 seconds. Track total signals, win rate, and open positions.',
+                position: 'bottom'
+            },
+            {
+                target: '.signals-container',
+                title: '🔮 Signal Feed',
+                content: 'Live trading signals scored by AI. Higher scores = stronger confluence. Click any card for details.',
+                position: 'left'
+            },
+            {
+                target: '.chart-container',
+                title: '📈 Performance Chart',
+                content: 'Historical wins/losses and ROI tracking. All results verifiable on Solana blockchain.',
+                position: 'top'
+            },
+            {
+                target: '.leaderboard',
+                title: '🏆 Top Performers',
+                content: 'Best signals ranked by ROI. See which tokens delivered the highest returns.',
+                position: 'left'
+            },
+            {
+                target: '.filter-bar',
+                title: '⌨️ Filters & Shortcuts',
+                content: 'Filter by risk level or use keyboard shortcuts: 1-5 for filters, R to refresh, ? for help.',
+                position: 'bottom'
+            }
+        ];
+        
+        let currentStep = 0;
+        let tourActive = false;
+        
+        function createTourOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'tour-overlay';
+            overlay.innerHTML = `
+                <style>
+                    #tour-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.7);
+                        z-index: 9998;
+                        pointer-events: none;
+                    }
+                    .tour-spotlight {
+                        position: absolute;
+                        box-shadow: 0 0 0 9999px rgba(0,0,0,0.7);
+                        border-radius: 8px;
+                        pointer-events: none;
+                        transition: all 0.3s ease;
+                    }
+                    .tour-tooltip {
+                        position: absolute;
+                        background: linear-gradient(135deg, #1a1a3a, #0a0a1a);
+                        border: 1px solid var(--primary);
+                        border-radius: 12px;
+                        padding: 20px;
+                        max-width: 320px;
+                        z-index: 9999;
+                        pointer-events: auto;
+                        animation: tourPop 0.3s ease;
+                    }
+                    @keyframes tourPop {
+                        from { opacity: 0; transform: scale(0.9); }
+                        to { opacity: 1; transform: scale(1); }
+                    }
+                    .tour-tooltip h3 {
+                        color: var(--primary);
+                        margin-bottom: 10px;
+                        font-size: 1.1em;
+                    }
+                    .tour-tooltip p {
+                        color: #ccc;
+                        font-size: 0.9em;
+                        line-height: 1.5;
+                        margin-bottom: 15px;
+                    }
+                    .tour-buttons {
+                        display: flex;
+                        gap: 10px;
+                        justify-content: space-between;
+                    }
+                    .tour-btn {
+                        padding: 8px 16px;
+                        border-radius: 6px;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 0.85em;
+                        transition: all 0.2s;
+                    }
+                    .tour-btn.primary {
+                        background: linear-gradient(90deg, var(--primary), var(--secondary));
+                        color: #000;
+                        font-weight: 600;
+                    }
+                    .tour-btn.secondary {
+                        background: transparent;
+                        border: 1px solid #444;
+                        color: #888;
+                    }
+                    .tour-btn:hover { transform: translateY(-2px); }
+                    .tour-progress {
+                        display: flex;
+                        gap: 5px;
+                        justify-content: center;
+                        margin-top: 15px;
+                    }
+                    .tour-dot {
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 50%;
+                        background: #444;
+                        transition: all 0.2s;
+                    }
+                    .tour-dot.active { background: var(--primary); }
+                    .tour-start-btn {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background: linear-gradient(90deg, var(--primary), var(--secondary));
+                        color: #000;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 30px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        font-size: 0.9em;
+                        z-index: 1000;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        transition: all 0.3s;
+                        box-shadow: 0 4px 20px rgba(0,217,255,0.3);
+                    }
+                    .tour-start-btn:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 6px 30px rgba(0,217,255,0.4);
+                    }
+                </style>
+            `;
+            document.body.appendChild(overlay);
+        }
+        
+        function showTourStep(stepIndex) {
+            const step = tourSteps[stepIndex];
+            const target = document.querySelector(step.target);
+            if (!target) return;
+            
+            const overlay = document.getElementById('tour-overlay');
+            const rect = target.getBoundingClientRect();
+            
+            // Create spotlight
+            let spotlight = document.querySelector('.tour-spotlight');
+            if (!spotlight) {
+                spotlight = document.createElement('div');
+                spotlight.className = 'tour-spotlight';
+                overlay.appendChild(spotlight);
+            }
+            
+            spotlight.style.top = (rect.top - 10) + 'px';
+            spotlight.style.left = (rect.left - 10) + 'px';
+            spotlight.style.width = (rect.width + 20) + 'px';
+            spotlight.style.height = (rect.height + 20) + 'px';
+            
+            // Create tooltip
+            let tooltip = document.querySelector('.tour-tooltip');
+            if (tooltip) tooltip.remove();
+            
+            tooltip = document.createElement('div');
+            tooltip.className = 'tour-tooltip';
+            tooltip.innerHTML = `
+                <h3>${step.title}</h3>
+                <p>${step.content}</p>
+                <div class="tour-buttons">
+                    <button class="tour-btn secondary" onclick="endTour()">Skip</button>
+                    <button class="tour-btn primary" onclick="${stepIndex < tourSteps.length - 1 ? 'nextTourStep()' : 'endTour()'}">
+                        ${stepIndex < tourSteps.length - 1 ? 'Next →' : 'Finish ✓'}
+                    </button>
+                </div>
+                <div class="tour-progress">
+                    ${tourSteps.map((_, i) => `<div class="tour-dot ${i === stepIndex ? 'active' : ''}"></div>`).join('')}
+                </div>
+            `;
+            
+            // Position tooltip
+            const tooltipRect = { width: 320, height: 200 };
+            let top, left;
+            
+            switch (step.position) {
+                case 'bottom':
+                    top = rect.bottom + 20;
+                    left = rect.left + (rect.width - tooltipRect.width) / 2;
+                    break;
+                case 'top':
+                    top = rect.top - tooltipRect.height - 20;
+                    left = rect.left + (rect.width - tooltipRect.width) / 2;
+                    break;
+                case 'left':
+                    top = rect.top;
+                    left = rect.left - tooltipRect.width - 20;
+                    break;
+                case 'right':
+                    top = rect.top;
+                    left = rect.right + 20;
+                    break;
+            }
+            
+            tooltip.style.top = Math.max(20, top) + 'px';
+            tooltip.style.left = Math.max(20, Math.min(window.innerWidth - 340, left)) + 'px';
+            
+            document.body.appendChild(tooltip);
+        }
+        
+        function nextTourStep() {
+            currentStep++;
+            if (currentStep < tourSteps.length) {
+                showTourStep(currentStep);
+            } else {
+                endTour();
+            }
+        }
+        
+        function startTour() {
+            tourActive = true;
+            currentStep = 0;
+            createTourOverlay();
+            showTourStep(0);
+            localStorage.setItem('tourCompleted', 'true');
+        }
+        
+        function endTour() {
+            tourActive = false;
+            const overlay = document.getElementById('tour-overlay');
+            const tooltip = document.querySelector('.tour-tooltip');
+            if (overlay) overlay.remove();
+            if (tooltip) tooltip.remove();
+        }
+        
+        // Add tour button if not completed
+        if (!localStorage.getItem('tourCompleted')) {
+            const btn = document.createElement('button');
+            btn.className = 'tour-start-btn';
+            btn.innerHTML = '🎯 Take a Tour';
+            btn.onclick = startTour;
+            document.body.appendChild(btn);
+            
+            // Auto-start after 3 seconds for demo
+            setTimeout(() => {
+                if (!tourActive && !localStorage.getItem('tourDismissed')) {
+                    startTour();
+                }
+            }, 3000);
+        }
+        
+        // Keyboard shortcut for tour
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+                if (tourActive) {
+                    endTour();
+                } else {
+                    startTour();
+                }
+            }
+        });
     </script>
 </body>
 </html>
