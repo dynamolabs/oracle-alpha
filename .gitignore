@@ -27,3 +27,7 @@ test-ledger/
 data/
 *.db
 .env.trading
+.env.trading
+.env.local
+*.pem
+*private*
