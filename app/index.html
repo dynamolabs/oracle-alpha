@@ -602,54 +602,1051 @@
         .confidence-MEDIUM { background: #eab308; color: #000; }
         .confidence-LOW { background: #ef4444; color: #fff; }
         
-        /* Mobile Responsive */
-        @media (max-width: 1024px) {
-            .stats-grid { grid-template-columns: repeat(3, 1fr); }
-            .signal-card { grid-template-columns: 100px 1fr 80px; }
-            .signal-details { grid-template-columns: repeat(2, 1fr); }
+        /* ========================================
+           COMPREHENSIVE MOBILE RESPONSIVE STYLES
+           ======================================== */
+        
+        /* Enable smooth scrolling on mobile */
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
         
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            h1 { font-size: 1.8em; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .stat-card { padding: 12px; }
-            .stat-value { font-size: 1.4em; }
+        /* Hamburger Menu Component */
+        .hamburger-menu {
+            display: none;
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        .hamburger-menu span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: #00d9ff;
+            margin: 5px 0;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        /* Mobile Navigation Overlay */
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 26, 0.98);
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .mobile-nav-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .mobile-nav-overlay a,
+        .mobile-nav-overlay button {
+            font-size: 1.2em;
+            padding: 15px 30px;
+            min-width: 200px;
+            text-align: center;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #e0e0e0;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            transition: all 0.3s;
+        }
+        
+        .mobile-nav-overlay a:hover,
+        .mobile-nav-overlay button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .mobile-nav-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 2em;
+            cursor: pointer;
+            padding: 10px;
+            min-width: auto !important;
+        }
+        
+        /* ====== DESKTOP (min-width: 769px) ====== */
+        @media (min-width: 769px) {
+            body {
+                font-size: 16px;
+            }
+        }
+        
+        /* ====== TABLET (max-width: 1024px) ====== */
+        @media (max-width: 1024px) {
+            .stats-grid { 
+                grid-template-columns: repeat(3, 1fr); 
+            }
             
+            .signal-card { 
+                grid-template-columns: 100px 1fr 80px; 
+            }
+            
+            .signal-details { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            
+            .chart-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .platform-stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            
+            .trusted-by-grid { 
+                grid-template-columns: repeat(3, 1fr); 
+            }
+        }
+        
+        /* ====== TABLET/MOBILE (max-width: 768px) ====== */
+        @media (max-width: 768px) {
+            /* Base typography */
+            body { 
+                padding: 10px; 
+                font-size: 15px;
+                line-height: 1.5;
+            }
+            
+            /* Header adjustments */
+            header {
+                padding: 15px 0;
+                text-align: center;
+            }
+            
+            h1 { 
+                font-size: 1.6em; 
+            }
+            
+            .subtitle {
+                font-size: 0.85em;
+            }
+            
+            .header-nav { 
+                position: static; 
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            
+            .header-nav a,
+            .portfolio-btn {
+                padding: 10px 16px;
+                font-size: 0.85em;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Hamburger visible on tablet */
+            .hamburger-menu {
+                display: block;
+                position: absolute;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+            
+            /* Stats Grid */
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 10px; 
+            }
+            
+            .stat-card { 
+                padding: 12px; 
+            }
+            
+            .stat-value { 
+                font-size: 1.4em; 
+            }
+            
+            .stat-label {
+                font-size: 0.75em;
+            }
+            
+            /* Signal Cards - Full width, stacked */
             .signal-card {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: 12px;
+                padding: 15px;
             }
-            .signal-details { grid-template-columns: repeat(4, 1fr); }
+            
+            .signal-details { 
+                grid-template-columns: repeat(4, 1fr); 
+                gap: 8px;
+            }
+            
             .signal-score {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 15px;
                 justify-content: center;
+                padding: 10px 0;
             }
-            .score-circle { width: 50px; height: 50px; font-size: 1.1em; }
-            .signal-meta { grid-column: span 1; }
-            .signal-actions { opacity: 1; }
+            
+            .score-circle { 
+                width: 50px; 
+                height: 50px; 
+                font-size: 1.1em; 
+            }
+            
+            .signal-meta { 
+                grid-column: span 1; 
+            }
+            
+            /* Always show actions on touch devices */
+            .signal-actions { 
+                opacity: 1; 
+                position: relative;
+                top: 0;
+                right: 0;
+                justify-content: flex-end;
+            }
+            
+            .action-btn {
+                padding: 10px 12px;
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 0.9em;
+            }
+            
+            /* Section headers */
+            .section-header { 
+                flex-direction: column; 
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .header-controls { 
+                width: 100%; 
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .filter-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .filter-btn {
+                padding: 8px 14px;
+                min-height: 44px;
+                font-size: 0.8em;
+            }
+            
+            .sound-toggle {
+                padding: 8px 14px;
+                min-height: 44px;
+            }
+            
+            /* Charts */
+            .chart-container {
+                padding: 15px;
+            }
+            
+            #performanceChart,
+            #backtestChart,
+            #drawdownChart,
+            #portfolioChart {
+                max-height: 200px;
+            }
+            
+            .chart-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .chart-stat {
+                padding: 12px;
+            }
+            
+            .chart-stat-value {
+                font-size: 1.2em;
+            }
+            
+            /* Modals - Full screen */
+            .modal {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                margin: 0;
+            }
+            
+            .modal-overlay.active .modal {
+                transform: scale(1);
+            }
+            
+            .modal-header {
+                position: sticky;
+                top: 0;
+                background: linear-gradient(135deg, #1a1a3a, #0a0a1a);
+                z-index: 10;
+                padding: 15px;
+                margin: -25px -25px 15px -25px;
+                border-radius: 0;
+            }
+            
+            .modal-close {
+                font-size: 2em;
+                padding: 10px;
+                min-width: 44px;
+                min-height: 44px;
+            }
+            
+            /* Platform stats */
+            .platform-stats-grid { 
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .platform-stat-card {
+                padding: 15px;
+            }
+            
+            .platform-stat-value { 
+                font-size: 1.3em; 
+            }
+            
+            .trusted-by-grid { 
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .partner-card {
+                padding: 12px 8px;
+            }
+            
+            .partner-logo {
+                font-size: 1.5em;
+            }
+            
+            .partner-name {
+                font-size: 0.8em;
+            }
+            
+            /* Simulator */
+            .simulator-controls {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .sim-stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            
+            .sim-hero-value { 
+                font-size: 2em; 
+            }
+            
+            .sim-trade-item { 
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            /* Backtest */
+            .backtest-controls {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .bt-stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .bt-chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .bt-period-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Leaderboard and performance grids */
+            .perf-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Activity ticker */
+            .activity-ticker {
+                font-size: 0.8em;
+            }
+            
+            /* Footer */
+            footer {
+                padding: 15px;
+                font-size: 0.8em;
+            }
+            
+            footer p {
+                word-break: break-word;
+            }
+            
+            /* Connection status */
+            .connection-status {
+                bottom: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.75em;
+            }
         }
         
+        /* ====== MOBILE SMALL (max-width: 480px) ====== */
         @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .signal-details { grid-template-columns: repeat(2, 1fr); }
-            .section-header { flex-direction: column; align-items: flex-start; }
-            .header-controls { width: 100%; justify-content: space-between; }
+            /* Base typography for small mobile */
+            body {
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            .container {
+                padding: 0;
+            }
+            
+            /* Header compact */
+            header {
+                padding: 10px 0;
+            }
+            
+            h1 {
+                font-size: 1.4em;
+            }
+            
+            .subtitle {
+                font-size: 0.8em;
+                display: none;
+            }
+            
+            /* Hide desktop nav, show hamburger */
+            .header-nav {
+                display: none;
+            }
+            
+            .hamburger-menu {
+                display: block;
+            }
+            
+            /* Stats Grid - 2 columns on small mobile */
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 10px;
+            }
+            
+            .stat-value {
+                font-size: 1.2em;
+            }
+            
+            .stat-label {
+                font-size: 0.7em;
+            }
+            
+            /* Signal Cards */
+            .signal-card {
+                padding: 12px;
+                gap: 10px;
+            }
+            
+            .token-symbol {
+                font-size: 1.1em;
+            }
+            
+            .token-name {
+                font-size: 0.8em;
+            }
+            
+            .token-address {
+                font-size: 0.6em;
+            }
+            
+            .signal-details { 
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .detail-value {
+                font-size: 0.85em;
+            }
+            
+            .detail-label {
+                font-size: 0.65em;
+            }
+            
+            .score-circle {
+                width: 45px;
+                height: 45px;
+                font-size: 1em;
+            }
+            
+            .risk-badge {
+                font-size: 0.65em;
+                padding: 2px 6px;
+            }
+            
+            /* Narratives */
+            .narratives {
+                gap: 4px;
+            }
+            
+            .narrative-tag {
+                font-size: 0.65em;
+                padding: 2px 6px;
+            }
+            
+            .signal-links {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            
+            .signal-links a {
+                font-size: 0.7em;
+                padding: 4px 8px;
+            }
+            
+            /* Section styling */
+            .signals-section {
+                padding: 12px;
+                border-radius: 10px;
+                margin-bottom: 12px;
+            }
+            
+            .section-title {
+                font-size: 1em;
+            }
+            
+            /* Filter buttons */
+            .filter-buttons {
+                width: 100%;
+            }
+            
+            .filter-btn {
+                flex: 1;
+                padding: 10px 8px;
+                font-size: 0.75em;
+            }
+            
+            /* Charts */
+            .chart-container {
+                padding: 10px;
+            }
+            
+            #performanceChart,
+            #backtestChart,
+            #portfolioChart {
+                max-height: 150px !important;
+            }
+            
+            #drawdownChart {
+                max-height: 100px !important;
+            }
+            
+            .chart-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .chart-stat {
+                padding: 10px;
+            }
+            
+            .chart-stat-value {
+                font-size: 1em;
+            }
+            
+            .chart-stat-label {
+                font-size: 0.7em;
+            }
+            
+            .chart-period-btns {
+                flex-wrap: wrap;
+            }
+            
+            /* Platform stats */
+            .platform-stats-grid { 
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .platform-stat-card {
+                padding: 12px 8px;
+            }
+            
+            .platform-stat-icon {
+                font-size: 1.5em;
+            }
+            
+            .platform-stat-value {
+                font-size: 1.1em;
+            }
+            
+            .platform-stat-label {
+                font-size: 0.75em;
+            }
+            
+            .platform-stat-sub {
+                font-size: 0.65em;
+            }
+            
+            .trusted-by-grid { 
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .trusted-by-title {
+                font-size: 0.9em;
+            }
+            
+            .partner-card {
+                padding: 10px 6px;
+            }
+            
+            .partner-logo {
+                font-size: 1.3em;
+            }
+            
+            .partner-name {
+                font-size: 0.75em;
+            }
+            
+            .partner-category {
+                font-size: 0.6em;
+            }
+            
+            /* Simulator */
+            .sim-input-group label {
+                font-size: 0.8em;
+            }
+            
+            .sim-run-btn {
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+            
+            .sim-hero-value {
+                font-size: 1.8em;
+            }
+            
+            .sim-hero-roi {
+                font-size: 1.2em;
+            }
+            
+            .sim-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .sim-stat {
+                padding: 10px;
+            }
+            
+            .sim-stat-value {
+                font-size: 1.1em;
+            }
+            
+            .sim-trade-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 10px;
+            }
+            
+            /* Backtest */
+            .bt-btn-group {
+                flex-wrap: wrap;
+            }
+            
+            .bt-range-btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+            }
+            
+            .bt-run-btn {
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+            
+            .bt-stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .bt-stat-card {
+                padding: 12px;
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            
+            .bt-stat-icon {
+                font-size: 1.4em;
+            }
+            
+            .bt-stat-value {
+                font-size: 1.1em;
+            }
+            
+            /* Modals - Full screen with better padding */
+            .modal {
+                padding: 15px;
+            }
+            
+            .modal-header {
+                margin: -15px -15px 15px -15px;
+                padding: 12px 15px;
+            }
+            
+            .modal-title {
+                font-size: 1.1em;
+            }
+            
+            /* Trade modal */
+            .trade-modal .trade-token-info {
+                padding: 12px;
+            }
+            
+            .trade-symbol {
+                font-size: 1.2em;
+            }
+            
+            .quick-amounts {
+                flex-wrap: wrap;
+            }
+            
+            .quick-amounts button {
+                flex: 1 1 45%;
+                min-height: 44px;
+            }
+            
+            .slippage-options {
+                flex-wrap: wrap;
+            }
+            
+            .slippage-btn {
+                flex: 1 1 45%;
+                min-height: 44px;
+            }
+            
+            .trade-execute-btn {
+                padding: 14px;
+                font-size: 1em;
+                min-height: 50px;
+            }
+            
+            /* Portfolio modal */
+            .balance-value {
+                font-size: 2em;
+            }
+            
+            .portfolio-actions {
+                flex-direction: column;
+            }
+            
+            .port-action-btn {
+                min-height: 44px;
+            }
+            
+            /* Explanation modal */
+            .explanation-section h4 {
+                font-size: 0.9em;
+            }
+            
+            .explanation-section li {
+                font-size: 0.85em;
+            }
+            
+            .explanation-summary {
+                font-size: 0.9em;
+                padding: 12px;
+            }
+            
+            /* Keyboard shortcuts modal */
+            #shortcuts-modal .modal > div {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .shortcut-item {
+                padding: 8px;
+            }
+            
+            .shortcut-item kbd {
+                padding: 4px 10px;
+                font-size: 0.85em;
+            }
+            
+            /* Leaderboard */
+            .perf-item {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+            
+            /* Demo banner */
+            .demo-banner {
+                padding: 6px;
+                font-size: 0.8em;
+            }
+            
+            /* Activity ticker */
+            .activity-ticker {
+                padding: 6px 10px;
+                font-size: 0.75em;
+            }
+            
+            /* Live badge */
+            .live-badge {
+                padding: 4px 10px;
+                font-size: 0.7em;
+            }
+            
+            /* Footer */
+            footer {
+                padding: 12px;
+                font-size: 0.75em;
+            }
+            
+            footer a {
+                display: inline;
+            }
+            
+            /* Toast notifications */
+            .toast {
+                right: 10px;
+                left: 10px;
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+            
+            /* Connection status */
+            .connection-status {
+                bottom: 8px;
+                right: 8px;
+                padding: 5px 10px;
+                font-size: 0.7em;
+            }
+        }
+        
+        /* ====== EXTRA SMALL (max-width: 360px) ====== */
+        @media (max-width: 360px) {
+            body {
+                padding: 5px;
+                font-size: 13px;
+            }
+            
+            h1 {
+                font-size: 1.2em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .stat-card {
+                padding: 8px;
+            }
+            
+            .stat-value {
+                font-size: 1em;
+            }
+            
+            .signal-card {
+                padding: 10px;
+            }
+            
+            .token-symbol {
+                font-size: 1em;
+            }
+            
+            .score-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9em;
+            }
+            
+            .signals-section {
+                padding: 10px;
+            }
+            
+            .modal {
+                padding: 10px;
+            }
+            
+            .balance-value {
+                font-size: 1.6em;
+            }
+        }
+        
+        /* ====== TOUCH DEVICE IMPROVEMENTS ====== */
+        @media (hover: none) and (pointer: coarse) {
+            /* Ensure all interactive elements are touch-friendly */
+            button, 
+            a, 
+            .filter-btn, 
+            .action-btn, 
+            .slippage-btn,
+            .quick-amounts button,
+            .bt-range-btn,
+            .port-action-btn,
+            input[type="number"],
+            select {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Remove hover-only effects */
+            .signal-card:hover {
+                transform: none;
+            }
+            
+            .stat-card:hover {
+                transform: none;
+            }
+            
+            .platform-stat-card:hover {
+                transform: none;
+            }
+            
+            /* Always show signal actions */
+            .signal-actions {
+                opacity: 1;
+            }
+            
+            /* Disable text selection on interactive elements */
+            button, a {
+                -webkit-user-select: none;
+                user-select: none;
+            }
+            
+            /* Better tap highlight */
+            button, a {
+                -webkit-tap-highlight-color: rgba(0, 217, 255, 0.2);
+            }
+        }
+        
+        /* ====== LANDSCAPE MOBILE ====== */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .modal {
+                max-height: 100vh;
+                overflow-y: auto;
+            }
+            
+            .modal-header {
+                position: sticky;
+                top: 0;
+            }
+            
+            .sim-hero-value {
+                font-size: 1.5em;
+            }
+            
+            .balance-value {
+                font-size: 1.8em;
+            }
+        }
+        
+        /* ====== PREVENT HORIZONTAL OVERFLOW ====== */
+        * {
+            max-width: 100%;
+        }
+        
+        img, video, iframe, canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        pre, code {
+            overflow-x: auto;
+            word-wrap: break-word;
+        }
+        
+        .token-address {
+            word-break: break-all;
+        }
+        
+        /* ====== SAFE AREA INSETS (notched phones) ====== */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(8px, env(safe-area-inset-left));
+                padding-right: max(8px, env(safe-area-inset-right));
+                padding-bottom: max(8px, env(safe-area-inset-bottom));
+            }
+            
+            .connection-status {
+                bottom: max(10px, env(safe-area-inset-bottom));
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="header-nav">
+            <!-- Hamburger Menu Button (mobile only) -->
+            <button class="hamburger-menu" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <div class="header-nav" id="desktop-nav">
                 <a href="/landing.html">← Home</a>
                 <button class="portfolio-btn" onclick="showPortfolioModal()">💰 Portfolio</button>
             </div>
             <h1>🔮 ORACLE Alpha</h1>
             <p class="subtitle">On-chain Reliable Alpha Compilation & Learning Engine</p>
         </header>
+        
+        <!-- Mobile Navigation Overlay -->
+        <div class="mobile-nav-overlay" id="mobile-nav">
+            <button class="mobile-nav-close" onclick="toggleMobileNav()">×</button>
+            <a href="/landing.html">🏠 Home</a>
+            <button onclick="showPortfolioModal(); toggleMobileNav();">💰 Portfolio</button>
+            <button onclick="toggleSound(); toggleMobileNav();">🔊 Toggle Sound</button>
+            <button onclick="showShortcuts(); toggleMobileNav();">⌨️ Keyboard Shortcuts</button>
+            <a href="https://github.com/dynamolabs/oracle-alpha" target="_blank">📂 GitHub</a>
+        </div>
         
         <div class="demo-banner" id="demo-banner">
             🎬 DEMO MODE ACTIVE - Generating realistic signals for presentation
@@ -2487,6 +3484,37 @@
         const signals = [];
         let soundEnabled = false;
         let currentFilter = 'all';
+        
+        // Mobile Navigation Toggle
+        function toggleMobileNav() {
+            const mobileNav = document.getElementById('mobile-nav');
+            const hamburger = document.getElementById('hamburger-btn');
+            const isActive = mobileNav.classList.toggle('active');
+            hamburger.classList.toggle('active', isActive);
+            
+            // Prevent body scroll when mobile nav is open
+            document.body.style.overflow = isActive ? 'hidden' : '';
+        }
+        
+        // Close mobile nav on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const mobileNav = document.getElementById('mobile-nav');
+                if (mobileNav && mobileNav.classList.contains('active')) {
+                    toggleMobileNav();
+                }
+            }
+        });
+        
+        // Close mobile nav when clicking outside
+        document.addEventListener('click', (e) => {
+            const mobileNav = document.getElementById('mobile-nav');
+            const hamburger = document.getElementById('hamburger-btn');
+            if (mobileNav && mobileNav.classList.contains('active') && 
+                !mobileNav.contains(e.target) && !hamburger.contains(e.target)) {
+                toggleMobileNav();
+            }
+        });
         
         // Sound toggle
         function toggleSound() {
