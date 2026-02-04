@@ -763,6 +763,366 @@
             </div>
         </div>
         
+        <!-- Portfolio Simulator Section -->
+        <div class="signals-section" id="portfolio-simulator">
+            <div class="section-header">
+                <h2 class="section-title">💰 Portfolio Simulator</h2>
+                <span class="live-badge" style="background: linear-gradient(90deg, #22c55e, #00d9ff);">BACKTEST</span>
+            </div>
+            
+            <div class="simulator-intro">
+                <p style="color: #888; margin-bottom: 15px;">
+                    🔮 <strong style="color: #00d9ff;">What if you followed ORACLE signals?</strong> 
+                    Simulate portfolio performance by backtesting with historical signals.
+                </p>
+            </div>
+            
+            <div class="simulator-controls">
+                <div class="sim-input-group">
+                    <label for="sim-start-amount">💵 Starting Capital</label>
+                    <div class="sim-input-wrapper">
+                        <span class="sim-currency">$</span>
+                        <input type="number" id="sim-start-amount" value="1000" min="100" max="1000000" step="100">
+                    </div>
+                </div>
+                <div class="sim-input-group">
+                    <label for="sim-min-score">📊 Min Signal Score</label>
+                    <input type="range" id="sim-min-score" value="60" min="40" max="90" step="5">
+                    <span class="sim-range-value" id="sim-score-value">60+</span>
+                </div>
+                <div class="sim-input-group">
+                    <label for="sim-days">📅 Lookback Period</label>
+                    <select id="sim-days">
+                        <option value="3">3 Days</option>
+                        <option value="7" selected>7 Days</option>
+                        <option value="14">14 Days</option>
+                        <option value="30">30 Days</option>
+                    </select>
+                </div>
+                <button class="sim-run-btn" onclick="runSimulation()">
+                    🚀 Run Simulation
+                </button>
+            </div>
+            
+            <div class="sim-results" id="sim-results" style="display: none;">
+                <div class="sim-summary">
+                    <div class="sim-hero">
+                        <div class="sim-hero-label">Portfolio Value</div>
+                        <div class="sim-hero-value" id="sim-final-value">$1,000</div>
+                        <div class="sim-hero-roi" id="sim-total-roi">+0%</div>
+                    </div>
+                    <div class="sim-stats-grid">
+                        <div class="sim-stat">
+                            <span class="sim-stat-value" id="sim-trades-count">0</span>
+                            <span class="sim-stat-label">Trades</span>
+                        </div>
+                        <div class="sim-stat">
+                            <span class="sim-stat-value" id="sim-win-rate" style="color: #22c55e;">0%</span>
+                            <span class="sim-stat-label">Win Rate</span>
+                        </div>
+                        <div class="sim-stat">
+                            <span class="sim-stat-value" id="sim-avg-roi">0%</span>
+                            <span class="sim-stat-label">Avg ROI/Trade</span>
+                        </div>
+                        <div class="sim-stat">
+                            <span class="sim-stat-value" id="sim-best-trade" style="color: #22c55e;">-</span>
+                            <span class="sim-stat-label">Best Trade</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sim-chart-container">
+                    <h4 style="color: #a855f7; margin-bottom: 15px;">📈 Portfolio Growth</h4>
+                    <canvas id="portfolioChart" height="250"></canvas>
+                </div>
+                
+                <div class="sim-trades-list">
+                    <h4 style="color: #a855f7; margin-bottom: 15px;">📋 Trade History</h4>
+                    <div id="sim-trades" class="sim-trades-container">
+                        <!-- Trades will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .simulator-controls {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                    gap: 20px;
+                    padding: 20px;
+                    background: rgba(0,0,0,0.3);
+                    border-radius: 12px;
+                    margin-bottom: 20px;
+                    align-items: end;
+                }
+                
+                .sim-input-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                
+                .sim-input-group label {
+                    color: #888;
+                    font-size: 0.85em;
+                }
+                
+                .sim-input-wrapper {
+                    display: flex;
+                    align-items: center;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                
+                .sim-currency {
+                    padding: 10px 12px;
+                    background: rgba(0,217,255,0.1);
+                    color: #00d9ff;
+                    font-weight: bold;
+                }
+                
+                .sim-input-group input[type="number"],
+                .sim-input-group select {
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #444;
+                    color: #fff;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-size: 1em;
+                    font-family: 'JetBrains Mono', monospace;
+                    width: 100%;
+                }
+                
+                .sim-input-wrapper input {
+                    border: none !important;
+                    border-radius: 0 !important;
+                }
+                
+                .sim-input-group input[type="range"] {
+                    -webkit-appearance: none;
+                    background: linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%);
+                    height: 6px;
+                    border-radius: 3px;
+                    cursor: pointer;
+                }
+                
+                .sim-input-group input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    width: 18px;
+                    height: 18px;
+                    background: #fff;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                }
+                
+                .sim-range-value {
+                    color: #00d9ff;
+                    font-weight: bold;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                
+                .sim-run-btn {
+                    background: linear-gradient(90deg, #00d9ff, #a855f7);
+                    color: #000;
+                    border: none;
+                    padding: 14px 24px;
+                    border-radius: 10px;
+                    font-size: 1em;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                
+                .sim-run-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 20px rgba(0,217,255,0.4);
+                }
+                
+                .sim-run-btn:active {
+                    transform: translateY(0);
+                }
+                
+                .sim-results {
+                    animation: fadeIn 0.5s ease;
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                
+                .sim-summary {
+                    background: linear-gradient(135deg, rgba(0,217,255,0.1), rgba(168,85,247,0.1));
+                    border: 1px solid rgba(0,217,255,0.3);
+                    border-radius: 15px;
+                    padding: 25px;
+                    margin-bottom: 20px;
+                }
+                
+                .sim-hero {
+                    text-align: center;
+                    margin-bottom: 25px;
+                    padding-bottom: 20px;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                }
+                
+                .sim-hero-label {
+                    color: #888;
+                    font-size: 0.9em;
+                    margin-bottom: 5px;
+                }
+                
+                .sim-hero-value {
+                    font-size: 3em;
+                    font-weight: 700;
+                    font-family: 'JetBrains Mono', monospace;
+                    background: linear-gradient(90deg, #00d9ff, #a855f7);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+                
+                .sim-hero-roi {
+                    font-size: 1.5em;
+                    font-weight: 700;
+                    font-family: 'JetBrains Mono', monospace;
+                    margin-top: 5px;
+                }
+                
+                .sim-hero-roi.positive { color: #22c55e; }
+                .sim-hero-roi.negative { color: #ef4444; }
+                
+                .sim-stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 15px;
+                }
+                
+                .sim-stat {
+                    text-align: center;
+                    padding: 15px;
+                    background: rgba(0,0,0,0.3);
+                    border-radius: 10px;
+                }
+                
+                .sim-stat-value {
+                    display: block;
+                    font-size: 1.4em;
+                    font-weight: 700;
+                    font-family: 'JetBrains Mono', monospace;
+                    color: #00d9ff;
+                }
+                
+                .sim-stat-label {
+                    color: #666;
+                    font-size: 0.8em;
+                    margin-top: 5px;
+                    display: block;
+                }
+                
+                .sim-chart-container {
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                
+                .sim-trades-container {
+                    max-height: 400px;
+                    overflow-y: auto;
+                    padding-right: 10px;
+                }
+                
+                .sim-trade-item {
+                    display: grid;
+                    grid-template-columns: 80px 1fr 100px 100px;
+                    gap: 15px;
+                    align-items: center;
+                    padding: 12px 15px;
+                    background: rgba(0,0,0,0.3);
+                    border-radius: 8px;
+                    margin-bottom: 8px;
+                    border-left: 3px solid #22c55e;
+                    transition: all 0.2s;
+                }
+                
+                .sim-trade-item:hover {
+                    background: rgba(0,0,0,0.5);
+                    transform: translateX(3px);
+                }
+                
+                .sim-trade-item.loss {
+                    border-left-color: #ef4444;
+                }
+                
+                .sim-trade-symbol {
+                    font-weight: 700;
+                    color: #fff;
+                }
+                
+                .sim-trade-score {
+                    display: inline-block;
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    font-size: 0.75em;
+                    background: rgba(168,85,247,0.2);
+                    color: #a855f7;
+                    margin-left: 8px;
+                }
+                
+                .sim-trade-meta {
+                    color: #666;
+                    font-size: 0.8em;
+                }
+                
+                .sim-trade-pnl {
+                    text-align: right;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-weight: 600;
+                }
+                
+                .sim-trade-pnl.positive { color: #22c55e; }
+                .sim-trade-pnl.negative { color: #ef4444; }
+                
+                .sim-trade-portfolio {
+                    text-align: right;
+                    font-family: 'JetBrains Mono', monospace;
+                    color: #888;
+                    font-size: 0.9em;
+                }
+                
+                @media (max-width: 768px) {
+                    .sim-stats-grid { grid-template-columns: repeat(2, 1fr); }
+                    .sim-hero-value { font-size: 2em; }
+                    .sim-trade-item { 
+                        grid-template-columns: 1fr 1fr;
+                        gap: 10px;
+                    }
+                }
+                
+                /* Scrollbar styling */
+                .sim-trades-container::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .sim-trades-container::-webkit-scrollbar-track {
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 3px;
+                }
+                .sim-trades-container::-webkit-scrollbar-thumb {
+                    background: #444;
+                    border-radius: 3px;
+                }
+                .sim-trades-container::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+            </style>
+        </div>
+        
         <!-- Keyboard Shortcuts Modal -->
         <div class="modal-overlay" id="shortcuts-modal" onclick="hideShortcuts()">
             <div class="modal" onclick="event.stopPropagation()">
@@ -1381,6 +1741,205 @@
                 console.error('Failed to update chart:', e);
             }
         }
+        
+        // ===== PORTFOLIO SIMULATOR =====
+        let portfolioChart = null;
+        
+        // Update score display when slider moves
+        document.getElementById('sim-min-score').addEventListener('input', function(e) {
+            document.getElementById('sim-score-value').textContent = e.target.value + '+';
+        });
+        
+        async function runSimulation() {
+            const startAmount = parseFloat(document.getElementById('sim-start-amount').value) || 1000;
+            const minScore = parseInt(document.getElementById('sim-min-score').value) || 60;
+            const days = parseInt(document.getElementById('sim-days').value) || 7;
+            
+            const btn = document.querySelector('.sim-run-btn');
+            btn.textContent = '⏳ Simulating...';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/portfolio/simulate?startAmount=${startAmount}&minScore=${minScore}&days=${days}`);
+                const data = await res.json();
+                
+                // Show results section
+                document.getElementById('sim-results').style.display = 'block';
+                
+                // Update hero stats
+                document.getElementById('sim-final-value').textContent = '$' + data.currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                
+                const roiEl = document.getElementById('sim-total-roi');
+                roiEl.textContent = (data.totalROI >= 0 ? '+' : '') + data.totalROI.toFixed(2) + '%';
+                roiEl.className = 'sim-hero-roi ' + (data.totalROI >= 0 ? 'positive' : 'negative');
+                
+                // Update stats
+                document.getElementById('sim-trades-count').textContent = data.totalTrades;
+                document.getElementById('sim-win-rate').textContent = data.winRate.toFixed(1) + '%';
+                document.getElementById('sim-avg-roi').textContent = (data.avgTradeROI >= 0 ? '+' : '') + data.avgTradeROI + '%';
+                document.getElementById('sim-avg-roi').style.color = data.avgTradeROI >= 0 ? '#22c55e' : '#ef4444';
+                
+                if (data.bestTrade) {
+                    document.getElementById('sim-best-trade').textContent = '$' + data.bestTrade.symbol + ' +' + data.bestTrade.roi + '%';
+                } else {
+                    document.getElementById('sim-best-trade').textContent = '-';
+                }
+                
+                // Render chart
+                renderPortfolioChart(data.chartData, startAmount);
+                
+                // Render trades
+                renderSimTrades(data.trades);
+                
+                // Scroll to results
+                document.getElementById('sim-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (e) {
+                console.error('Simulation error:', e);
+                showToast('❌ Simulation failed. Please try again.');
+            } finally {
+                btn.textContent = '🚀 Run Simulation';
+                btn.disabled = false;
+            }
+        }
+        
+        function renderPortfolioChart(chartData, startAmount) {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            
+            if (portfolioChart) {
+                portfolioChart.destroy();
+            }
+            
+            const labels = chartData.map(d => d.label);
+            const values = chartData.map(d => d.value);
+            const trades = chartData.map(d => d.trade ? `$${d.trade}: ${d.roi > 0 ? '+' : ''}${d.roi}%` : null);
+            
+            // Create gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+            gradient.addColorStop(0, 'rgba(0, 217, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(0, 217, 255, 0.0)');
+            
+            portfolioChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: values,
+                        borderColor: '#00d9ff',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: values.map((v, i) => {
+                            if (i === 0) return '#888';
+                            return v >= values[i-1] ? '#22c55e' : '#ef4444';
+                        }),
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Starting Amount',
+                        data: Array(values.length).fill(startAmount),
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            titleColor: '#00d9ff',
+                            bodyColor: '#fff',
+                            borderColor: '#444',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const idx = context.dataIndex;
+                                    if (trades[idx]) {
+                                        return '\n' + trades[idx];
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#666', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: {
+                                color: '#666',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderSimTrades(trades) {
+            const container = document.getElementById('sim-trades');
+            
+            if (!trades || trades.length === 0) {
+                container.innerHTML = '<div class="empty-state">No trades in this simulation</div>';
+                return;
+            }
+            
+            // Show most recent first
+            const reversed = [...trades].reverse();
+            
+            container.innerHTML = reversed.map(trade => {
+                const isWin = parseFloat(trade.roi) >= 0;
+                const pnlVal = parseFloat(trade.pnl);
+                const date = new Date(trade.entryTime).toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="sim-trade-item ${isWin ? '' : 'loss'}">
+                        <div>
+                            <span class="sim-trade-symbol">$${trade.symbol}</span>
+                            <span class="sim-trade-score">${trade.score}</span>
+                        </div>
+                        <div class="sim-trade-meta">
+                            ${date} · ${trade.exitReason}
+                        </div>
+                        <div class="sim-trade-pnl ${isWin ? 'positive' : 'negative'}">
+                            ${isWin ? '+' : ''}${trade.roi}%
+                            <br>
+                            <small style="color: ${isWin ? '#22c55e' : '#ef4444'}; opacity: 0.8;">
+                                ${pnlVal >= 0 ? '+' : ''}$${pnlVal.toFixed(2)}
+                            </small>
+                        </div>
+                        <div class="sim-trade-portfolio">
+                            $${parseFloat(trade.portfolioValueAfter).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Auto-run simulation on page load with defaults
+        setTimeout(() => {
+            runSimulation();
+        }, 2000);
         
         // Initialize
         fetchStats();

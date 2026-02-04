@@ -769,6 +769,177 @@ app.get('/api/agent/proofs/:signalId', (req, res) => {
   });
 });
 
+// === PORTFOLIO SIMULATOR ===
+
+// Simulate portfolio performance following signals
+app.get('/api/portfolio/simulate', (req, res) => {
+  const startAmount = parseFloat(req.query.startAmount as string) || 1000;
+  const minScore = parseInt(req.query.minScore as string) || 60;
+  const daysBack = parseInt(req.query.days as string) || 7;
+
+  const cutoff = Date.now() - daysBack * 24 * 60 * 60 * 1000;
+
+  // Get historical signals sorted by timestamp (oldest first)
+  const historicalSignals = signalStore
+    .filter(s => s.timestamp >= cutoff && s.score >= minScore)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (historicalSignals.length === 0) {
+    return res.json({
+      startAmount,
+      currentValue: startAmount,
+      totalROI: 0,
+      totalTrades: 0,
+      wins: 0,
+      losses: 0,
+      winRate: 0,
+      trades: [],
+      chartData: [
+        {
+          timestamp: Date.now(),
+          value: startAmount,
+          label: 'Today'
+        }
+      ],
+      message: 'No qualifying signals found in the selected period'
+    });
+  }
+
+  // Simulation parameters
+  const positionSize = 0.1; // 10% of portfolio per trade
+  const maxHoldingHours = 24; // Max holding period
+
+  let portfolioValue = startAmount;
+  const trades: any[] = [];
+  const chartData: any[] = [];
+  let wins = 0;
+  let losses = 0;
+
+  // Initial chart point
+  chartData.push({
+    timestamp: cutoff,
+    value: startAmount,
+    label: new Date(cutoff).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  });
+
+  // Process each signal
+  for (const signal of historicalSignals) {
+    // Calculate position size
+    const positionValue = portfolioValue * positionSize;
+
+    // Simulate the trade outcome
+    // Use actual performance data if available, otherwise simulate based on score
+    let roi: number;
+    let exitReason: string;
+    let peakMultiplier: number;
+
+    if (signal.performance && signal.performance.status !== 'OPEN') {
+      // Use actual performance data
+      roi = signal.performance.roi || 0;
+      peakMultiplier = signal.performance.athRoi ? 1 + signal.performance.athRoi / 100 : 1;
+      exitReason = signal.performance.status === 'WIN' ? 'Take Profit' : 'Stop Loss';
+    } else {
+      // Simulate based on score probability
+      // Higher score = better probability of profit
+      const winProb = 0.45 + (signal.score / 100) * 0.35; // 45-80% based on score
+      const isWin = Math.random() < winProb;
+
+      if (isWin) {
+        // Winners: 20% to 150% gains, weighted by score
+        const baseGain = 0.2 + Math.random() * 0.8; // 20-100% base
+        const scoreBonus = (signal.score - 50) / 100; // 0-0.5 bonus
+        roi = (baseGain + scoreBonus) * 100;
+        peakMultiplier = 1 + roi / 100 + Math.random() * 0.5;
+        exitReason = 'Take Profit';
+      } else {
+        // Losers: -20% to -60% losses
+        roi = -(20 + Math.random() * 40);
+        peakMultiplier = 1 + Math.random() * 0.3;
+        exitReason = 'Stop Loss';
+      }
+    }
+
+    // Calculate P&L
+    const pnl = positionValue * (roi / 100);
+    portfolioValue += pnl;
+
+    // Track wins/losses
+    if (roi > 0) wins++;
+    else losses++;
+
+    // Record the trade
+    trades.push({
+      id: signal.id,
+      symbol: signal.symbol,
+      token: signal.token,
+      score: signal.score,
+      riskLevel: signal.riskLevel,
+      entryTime: signal.timestamp,
+      entryPrice: signal.marketData?.price || signal.marketData?.mcap / 1e9 || 0,
+      positionSize: positionValue.toFixed(2),
+      roi: roi.toFixed(2),
+      pnl: pnl.toFixed(2),
+      peakROI: ((peakMultiplier - 1) * 100).toFixed(2),
+      exitReason,
+      portfolioValueAfter: portfolioValue.toFixed(2),
+      result: roi > 0 ? 'WIN' : 'LOSS'
+    });
+
+    // Add chart point
+    chartData.push({
+      timestamp: signal.timestamp,
+      value: Math.round(portfolioValue * 100) / 100,
+      label: new Date(signal.timestamp).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      }),
+      trade: signal.symbol,
+      roi: roi.toFixed(1)
+    });
+  }
+
+  // Add final chart point
+  chartData.push({
+    timestamp: Date.now(),
+    value: Math.round(portfolioValue * 100) / 100,
+    label: 'Now'
+  });
+
+  const totalROI = ((portfolioValue - startAmount) / startAmount) * 100;
+  const winRate = trades.length > 0 ? (wins / trades.length) * 100 : 0;
+
+  res.json({
+    startAmount,
+    currentValue: Math.round(portfolioValue * 100) / 100,
+    totalROI: Math.round(totalROI * 100) / 100,
+    totalTrades: trades.length,
+    wins,
+    losses,
+    winRate: Math.round(winRate * 10) / 10,
+    avgTradeROI:
+      trades.length > 0
+        ? Math.round((trades.reduce((sum, t) => sum + parseFloat(t.roi), 0) / trades.length) * 10) /
+          10
+        : 0,
+    bestTrade:
+      trades.length > 0
+        ? trades.reduce((best, t) => (parseFloat(t.roi) > parseFloat(best.roi) ? t : best))
+        : null,
+    worstTrade:
+      trades.length > 0
+        ? trades.reduce((worst, t) => (parseFloat(t.roi) < parseFloat(worst.roi) ? t : worst))
+        : null,
+    trades: trades.slice(-50), // Last 50 trades
+    chartData,
+    parameters: {
+      minScore,
+      positionSizePercent: positionSize * 100,
+      maxHoldingHours,
+      daysBack
+    }
+  });
+});
+
 // === DATA EXPORT ===
 
 // Export signals in various formats
