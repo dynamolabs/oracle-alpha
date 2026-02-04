@@ -1,69 +1,52 @@
 #!/bin/bash
-
 # ORACLE Alpha - Mainnet Deployment Script
-# Prerequisites:
-# 1. Solana CLI installed (sh -c "$(curl -sSfL https://release.solana.com/stable/install)")
-# 2. Anchor CLI installed (cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli)
-# 3. Wallet with ~2 SOL for deployment (solana balance)
-# 4. Update Anchor.toml with mainnet config
+# Requires ~2.5 SOL in wallet for rent exemption
 
 set -e
 
+PROGRAM_ID="AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd"
+WALLET_PATH="$HOME/.config/solana/id.json"
+RPC_URL="https://api.mainnet-beta.solana.com"
+
 echo "🔮 ORACLE Alpha - Mainnet Deployment"
-echo "====================================="
-
-# Check if solana CLI is installed
-if ! command -v solana &> /dev/null; then
-    echo "❌ Solana CLI not found. Install with:"
-    echo "   sh -c \"\$(curl -sSfL https://release.solana.com/stable/install)\""
-    exit 1
-fi
-
-# Check if anchor CLI is installed
-if ! command -v anchor &> /dev/null; then
-    echo "❌ Anchor CLI not found. Install with:"
-    echo "   cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli"
-    exit 1
-fi
+echo "======================================"
 
 # Check wallet balance
-BALANCE=$(solana balance --url mainnet-beta 2>&1 | grep -oP '[\d.]+' | head -1)
-echo "💰 Wallet balance: $BALANCE SOL"
+BALANCE=$(solana balance --url mainnet-beta)
+echo "Wallet balance: $BALANCE"
 
-if (( $(echo "$BALANCE < 2" | bc -l) )); then
-    echo "⚠️  Warning: Low balance. Deployment requires ~2 SOL"
-    echo "   Fund your wallet: $(solana address)"
-    read -p "Continue anyway? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
+# Check if we have enough SOL (need ~2.5 SOL)
+BALANCE_NUM=$(echo $BALANCE | grep -oP '[\d.]+')
+MIN_BALANCE=2.5
+
+if (( $(echo "$BALANCE_NUM < $MIN_BALANCE" | bc -l) )); then
+    echo "❌ Insufficient balance! Need at least 2.5 SOL for deployment"
+    echo "   Wallet address: $(solana address)"
+    echo "   Please fund the wallet and try again."
+    exit 1
 fi
+
+echo "✅ Sufficient balance for deployment"
+
+# Configure for mainnet
+echo "📝 Configuring for mainnet..."
+solana config set --url mainnet-beta
 
 # Build program
 echo "🔨 Building program..."
+cd "$(dirname "$0")/.."
 anchor build
 
-# Get program keypair
-PROGRAM_KEYPAIR="target/deploy/oracle-keypair.json"
-if [ ! -f "$PROGRAM_KEYPAIR" ]; then
-    echo "❌ Program keypair not found at $PROGRAM_KEYPAIR"
-    exit 1
-fi
-
 # Deploy to mainnet
-echo "🚀 Deploying to mainnet-beta..."
+echo "🚀 Deploying to mainnet..."
 anchor deploy --provider.cluster mainnet
 
-# Get program ID
-PROGRAM_ID=$(solana address -k target/deploy/oracle-keypair.json)
+echo "✅ Deployment complete!"
 echo ""
-echo "✅ Deployment successful!"
-echo "====================================="
 echo "Program ID: $PROGRAM_ID"
 echo "Explorer: https://explorer.solana.com/address/$PROGRAM_ID"
 echo ""
-echo "📝 Next steps:"
-echo "1. Update Anchor.toml with mainnet program ID"
-echo "2. Update .env with SOLANA_CLUSTER=mainnet-beta"
-echo "3. Update README.md with mainnet explorer link"
+echo "Next steps:"
+echo "1. Initialize the Oracle: solana-keygen pubkey $WALLET_PATH"
+echo "2. Update .env with mainnet RPC"
+echo "3. Restart the API server"

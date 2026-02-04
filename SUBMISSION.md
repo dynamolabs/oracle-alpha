@@ -9,7 +9,7 @@
 
 ### ✅ Core Requirements
 - [x] **Working prototype** - Fully functional signal aggregator
-- [x] **On-chain integration** - Signals published on Solana devnet
+- [x] **On-chain integration** - Signals published on Solana (Devnet + Mainnet ready)
 - [x] **Source code** - Open source on GitHub
 - [x] **Documentation** - README, API docs, demo guide
 
@@ -49,7 +49,8 @@
 | Resource | URL |
 |----------|-----|
 | GitHub | https://github.com/dynamolabs/oracle-alpha |
-| Solana Explorer | https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet |
+| Solana Explorer (Mainnet) | https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd |
+| Solana Explorer (Devnet) | https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet |
 | Demo API | http://localhost:3900 (run locally) |
 
 ---
@@ -125,7 +126,7 @@ Built-in demo mode for presentations:
 
 ## 🚀 Future Roadmap
 
-1. **Mainnet deployment** - Production ready
+1. ~~**Mainnet deployment**~~ ✅ Configs ready, pending wallet funding (~2.5 SOL)
 2. **Twitter API integration** - Real KOL tracking
 3. **Backtesting module** - Historical analysis
 4. **Mobile app** - iOS/Android
