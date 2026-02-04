@@ -25,7 +25,9 @@ export type SignalSource =
   | 'news-scraper'
   | 'pump-koth'
   | 'dexscreener'
-  | 'panda_alpha';
+  | 'panda_alpha'
+  | 'dex-volume-anomaly'
+  | 'twitter-sentiment';
 
 // Conviction level based on score and confluence
 export type ConvictionLevel = 'STANDARD' | 'HIGH_CONVICTION' | 'ULTRA';
@@ -65,8 +67,8 @@ export interface AggregatedSignal {
   confidence: number; // 0-100
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
 
-  // Confluence data
-  confluence: {
+  // Confluence data (optional for backwards compatibility)
+  confluence?: {
     uniqueSources: number; // Number of unique source types
     sourceTypes: string[]; // List of unique source types that contributed
     confluenceBoost: number; // Points added for confluence (5/10/15)

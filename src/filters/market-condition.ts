@@ -378,6 +378,3 @@ export function getCacheStatus(): { cached: boolean; ageMs: number; expiresInMs:
     expiresInMs: cachedCondition ? Math.max(0, (lastFetchTime + CACHE_TTL_MS) - now) : 0
   };
 }
-
-// Export types for other modules
-export type { MarketCondition };
