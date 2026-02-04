@@ -8306,3 +8306,121 @@ setInterval(async () => {
 }, 60000);
 
 export { app, server };
+
+// ==================== AUTO TRADER ====================
+import autoTrader from '../trading/auto-trader';
+
+// Initialize auto trader on startup
+autoTrader.initAutoTrader();
+
+app.get('/api/trader/status', async (req, res) => {
+  try {
+    const status = autoTrader.getTradingStatus();
+    const balance = await autoTrader.getWalletBalance();
+    res.json({ ...status, balance });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/trader/start', (req, res) => {
+  autoTrader.startAutoTrading();
+  res.json({ success: true, message: 'Auto trading started' });
+});
+
+app.post('/api/trader/stop', (req, res) => {
+  autoTrader.stopAutoTrading();
+  res.json({ success: true, message: 'Auto trading stopped' });
+});
+
+app.get('/api/trader/history', (req, res) => {
+  const history = autoTrader.getTradeHistory();
+  res.json(history);
+});
+
+app.get('/api/trader/balance', async (req, res) => {
+  const balance = await autoTrader.getWalletBalance();
+  res.json({ balance, walletAddress: autoTrader.getTradingStatus().walletAddress });
+});
+
+app.get('/api/trader/insights', (req, res) => {
+  const insights = autoTrader.getLearningInsights();
+  res.json(insights);
+});
+
+app.post('/api/trader/check-signal', async (req, res) => {
+  const { signal } = req.body;
+  if (!signal) return res.status(400).json({ error: 'Signal required' });
+  
+  const result = autoTrader.isSignalTradeable(signal);
+  const positionSize = result.tradeable ? await autoTrader.calculatePositionSize(signal) : 0;
+  
+  res.json({ ...result, positionSize });
+});
+
+app.post('/api/trader/execute', async (req, res) => {
+  const { signal, positionSol } = req.body;
+  if (!signal) return res.status(400).json({ error: 'Signal required' });
+  
+  const status = autoTrader.getTradingStatus();
+  if (!status.isRunning) {
+    return res.status(400).json({ error: 'Auto trading is not running. Start it first.' });
+  }
+  
+  const checkResult = autoTrader.isSignalTradeable(signal);
+  if (!checkResult.tradeable) {
+    return res.json({ executed: false, reason: checkResult.reason });
+  }
+  
+  const size = positionSol || await autoTrader.calculatePositionSize(signal);
+  if (size <= 0) {
+    return res.json({ executed: false, reason: 'Position size too small' });
+  }
+  
+  const trade = await autoTrader.executeBuy(signal, size);
+  res.json({ executed: trade?.status === 'executed', trade });
+});
+
+app.post('/api/trader/check-positions', async (req, res) => {
+  await autoTrader.checkPositions();
+  const status = autoTrader.getTradingStatus();
+  res.json({ positions: status.positions });
+});
+
+console.log('[SERVER] Auto-trader endpoints added');
+
+// ==================== LIVE MONITOR ====================
+import liveMonitor from '../trading/live-monitor';
+
+app.get('/api/monitor/status', (req, res) => {
+  const status = liveMonitor.getMonitorStatus();
+  res.json(status);
+});
+
+app.post('/api/monitor/start', (req, res) => {
+  const interval = parseInt(req.query.interval as string) || 30000;
+  liveMonitor.startLiveMonitor(interval);
+  res.json({ success: true, message: `Monitor started (${interval/1000}s interval)` });
+});
+
+app.post('/api/monitor/stop', (req, res) => {
+  liveMonitor.stopLiveMonitor();
+  res.json({ success: true, message: 'Monitor stopped' });
+});
+
+app.get('/api/monitor/recent-buys', (req, res) => {
+  const limit = parseInt(req.query.limit as string) || 20;
+  const buys = liveMonitor.getRecentBuys(limit);
+  res.json(buys);
+});
+
+app.post('/api/monitor/add-wallet', (req, res) => {
+  const { wallet, type } = req.body;
+  if (!wallet || !type) {
+    return res.status(400).json({ error: 'wallet and type required' });
+  }
+  liveMonitor.addWalletToMonitor(wallet, type);
+  res.json({ success: true, message: `Added ${wallet} as ${type}` });
+});
+
+console.log('[SERVER] Live monitor endpoints added');
