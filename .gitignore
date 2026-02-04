@@ -26,3 +26,4 @@ test-ledger/
 # Data
 data/
 *.db
+.env.trading
