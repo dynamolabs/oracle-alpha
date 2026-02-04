@@ -273,5 +273,3 @@ export function generateSvgCard(signal: AggregatedSignal): string {
 </svg>
 `.trim();
 }
-
-export { generateTextCard, generateHtmlCard, generateSvgCard };

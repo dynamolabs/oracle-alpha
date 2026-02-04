@@ -24,7 +24,8 @@ export type SignalSource =
   | 'whale-tracker'
   | 'news-scraper'
   | 'pump-koth'
-  | 'dexscreener';
+  | 'dexscreener'
+  | 'panda_alpha';
 
 // Aggregated Signal
 export interface AggregatedSignal {

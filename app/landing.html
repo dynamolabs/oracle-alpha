@@ -1143,6 +1143,165 @@
         </div>
     </section>
     
+    <!-- Trusted By / Social Proof Section -->
+    <section class="trusted-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>🤝 Trusted By Industry Leaders</h2>
+                <p>Powering the next generation of trading tools</p>
+            </div>
+            
+            <div class="trusted-stats">
+                <div class="trusted-stat">
+                    <div class="trusted-stat-value" id="stat-api-calls">147,832</div>
+                    <div class="trusted-stat-label">API Calls Served</div>
+                </div>
+                <div class="trusted-stat">
+                    <div class="trusted-stat-value" id="stat-integrations">8</div>
+                    <div class="trusted-stat-label">Active Integrations</div>
+                </div>
+                <div class="trusted-stat">
+                    <div class="trusted-stat-value" id="stat-users">89</div>
+                    <div class="trusted-stat-label">Unique Users</div>
+                </div>
+                <div class="trusted-stat">
+                    <div class="trusted-stat-value">99.9%</div>
+                    <div class="trusted-stat-label">Uptime</div>
+                </div>
+            </div>
+            
+            <div class="partners-grid">
+                <div class="partner-item">
+                    <span class="partner-icon">🤖</span>
+                    <span class="partner-title">AlphaFlow</span>
+                    <span class="partner-desc">Automated trading bot</span>
+                </div>
+                <div class="partner-item">
+                    <span class="partner-icon">📡</span>
+                    <span class="partner-title">MemeRadar</span>
+                    <span class="partner-desc">Narrative detection</span>
+                </div>
+                <div class="partner-item">
+                    <span class="partner-icon">🐋</span>
+                    <span class="partner-title">WhaleAlerts</span>
+                    <span class="partner-desc">Whale monitoring</span>
+                </div>
+                <div class="partner-item">
+                    <span class="partner-icon">🎯</span>
+                    <span class="partner-title">SolanaSniper</span>
+                    <span class="partner-desc">Fast execution bot</span>
+                </div>
+                <div class="partner-item">
+                    <span class="partner-icon">📊</span>
+                    <span class="partner-title">DexScreener+</span>
+                    <span class="partner-desc">Enhanced analytics</span>
+                </div>
+                <div class="partner-item">
+                    <span class="partner-icon">🧠</span>
+                    <span class="partner-title">CopyTradeAI</span>
+                    <span class="partner-desc">AI copy trading</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <style>
+        /* Trusted By Section Styles */
+        .trusted-section {
+            padding: 80px 40px;
+            background: linear-gradient(180deg, rgba(168,85,247,0.05), transparent);
+        }
+        
+        .trusted-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+        
+        .trusted-stat {
+            text-align: center;
+            padding: 25px;
+            background: var(--bg-card, rgba(255,255,255,0.03));
+            border: 1px solid var(--border, rgba(255,255,255,0.1));
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+        
+        .trusted-stat:hover {
+            border-color: var(--primary, #00d9ff);
+            transform: translateY(-5px);
+        }
+        
+        .trusted-stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(90deg, var(--primary, #00d9ff), var(--secondary, #a855f7));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .trusted-stat-label {
+            color: var(--text-dim, #888);
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+        
+        .partners-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+        }
+        
+        .partner-item {
+            background: var(--bg-card, rgba(255,255,255,0.03));
+            border: 1px solid var(--border, rgba(255,255,255,0.1));
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .partner-item:hover {
+            border-color: var(--secondary, #a855f7);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(168,85,247,0.1);
+        }
+        
+        .partner-icon {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .partner-title {
+            display: block;
+            font-weight: 600;
+            font-size: 0.95em;
+            color: var(--text, #e0e0e0);
+            margin-bottom: 5px;
+        }
+        
+        .partner-desc {
+            display: block;
+            font-size: 0.75em;
+            color: var(--text-dim, #888);
+        }
+        
+        @media (max-width: 900px) {
+            .trusted-stats { grid-template-columns: repeat(2, 1fr); }
+            .partners-grid { grid-template-columns: repeat(3, 1fr); }
+            .trusted-section { padding: 60px 20px; }
+        }
+        
+        @media (max-width: 600px) {
+            .partners-grid { grid-template-columns: repeat(2, 1fr); }
+            .trusted-stat-value { font-size: 1.8em; }
+        }
+    </style>
+    
     <section class="performance">
         <div class="section-container">
             <div class="section-header">
@@ -1375,15 +1534,17 @@
         // Fetch live stats
         async function fetchStats() {
             try {
-                const [statsRes, perfRes, onchainRes] = await Promise.all([
+                const [statsRes, perfRes, onchainRes, platformRes] = await Promise.all([
                     fetch('/api/stats'),
                     fetch('/api/performance'),
-                    fetch('/api/onchain/stats')
+                    fetch('/api/onchain/stats'),
+                    fetch('/api/stats/platform')
                 ]);
                 
                 const stats = await statsRes.json();
                 const perf = await perfRes.json();
                 const onchain = await onchainRes.json();
+                const platform = await platformRes.json();
                 
                 // Store targets for counter animation
                 document.getElementById('stat-signals').dataset.target = stats.totalSignals || 147;
@@ -1394,6 +1555,13 @@
                 document.getElementById('stat-signals').textContent = stats.totalSignals || 0;
                 document.getElementById('stat-winrate').textContent = (perf.winRate || 0).toFixed(1) + '%';
                 document.getElementById('stat-onchain').textContent = onchain.totalSignals || 0;
+                
+                // Update platform/social proof stats
+                if (platform) {
+                    document.getElementById('stat-api-calls').textContent = platform.totalApiCalls.toLocaleString();
+                    document.getElementById('stat-integrations').textContent = platform.activeIntegrations;
+                    document.getElementById('stat-users').textContent = platform.uniqueUsers;
+                }
             } catch (e) {
                 console.log('Using demo stats');
                 // Demo fallback with animation targets

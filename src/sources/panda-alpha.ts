@@ -48,12 +48,13 @@ export async function scanPandaAlpha(): Promise<RawSignal[]> {
       const normalizedScore = Math.min(100, Math.round(panda.score / 2));
 
       signals.push({
-        source: SOURCE_NAME,
+        source: SOURCE_NAME as SignalSource,
         token: panda.ca,
         symbol: panda.token,
-        rawScore: normalizedScore,
-        confidence: panda.buyRatio,
+        action: 'BUY' as const,
+        confidence: Math.round(panda.buyRatio * 100),
         metadata: {
+          rawScore: normalizedScore,
           pandaScore: panda.score,
           baseScore: panda.baseScore,
           signalBoost: panda.signalBoost,
@@ -74,8 +75,8 @@ export async function scanPandaAlpha(): Promise<RawSignal[]> {
   return signals;
 }
 
-export const pandaAlphaSource: SignalSource = {
-  name: SOURCE_NAME,
+export const pandaAlphaSource = {
+  name: SOURCE_NAME as SignalSource,
   displayName: 'Panda Alpha',
   description: 'AI-powered memecoin signal aggregator',
   weight: 0.15, // 15% weight in final score
