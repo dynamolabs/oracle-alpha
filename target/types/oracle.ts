@@ -230,6 +230,173 @@ export type Oracle = {
       ]
     },
     {
+      "name": "publishSignalWithProof",
+      "docs": [
+        "Publish a signal with reasoning proof commitment"
+      ],
+      "discriminator": [
+        195,
+        60,
+        177,
+        219,
+        69,
+        124,
+        154,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "oracleState",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  105,
+                  103,
+                  110,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "oracle_state.total_signals",
+                "account": "oracleState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token",
+          "type": "pubkey"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "score",
+          "type": "u8"
+        },
+        {
+          "name": "riskLevel",
+          "type": "u8"
+        },
+        {
+          "name": "sourcesBitmap",
+          "type": "u8"
+        },
+        {
+          "name": "mcap",
+          "type": "u64"
+        },
+        {
+          "name": "entryPrice",
+          "type": "u64"
+        },
+        {
+          "name": "reasoningHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "revealReasoning",
+      "docs": [
+        "Mark reasoning as revealed (after price movement)"
+      ],
+      "discriminator": [
+        76,
+        215,
+        6,
+        241,
+        209,
+        207,
+        84,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "oracleState",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signal",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "updateAth",
       "docs": [
         "Update signal with ATH (for tracking)"
@@ -317,6 +484,19 @@ export type Oracle = {
   ],
   "events": [
     {
+      "name": "reasoningRevealed",
+      "discriminator": [
+        136,
+        27,
+        89,
+        205,
+        193,
+        65,
+        142,
+        210
+      ]
+    },
+    {
       "name": "signalClosed",
       "discriminator": [
         129,
@@ -341,6 +521,19 @@ export type Oracle = {
         203,
         42
       ]
+    },
+    {
+      "name": "signalPublishedWithProof",
+      "discriminator": [
+        72,
+        82,
+        184,
+        90,
+        190,
+        47,
+        227,
+        117
+      ]
     }
   ],
   "errors": [
@@ -363,6 +556,16 @@ export type Oracle = {
       "code": 6003,
       "name": "signalAlreadyClosed",
       "msg": "Signal already closed"
+    },
+    {
+      "code": 6004,
+      "name": "reasoningAlreadyRevealed",
+      "msg": "Reasoning already revealed"
+    },
+    {
+      "code": 6005,
+      "name": "noReasoningCommitment",
+      "msg": "No reasoning commitment exists for this signal"
     }
   ],
   "types": [
@@ -390,6 +593,31 @@ export type Oracle = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reasoningRevealed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "reasoningHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -456,6 +684,19 @@ export type Oracle = {
             }
           },
           {
+            "name": "reasoningHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reasoningRevealed",
+            "type": "bool"
+          },
+          {
             "name": "bump",
             "type": "u8"
           }
@@ -502,6 +743,39 @@ export type Oracle = {
           {
             "name": "score",
             "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "signalPublishedWithProof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "token",
+            "type": "pubkey"
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "reasoningHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "timestamp",

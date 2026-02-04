@@ -1,0 +1,148 @@
+{
+  "name": "oracle-alpha",
+  "version": "1.0.0",
+  "description": "On-chain verifiable signal aggregator for Solana memecoin trading. Get AI-powered trading signals with cryptographic proof of performance.",
+  "homepage": "https://github.com/dynamolabs/oracle-alpha",
+  "metadata": {
+    "category": "trading",
+    "chain": "solana",
+    "program": "AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd",
+    "api_base": "http://45.77.42.204:3900/api"
+  },
+  "endpoints": {
+    "signals": {
+      "method": "GET",
+      "path": "/api/signals",
+      "description": "Get recent trading signals",
+      "parameters": {
+        "limit": {
+          "type": "number",
+          "default": 20,
+          "description": "Number of signals to return (max 100)"
+        },
+        "minScore": {
+          "type": "number",
+          "default": 0,
+          "description": "Minimum signal score (0-100)"
+        },
+        "risk": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH", "EXTREME"],
+          "description": "Filter by risk level"
+        }
+      },
+      "response": {
+        "signals": [
+          {
+            "id": "string",
+            "token": "string",
+            "symbol": "string",
+            "entryPrice": "number",
+            "score": "number (0-100)",
+            "risk": "LOW|MEDIUM|HIGH|EXTREME",
+            "sources": ["string"],
+            "reasoning": "string",
+            "reasoningHash": "string (sha256)",
+            "timestamp": "ISO8601",
+            "onChainTx": "string (solana tx signature)"
+          }
+        ]
+      }
+    },
+    "signal": {
+      "method": "GET",
+      "path": "/api/signals/:id",
+      "description": "Get a specific signal with full details",
+      "response": {
+        "signal": {
+          "id": "string",
+          "token": "string",
+          "symbol": "string",
+          "name": "string",
+          "entryPrice": "number",
+          "currentPrice": "number",
+          "athPrice": "number",
+          "athMultiple": "number",
+          "score": "number",
+          "risk": "string",
+          "sources": [
+            {
+              "name": "string",
+              "weight": "number",
+              "contribution": "number"
+            }
+          ],
+          "reasoning": "string",
+          "reasoningHash": "string",
+          "reasoningRevealed": "boolean",
+          "outcome": "PENDING|WIN|LOSS",
+          "roi": "number (percentage)",
+          "timestamp": "ISO8601",
+          "onChainPda": "string",
+          "onChainTx": "string"
+        }
+      }
+    },
+    "performance": {
+      "method": "GET",
+      "path": "/api/performance",
+      "description": "Get overall signal performance stats",
+      "response": {
+        "totalSignals": "number",
+        "wins": "number",
+        "losses": "number",
+        "pending": "number",
+        "winRate": "number (percentage)",
+        "avgRoi": "number (percentage)",
+        "bestSignal": {
+          "symbol": "string",
+          "roi": "number"
+        }
+      }
+    },
+    "subscribe": {
+      "method": "POST",
+      "path": "/api/subscribe",
+      "description": "Subscribe to real-time signals via webhook",
+      "body": {
+        "webhookUrl": "string (required)",
+        "minScore": "number (optional, default 50)",
+        "risks": ["LOW", "MEDIUM"]
+      },
+      "response": {
+        "subscriptionId": "string",
+        "status": "active"
+      }
+    },
+    "sources": {
+      "method": "GET",
+      "path": "/api/sources",
+      "description": "Get list of signal sources and their stats",
+      "response": {
+        "sources": [
+          {
+            "name": "string",
+            "type": "smart_wallet|kol|volume|narrative|launch|whale|news|social|koth",
+            "weight": "number",
+            "signals": "number",
+            "winRate": "number"
+          }
+        ]
+      }
+    }
+  },
+  "examples": {
+    "getTopSignals": "curl 'http://45.77.42.204:3900/api/signals?minScore=70&limit=10'",
+    "getPerformance": "curl 'http://45.77.42.204:3900/api/performance'",
+    "subscribeWebhook": "curl -X POST 'http://45.77.42.204:3900/api/subscribe' -H 'Content-Type: application/json' -d '{\"webhookUrl\": \"https://your-agent.com/webhook\", \"minScore\": 60}'"
+  },
+  "authentication": {
+    "type": "api_key",
+    "header": "X-API-Key",
+    "note": "Contact @ShifuSensei for API key"
+  },
+  "rateLimit": {
+    "requests": 100,
+    "window": "1 minute"
+  }
+}

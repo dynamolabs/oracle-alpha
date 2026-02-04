@@ -224,6 +224,173 @@
       ]
     },
     {
+      "name": "publish_signal_with_proof",
+      "docs": [
+        "Publish a signal with reasoning proof commitment"
+      ],
+      "discriminator": [
+        195,
+        60,
+        177,
+        219,
+        69,
+        124,
+        154,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "oracle_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  105,
+                  103,
+                  110,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "oracle_state.total_signals",
+                "account": "OracleState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token",
+          "type": "pubkey"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "score",
+          "type": "u8"
+        },
+        {
+          "name": "risk_level",
+          "type": "u8"
+        },
+        {
+          "name": "sources_bitmap",
+          "type": "u8"
+        },
+        {
+          "name": "mcap",
+          "type": "u64"
+        },
+        {
+          "name": "entry_price",
+          "type": "u64"
+        },
+        {
+          "name": "reasoning_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reveal_reasoning",
+      "docs": [
+        "Mark reasoning as revealed (after price movement)"
+      ],
+      "discriminator": [
+        76,
+        215,
+        6,
+        241,
+        209,
+        207,
+        84,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "oracle_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signal",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "update_ath",
       "docs": [
         "Update signal with ATH (for tracking)"
@@ -311,6 +478,19 @@
   ],
   "events": [
     {
+      "name": "ReasoningRevealed",
+      "discriminator": [
+        136,
+        27,
+        89,
+        205,
+        193,
+        65,
+        142,
+        210
+      ]
+    },
+    {
       "name": "SignalClosed",
       "discriminator": [
         129,
@@ -335,6 +515,19 @@
         203,
         42
       ]
+    },
+    {
+      "name": "SignalPublishedWithProof",
+      "discriminator": [
+        72,
+        82,
+        184,
+        90,
+        190,
+        47,
+        227,
+        117
+      ]
     }
   ],
   "errors": [
@@ -357,6 +550,16 @@
       "code": 6003,
       "name": "SignalAlreadyClosed",
       "msg": "Signal already closed"
+    },
+    {
+      "code": 6004,
+      "name": "ReasoningAlreadyRevealed",
+      "msg": "Reasoning already revealed"
+    },
+    {
+      "code": 6005,
+      "name": "NoReasoningCommitment",
+      "msg": "No reasoning commitment exists for this signal"
     }
   ],
   "types": [
@@ -384,6 +587,31 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReasoningRevealed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "reasoning_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -450,6 +678,19 @@
             }
           },
           {
+            "name": "reasoning_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reasoning_revealed",
+            "type": "bool"
+          },
+          {
             "name": "bump",
             "type": "u8"
           }
@@ -496,6 +737,39 @@
           {
             "name": "score",
             "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignalPublishedWithProof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "token",
+            "type": "pubkey"
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "reasoning_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "timestamp",

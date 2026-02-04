@@ -9,7 +9,7 @@
   <a href="#"><img src="https://img.shields.io/badge/tests-193%20passed-brightgreen" alt="Tests"></a>
   <a href="#"><img src="https://img.shields.io/badge/coverage-77%25+-brightgreen" alt="Coverage"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
-  <a href="https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet"><img src="https://img.shields.io/badge/Solana-Devnet-blueviolet" alt="Solana"></a>
+  <a href="https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd"><img src="https://img.shields.io/badge/Solana-Mainnet-blueviolet" alt="Solana"></a>
   <a href="#"><img src="https://img.shields.io/badge/Docker-Ready-blue" alt="Docker"></a>
   <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.3-blue" alt="TypeScript"></a>
 </p>
@@ -37,6 +37,7 @@
 
 | Network | Program ID | Explorer |
 |---------|------------|----------|
+| **Mainnet** | `AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd` | [View](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd) |
 | Devnet | `AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd` | [View](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet) |
 
 ## 🎯 What is ORACLE Alpha?
@@ -211,12 +212,110 @@ pm2 logs oracle-alpha
 ### WebSocket
 - `ws://localhost:3900/ws` - Real-time signal updates
 
+## 🤖 Agent Composability API (Colosseum Skill.json)
+
+ORACLE Alpha exposes a **skill.json** endpoint for agent discovery, compatible with the Colosseum Agent Hackathon ecosystem. Other agents can consume our signals programmatically.
+
+### Skill Discovery
+```bash
+# Get skill.json for agent integration
+curl https://oracle-alpha.dynamolabs.xyz/skill.json
+```
+
+### Agent-Optimized Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/agent/signals` | Real-time signals (agent-optimized format) |
+| GET | `/api/agent/signals/latest` | Single best signal for quick decisions |
+| GET | `/api/agent/signals/token/:address` | Signal for specific token |
+| GET | `/api/agent/performance` | Performance metrics summary |
+| GET | `/api/agent/performance/history` | Historical signal outcomes |
+| GET | `/api/agent/leaderboard` | Top performing signals by ROI |
+| GET | `/api/agent/sources` | Source reliability breakdown |
+| GET | `/api/agent/onchain/verified` | On-chain verified signals |
+| GET | `/api/agent/onchain/stats` | On-chain oracle statistics |
+
+### Quick Start for Agents
+
+```bash
+# 1. Discover the skill
+curl https://oracle-alpha.dynamolabs.xyz/skill.json
+
+# 2. Get real-time signals (high score, low risk)
+curl "https://oracle-alpha.dynamolabs.xyz/api/agent/signals?minScore=70&riskLevel=LOW&limit=5"
+
+# 3. Get the best current signal
+curl https://oracle-alpha.dynamolabs.xyz/api/agent/signals/latest
+
+# 4. Check historical performance
+curl https://oracle-alpha.dynamolabs.xyz/api/agent/performance
+
+# 5. Verify on-chain track record
+curl https://oracle-alpha.dynamolabs.xyz/api/agent/onchain/verified
+```
+
+### Example Response: `/api/agent/signals`
+
+```json
+{
+  "count": 3,
+  "timestamp": 1707012345678,
+  "signals": [
+    {
+      "id": "sig_abc123",
+      "token": "TokenMintAddress...",
+      "symbol": "ALPHA",
+      "score": 82,
+      "confidence": 78,
+      "riskLevel": "LOW",
+      "sources": [
+        {"type": "smart_wallet", "score": 85, "weight": 1.5},
+        {"type": "volume_spike", "score": 72, "weight": 1.0}
+      ],
+      "marketData": {
+        "price": 0.00234,
+        "mcap": 1500000,
+        "volume24h": 250000
+      },
+      "narratives": ["AI", "Meme"],
+      "timestamp": 1707012300000,
+      "age_minutes": 5,
+      "onchain_published": true,
+      "action": "STRONG_BUY"
+    }
+  ]
+}
+```
+
+### WebSocket for Real-Time Streaming
+
+```javascript
+const ws = new WebSocket('wss://oracle-alpha.dynamolabs.xyz/ws');
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if (data.type === 'signal') {
+    console.log('New signal:', data.data.symbol, 'Score:', data.data.score);
+  }
+};
+```
+
+### Why Trust ORACLE Alpha Signals?
+
+1. **Verifiable On-Chain** - High-confidence signals published to Solana BEFORE price moves
+2. **Transparent Performance** - All historical outcomes publicly queryable
+3. **Multi-Source Validation** - Signals confirmed by multiple independent sources
+4. **Immutable Timestamps** - On-chain records cannot be retroactively modified
+
 ## ⚙️ Configuration
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | API server port | 3900 |
-| `SOLANA_RPC_URL` | Solana RPC endpoint | devnet |
+| `SOLANA_RPC_URL` | Solana RPC endpoint | mainnet-beta |
+| `SOLANA_NETWORK` | Network name (mainnet-beta/devnet) | mainnet-beta |
+| `ORACLE_PROGRAM_ID` | Program ID | `AL9bxB2BUH...` |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token | - |
 | `TELEGRAM_CHAT_ID` | Telegram chat ID | - |
 | `HELIUS_API_KEY` | Helius API key (optional) | - |
@@ -300,7 +399,8 @@ PRs welcome! Please follow the existing code style.
 ## 🔗 Links
 
 - [GitHub](https://github.com/dynamolabs/oracle-alpha)
-- [Solana Explorer](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet)
+- [Solana Explorer (Mainnet)](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd)
+- [Solana Explorer (Devnet)](https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet)
 - [Colosseum Hackathon](https://colosseum.com/agent-hackathon)
 
 ---

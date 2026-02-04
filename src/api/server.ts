@@ -39,6 +39,16 @@ import { DemoRunner, generateDemoSignal, generateHistoricalSignals } from '../de
 import { generateTextCard, generateHtmlCard, generateSvgCard } from './share-card';
 import { exportSignals, exportPerformanceReport } from '../export/data-export';
 import { explainSignal, formatExplanation } from '../analysis/explainer';
+import {
+  loadProof,
+  listProofs,
+  verifyProof,
+  revealProof,
+  formatProofForDisplay,
+  getProofsReadyForReveal,
+  ReasoningProof
+} from '../reasoning/proofs';
+import { publishSignalWithProof, revealReasoningOnChain } from '../onchain/publisher';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -166,8 +176,8 @@ app.get('/api/info', async (req, res) => {
     description: 'On-chain Reliable Alpha Compilation & Learning Engine',
     author: 'ShifuSensei 🐼',
     hackathon: 'Colosseum Agent Hackathon 2026',
-    programId: 'AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd',
-    network: 'devnet',
+    programId: ORACLE_PROGRAM_ID,
+    network: SOLANA_NETWORK,
     features: [
       '8 signal sources (smart wallets, KOLs, volume, narratives, etc.)',
       'Weighted scoring algorithm',
@@ -179,8 +189,7 @@ app.get('/api/info', async (req, res) => {
     onChain: onchain || { enabled: false },
     links: {
       github: 'https://github.com/dynamolabs/oracle-alpha',
-      explorer:
-        'https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet'
+      explorer: getExplorerUrl(ORACLE_PROGRAM_ID)
     }
   });
 });
@@ -423,7 +432,7 @@ app.get('/api/summary', (req, res) => {
     text += `${riskEmoji} $${s.symbol} - Score: ${s.score}\n`;
   }
 
-  text += '\n⛓️ Verifiable on Solana devnet';
+  text += `\n⛓️ Verifiable on Solana ${SOLANA_NETWORK}`;
 
   res.json({
     text,
@@ -555,6 +564,211 @@ app.get('/api/explain/:id/text', (req, res) => {
   res.type('text/plain').send(text);
 });
 
+// === REASONING PROOFS API ===
+// Verifiable AI reasoning - proves analysis was committed BEFORE outcome
+
+// List all reasoning proofs
+app.get('/api/proofs', (req, res) => {
+  const includeRevealed = req.query.revealed !== 'false';
+  let proofs = listProofs();
+
+  if (!includeRevealed) {
+    proofs = proofs.filter(p => !p.revealed);
+  }
+
+  res.json({
+    count: proofs.length,
+    proofs: proofs.map(p => ({
+      signalId: p.signalId,
+      symbol: p.symbol,
+      token: p.token,
+      timestamp: p.timestamp,
+      reasoningHash: p.reasoningHash,
+      revealed: p.revealed,
+      revealedAt: p.revealedAt,
+      conviction: p.reasoning.conviction,
+      verified: verifyProof(p)
+    }))
+  });
+});
+
+// Get a specific proof
+app.get('/api/proofs/:signalId', (req, res) => {
+  const proof = loadProof(req.params.signalId);
+
+  if (!proof) {
+    return res.status(404).json({ error: 'Proof not found' });
+  }
+
+  // If not revealed, only show the hash (not the reasoning)
+  if (!proof.revealed) {
+    return res.json({
+      signalId: proof.signalId,
+      symbol: proof.symbol,
+      token: proof.token,
+      timestamp: proof.timestamp,
+      reasoningHash: proof.reasoningHash,
+      revealed: false,
+      marketDataAtSignal: proof.marketDataAtSignal,
+      message: 'Reasoning not yet revealed. Hash is committed on-chain.'
+    });
+  }
+
+  // Full proof if revealed
+  res.json({
+    signalId: proof.signalId,
+    symbol: proof.symbol,
+    token: proof.token,
+    timestamp: proof.timestamp,
+    reasoningHash: proof.reasoningHash,
+    revealed: true,
+    revealedAt: proof.revealedAt,
+    priceAtReveal: proof.priceAtReveal,
+    reasoning: proof.reasoning,
+    marketDataAtSignal: proof.marketDataAtSignal,
+    verified: verifyProof(proof)
+  });
+});
+
+// Verify a proof (anyone can verify)
+app.get('/api/proofs/:signalId/verify', (req, res) => {
+  const proof = loadProof(req.params.signalId);
+
+  if (!proof) {
+    return res.status(404).json({ error: 'Proof not found' });
+  }
+
+  const isValid = verifyProof(proof);
+
+  res.json({
+    signalId: proof.signalId,
+    symbol: proof.symbol,
+    reasoningHash: proof.reasoningHash,
+    verified: isValid,
+    message: isValid
+      ? 'Proof is valid - hash(reasoning + salt) matches committed hash'
+      : 'INVALID PROOF - hash does not match!'
+  });
+});
+
+// Reveal a proof (after price movement)
+app.post('/api/proofs/:signalId/reveal', async (req, res) => {
+  const { signalId } = req.params;
+  const { currentPrice } = req.body;
+
+  const proof = await revealProof(signalId, currentPrice);
+
+  if (!proof) {
+    return res.status(404).json({ error: 'Proof not found' });
+  }
+
+  // Also mark as revealed on-chain if possible
+  try {
+    const signalIdNum = parseInt(signalId);
+    if (!isNaN(signalIdNum)) {
+      await revealReasoningOnChain(signalIdNum);
+    }
+  } catch (e) {
+    console.error('[PROOFS] Failed to reveal on-chain:', e);
+  }
+
+  res.json({
+    signalId: proof.signalId,
+    symbol: proof.symbol,
+    revealed: true,
+    revealedAt: proof.revealedAt,
+    priceAtReveal: proof.priceAtReveal,
+    reasoning: proof.reasoning,
+    verified: verifyProof(proof)
+  });
+});
+
+// Get formatted proof text (human readable)
+app.get('/api/proofs/:signalId/text', (req, res) => {
+  const proof = loadProof(req.params.signalId);
+
+  if (!proof) {
+    return res.status(404).json({ error: 'Proof not found' });
+  }
+
+  if (!proof.revealed) {
+    return res
+      .type('text/plain')
+      .send(
+        `🔐 REASONING PROOF: $${proof.symbol}\n` +
+          `${'═'.repeat(40)}\n\n` +
+          '⏳ Status: NOT YET REVEALED\n' +
+          `📅 Committed: ${new Date(proof.timestamp).toISOString()}\n` +
+          `🔑 Hash: ${proof.reasoningHash}\n\n` +
+          'The AI reasoning was committed before the outcome.\n' +
+          'Once revealed, anyone can verify the hash matches.'
+      );
+  }
+
+  res.type('text/plain').send(formatProofForDisplay(proof));
+});
+
+// Get proofs ready for reveal (older than threshold)
+app.get('/api/proofs/pending/reveal', (req, res) => {
+  const minAgeMinutes = req.query.minAge ? parseInt(req.query.minAge as string) : 60;
+  const pending = getProofsReadyForReveal(minAgeMinutes);
+
+  res.json({
+    minAgeMinutes,
+    count: pending.length,
+    proofs: pending.map(p => ({
+      signalId: p.signalId,
+      symbol: p.symbol,
+      token: p.token,
+      timestamp: p.timestamp,
+      reasoningHash: p.reasoningHash,
+      ageMinutes: Math.floor((Date.now() - p.timestamp) / 60000)
+    }))
+  });
+});
+
+// Agent-optimized proof verification
+app.get('/api/agent/proofs/:signalId', (req, res) => {
+  const proof = loadProof(req.params.signalId);
+
+  if (!proof) {
+    return res.status(404).json({ error: 'Proof not found' });
+  }
+
+  res.json({
+    signalId: proof.signalId,
+    token: proof.token,
+    symbol: proof.symbol,
+    timestamp: proof.timestamp,
+    reasoningHash: proof.reasoningHash,
+    revealed: proof.revealed,
+    verified: verifyProof(proof),
+    // Only include reasoning if revealed
+    ...(proof.revealed
+      ? {
+          reasoning: {
+            conviction: proof.reasoning.conviction,
+            priceTargets: proof.reasoning.priceTargets,
+            bullishCount: proof.reasoning.bullishFactors.length,
+            bearishCount: proof.reasoning.bearishFactors.length,
+            timeframe: proof.reasoning.timeframe
+          },
+          outcome: proof.priceAtReveal
+            ? {
+                priceAtSignal: proof.marketDataAtSignal.mcap,
+                priceAtReveal: proof.priceAtReveal,
+                roi: (
+                  ((proof.priceAtReveal - proof.marketDataAtSignal.mcap) /
+                    proof.marketDataAtSignal.mcap) *
+                  100
+                ).toFixed(2)
+              }
+            : null
+        }
+      : {})
+  });
+});
+
 // === DATA EXPORT ===
 
 // Export signals in various formats
@@ -594,6 +808,274 @@ app.get('/api/export/performance', (req, res) => {
   res.send(report);
 });
 
+// === AGENT COMPOSABILITY API ===
+// Endpoints optimized for agent consumption (Colosseum skill.json compatible)
+
+// Serve skill.json for agent discovery
+app.get('/skill.json', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../app/skill.json'));
+});
+
+// Network config
+const SOLANA_NETWORK = process.env.SOLANA_NETWORK || 'mainnet-beta';
+const ORACLE_PROGRAM_ID =
+  process.env.ORACLE_PROGRAM_ID || 'AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd';
+const getExplorerUrl = (address: string) => {
+  const cluster = SOLANA_NETWORK === 'mainnet-beta' ? '' : `?cluster=${SOLANA_NETWORK}`;
+  return `https://explorer.solana.com/address/${address}${cluster}`;
+};
+
+// Agent-optimized real-time signals
+app.get('/api/agent/signals', (req, res) => {
+  const minScore = req.query.minScore ? parseInt(req.query.minScore as string) : 60;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+  const riskLevel = req.query.riskLevel as string | undefined;
+
+  let signals = signalStore.filter(s => s.score >= minScore);
+
+  if (riskLevel) {
+    signals = signals.filter(s => s.riskLevel === riskLevel.toUpperCase());
+  }
+
+  const agentSignals = signals.slice(0, limit).map(s => ({
+    id: s.id,
+    token: s.token,
+    symbol: s.symbol,
+    name: s.name,
+    score: s.score,
+    confidence: s.confidence,
+    riskLevel: s.riskLevel,
+    sources: s.sources.map(src => ({
+      type: src.source,
+      score: src.rawScore,
+      weight: src.weight
+    })),
+    marketData: {
+      price: s.marketData?.price || null,
+      mcap: s.marketData?.mcap || null,
+      volume1h: s.marketData?.volume1h || null,
+      priceChange1h: s.marketData?.priceChange1h || null
+    },
+    narratives: s.analysis?.narrative || [],
+    timestamp: s.timestamp,
+    age_minutes: Math.floor((Date.now() - s.timestamp) / 60000),
+    onchain_published: s.published || false,
+    performance: s.performance || null
+  }));
+
+  res.json({
+    count: agentSignals.length,
+    timestamp: Date.now(),
+    signals: agentSignals
+  });
+});
+
+// Get latest best signal for quick decisions
+app.get('/api/agent/signals/latest', (req, res) => {
+  const minScore = 65;
+  const maxAge = 30 * 60 * 1000; // 30 minutes
+  const cutoff = Date.now() - maxAge;
+
+  const candidates = signalStore
+    .filter(s => s.score >= minScore && s.timestamp >= cutoff)
+    .sort((a, b) => b.score - a.score);
+
+  if (candidates.length === 0) {
+    return res.json({ signal: null, message: 'No qualifying signals in the last 30 minutes' });
+  }
+
+  const best = candidates[0];
+  res.json({
+    signal: {
+      id: best.id,
+      token: best.token,
+      symbol: best.symbol,
+      score: best.score,
+      riskLevel: best.riskLevel,
+      sources: best.sources.map(src => src.source),
+      price: best.marketData?.price || null,
+      mcap: best.marketData?.mcap || null,
+      timestamp: best.timestamp,
+      action:
+        best.riskLevel === 'LOW' ? 'STRONG_BUY' : best.riskLevel === 'MEDIUM' ? 'BUY' : 'WATCH'
+    }
+  });
+});
+
+// Get signal by token address
+app.get('/api/agent/signals/token/:address', (req, res) => {
+  const { address } = req.params;
+  const signal = signalStore.find(s => s.token === address);
+
+  if (!signal) {
+    return res.status(404).json({ error: 'No signal found for this token' });
+  }
+
+  res.json({
+    id: signal.id,
+    token: signal.token,
+    symbol: signal.symbol,
+    score: signal.score,
+    riskLevel: signal.riskLevel,
+    sources: signal.sources,
+    marketData: signal.marketData,
+    timestamp: signal.timestamp,
+    performance: signal.performance
+  });
+});
+
+// Agent performance endpoint
+app.get('/api/agent/performance', (req, res) => {
+  const summary = getPerformanceSummary();
+  const tracked = getTrackedSignals();
+
+  const wins = tracked.filter(t => t.status === 'WIN').length;
+  const losses = tracked.filter(t => t.status === 'LOSS').length;
+  const open = tracked.filter(t => t.status === 'OPEN').length;
+
+  res.json({
+    totalSignals: summary.total,
+    openSignals: open,
+    closedSignals: wins + losses,
+    wins,
+    losses,
+    winRate: summary.winRate,
+    avgRoi: summary.avgRoi,
+    bestRoi: summary.bestTrade?.roi || 0,
+    worstRoi: summary.worstTrade?.roi || 0,
+    timestamp: Date.now()
+  });
+});
+
+// Historical performance for agents
+app.get('/api/agent/performance/history', (req, res) => {
+  const days = req.query.days ? parseInt(req.query.days as string) : 7;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+
+  const historical = signalStore
+    .filter(s => s.performance && s.timestamp >= cutoff)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, limit)
+    .map(s => ({
+      id: s.id,
+      token: s.token,
+      symbol: s.symbol,
+      score: s.score,
+      entryPrice: s.performance?.entryPrice,
+      exitPrice: s.performance?.currentPrice,
+      athPrice: s.performance?.athPrice,
+      roi: s.performance?.roi,
+      athRoi: s.performance?.athRoi,
+      status: s.performance?.status,
+      timestamp: s.timestamp
+    }));
+
+  res.json({
+    days,
+    count: historical.length,
+    history: historical
+  });
+});
+
+// Agent leaderboard
+app.get('/api/agent/leaderboard', (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+  const tracked = getTrackedSignals();
+
+  const sorted = tracked
+    .filter(t => t.currentPrice > 0)
+    .sort((a, b) => (b.roi || 0) - (a.roi || 0))
+    .slice(0, limit);
+
+  res.json({
+    count: sorted.length,
+    leaderboard: sorted.map((t, idx) => ({
+      rank: idx + 1,
+      symbol: t.symbol,
+      token: t.token,
+      entryPrice: t.entryPrice,
+      currentPrice: t.currentPrice,
+      athPrice: t.athPrice,
+      roi: t.roi,
+      athRoi: t.athRoi,
+      status: t.status
+    }))
+  });
+});
+
+// Agent sources breakdown
+app.get('/api/agent/sources', (req, res) => {
+  const sourceStats = new Map<
+    string,
+    { count: number; avgScore: number; winRate: number; wins: number; total: number }
+  >();
+
+  for (const signal of signalStore) {
+    for (const source of signal.sources) {
+      const stats = sourceStats.get(source.source) || {
+        count: 0,
+        avgScore: 0,
+        winRate: 0,
+        wins: 0,
+        total: 0
+      };
+      stats.count++;
+      stats.avgScore = (stats.avgScore * (stats.count - 1) + source.rawScore) / stats.count;
+      if (signal.performance) {
+        stats.total++;
+        if (signal.performance.status === 'WIN') stats.wins++;
+        stats.winRate = (stats.wins / stats.total) * 100;
+      }
+      sourceStats.set(source.source, stats);
+    }
+  }
+
+  const sources = Array.from(sourceStats.entries()).map(([name, stats]) => ({
+    source: name,
+    signalCount: stats.count,
+    avgScore: Math.round(stats.avgScore * 10) / 10,
+    winRate: Math.round(stats.winRate * 10) / 10,
+    reliability:
+      stats.total >= 10
+        ? stats.winRate >= 60
+          ? 'HIGH'
+          : stats.winRate >= 45
+            ? 'MEDIUM'
+            : 'LOW'
+        : 'INSUFFICIENT_DATA'
+  }));
+
+  res.json({ sources });
+});
+
+// On-chain verified signals for agents
+app.get('/api/agent/onchain/verified', async (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+  const signals = await fetchOnChainSignals(limit);
+
+  res.json({
+    count: signals.length,
+    network: SOLANA_NETWORK,
+    programId: ORACLE_PROGRAM_ID,
+    signals: signals.map(s => ({
+      ...s,
+      explorer: getExplorerUrl(s.publicKey)
+    }))
+  });
+});
+
+// On-chain stats for agents
+app.get('/api/agent/onchain/stats', async (req, res) => {
+  const stats = await getOnChainStats();
+  res.json({
+    enabled: !!stats,
+    network: SOLANA_NETWORK,
+    programId: ORACLE_PROGRAM_ID,
+    ...(stats || {})
+  });
+});
+
 // === PERFORMANCE TRACKING ===
 
 // Get performance summary
@@ -625,6 +1107,102 @@ app.post('/api/performance/update', async (req, res) => {
   await updateTrackedSignals();
   res.json({ status: 'updated', tracked: getTrackedSignals().length });
 });
+
+// === WEBHOOK SUBSCRIPTIONS ===
+
+interface WebhookSubscription {
+  id: string;
+  webhookUrl: string;
+  minScore: number;
+  risks: string[];
+  createdAt: number;
+  active: boolean;
+}
+
+const webhookSubscriptions: Map<string, WebhookSubscription> = new Map();
+
+// Subscribe to signals via webhook
+app.post('/api/subscribe', (req, res) => {
+  const { webhookUrl, minScore = 50, risks = ['LOW', 'MEDIUM', 'HIGH'] } = req.body;
+
+  if (!webhookUrl) {
+    return res.status(400).json({ error: 'webhookUrl is required' });
+  }
+
+  try {
+    new URL(webhookUrl); // Validate URL
+  } catch {
+    return res.status(400).json({ error: 'Invalid webhookUrl' });
+  }
+
+  const id = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const subscription: WebhookSubscription = {
+    id,
+    webhookUrl,
+    minScore: Math.max(0, Math.min(100, minScore)),
+    risks: risks.map((r: string) => r.toUpperCase()),
+    createdAt: Date.now(),
+    active: true
+  };
+
+  webhookSubscriptions.set(id, subscription);
+  console.log(`[Webhook] New subscription: ${id} -> ${webhookUrl}`);
+
+  res.json({
+    subscriptionId: id,
+    status: 'active',
+    minScore: subscription.minScore,
+    risks: subscription.risks
+  });
+});
+
+// Unsubscribe
+app.delete('/api/subscribe/:id', (req, res) => {
+  const { id } = req.params;
+  if (webhookSubscriptions.has(id)) {
+    webhookSubscriptions.delete(id);
+    res.json({ status: 'unsubscribed' });
+  } else {
+    res.status(404).json({ error: 'Subscription not found' });
+  }
+});
+
+// List subscriptions (for debugging)
+app.get('/api/subscriptions', (req, res) => {
+  const subs = Array.from(webhookSubscriptions.values());
+  res.json({ count: subs.length, subscriptions: subs });
+});
+
+// Function to notify webhooks (call this when new signal is created)
+async function notifyWebhooks(signal: any) {
+  for (const sub of webhookSubscriptions.values()) {
+    if (!sub.active) continue;
+    if (signal.score < sub.minScore) continue;
+    if (!sub.risks.includes(signal.riskLevel)) continue;
+
+    try {
+      await fetch(sub.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'new_signal',
+          signal: {
+            id: signal.id,
+            token: signal.token,
+            symbol: signal.symbol,
+            score: signal.score,
+            riskLevel: signal.riskLevel,
+            price: signal.marketData?.price,
+            timestamp: signal.timestamp
+          }
+        })
+      });
+      console.log(`[Webhook] Notified ${sub.id}`);
+    } catch (err) {
+      console.error(`[Webhook] Failed to notify ${sub.id}:`, err);
+    }
+  }
+}
 
 // Manual trigger scan (for testing)
 app.post('/api/scan', async (req, res) => {
@@ -725,16 +1303,22 @@ async function initOnChain() {
   }
 }
 
-// Auto-publish high-confidence signals
+// Auto-publish high-confidence signals WITH reasoning proofs
 async function autoPublishSignal(signal: AggregatedSignal) {
   if (!onChainEnabled) return;
 
   // Only publish high-quality signals we haven't published before
   if (signal.score >= 70 && !publishedTokens.has(signal.token)) {
-    const tx = await publishSignalOnChain(signal);
+    // Use proof-enabled publishing for verifiable AI reasoning
+    const { tx, proof } = await publishSignalWithProof(signal);
     if (tx) {
       publishedTokens.add(signal.token);
-      console.log(`[ONCHAIN] Published ${signal.symbol} (Score: ${signal.score})`);
+      console.log(
+        `[ONCHAIN] Published ${signal.symbol} with reasoning proof (Score: ${signal.score})`
+      );
+      if (proof) {
+        console.log(`[PROOFS] Commitment hash: ${proof.reasoningHash.slice(0, 16)}...`);
+      }
     }
   }
 }

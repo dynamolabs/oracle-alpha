@@ -49,6 +49,8 @@ pub mod oracle {
         signal.ath_price = entry_price;
         signal.exit_price = 0;
         signal.roi_bps = 0;
+        signal.reasoning_hash = [0u8; 32]; // Empty initially
+        signal.reasoning_revealed = false;
         signal.bump = ctx.bumps.signal;
         
         oracle_state.total_signals += 1;
@@ -61,6 +63,76 @@ pub mod oracle {
         });
         
         msg!("Signal #{} published: {} with score {}", signal.id, signal.symbol, score);
+        Ok(())
+    }
+    
+    /// Publish a signal with reasoning proof commitment
+    pub fn publish_signal_with_proof(
+        ctx: Context<PublishSignal>,
+        token: Pubkey,
+        symbol: String,
+        score: u8,
+        risk_level: u8,
+        sources_bitmap: u8,
+        mcap: u64,
+        entry_price: u64,
+        reasoning_hash: [u8; 32],
+    ) -> Result<()> {
+        require!(symbol.len() <= 10, OracleError::SymbolTooLong);
+        require!(score <= 100, OracleError::InvalidScore);
+        
+        let signal = &mut ctx.accounts.signal;
+        let oracle_state = &mut ctx.accounts.oracle_state;
+        
+        signal.id = oracle_state.total_signals;
+        signal.token = token;
+        signal.symbol = symbol;
+        signal.score = score;
+        signal.risk_level = risk_level;
+        signal.sources_bitmap = sources_bitmap;
+        signal.mcap_at_signal = mcap;
+        signal.entry_price = entry_price;
+        signal.timestamp = Clock::get()?.unix_timestamp;
+        signal.status = SignalStatus::Open;
+        signal.ath_price = entry_price;
+        signal.exit_price = 0;
+        signal.roi_bps = 0;
+        signal.reasoning_hash = reasoning_hash;
+        signal.reasoning_revealed = false;
+        signal.bump = ctx.bumps.signal;
+        
+        oracle_state.total_signals += 1;
+        
+        emit!(SignalPublishedWithProof {
+            id: signal.id,
+            token,
+            score,
+            reasoning_hash,
+            timestamp: signal.timestamp,
+        });
+        
+        msg!("Signal #{} published with reasoning proof: {} (score {})", signal.id, signal.symbol, score);
+        Ok(())
+    }
+    
+    /// Mark reasoning as revealed (after price movement)
+    pub fn reveal_reasoning(
+        ctx: Context<UpdateSignal>,
+    ) -> Result<()> {
+        let signal = &mut ctx.accounts.signal;
+        
+        require!(!signal.reasoning_revealed, OracleError::ReasoningAlreadyRevealed);
+        require!(signal.reasoning_hash != [0u8; 32], OracleError::NoReasoningCommitment);
+        
+        signal.reasoning_revealed = true;
+        
+        emit!(ReasoningRevealed {
+            id: signal.id,
+            reasoning_hash: signal.reasoning_hash,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        
+        msg!("Signal #{} reasoning revealed", signal.id);
         Ok(())
     }
 
@@ -214,6 +286,8 @@ pub struct Signal {
     pub roi_bps: i64,            // ROI in basis points (can be negative)
     pub timestamp: i64,
     pub status: SignalStatus,
+    pub reasoning_hash: [u8; 32], // SHA256 of reasoning committed BEFORE outcome
+    pub reasoning_revealed: bool, // Whether reasoning has been revealed publicly
     pub bump: u8,
 }
 
@@ -242,6 +316,22 @@ pub struct SignalClosed {
     pub roi_bps: i64,
 }
 
+#[event]
+pub struct SignalPublishedWithProof {
+    pub id: u64,
+    pub token: Pubkey,
+    pub score: u8,
+    pub reasoning_hash: [u8; 32],
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct ReasoningRevealed {
+    pub id: u64,
+    pub reasoning_hash: [u8; 32],
+    pub timestamp: i64,
+}
+
 // === ERRORS ===
 
 #[error_code]
@@ -254,4 +344,8 @@ pub enum OracleError {
     InvalidScore,
     #[msg("Signal already closed")]
     SignalAlreadyClosed,
+    #[msg("Reasoning already revealed")]
+    ReasoningAlreadyRevealed,
+    #[msg("No reasoning commitment exists for this signal")]
+    NoReasoningCommitment,
 }

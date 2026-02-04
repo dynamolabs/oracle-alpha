@@ -7,11 +7,14 @@ skip-lint = false
 [programs.devnet]
 oracle = "AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd"
 
+[programs.mainnet]
+oracle = "AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "mainnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
