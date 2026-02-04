@@ -65,6 +65,182 @@
         .bg-glow.primary { background: var(--primary); top: -200px; left: -200px; }
         .bg-glow.secondary { background: var(--secondary); bottom: -200px; right: -200px; }
         
+        /* ===== ANIMATED FEATURES SHOWCASE CSS ===== */
+        
+        /* Scroll Reveal Animations */
+        .reveal-element {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        .reveal-element.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Floating Particles */
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float-particle 10s infinite ease-in-out;
+        }
+        
+        .particle:nth-child(even) {
+            background: var(--secondary);
+            width: 3px;
+            height: 3px;
+        }
+        
+        @keyframes float-particle {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+            25% { transform: translateY(-100px) translateX(20px); opacity: 0.5; }
+            50% { transform: translateY(-50px) translateX(-20px); opacity: 0.2; }
+            75% { transform: translateY(-150px) translateX(10px); opacity: 0.4; }
+        }
+        
+        /* Signal Card Demo Animations */
+        .demo-signal-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .signal-exit {
+            animation: slideOut 0.3s ease forwards;
+        }
+        
+        .signal-enter {
+            animation: slideIn 0.5s ease forwards;
+        }
+        
+        @keyframes slideOut {
+            to { opacity: 0; transform: translateX(-20px); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .signal-pulse {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        }
+        
+        /* Enhanced Hover States */
+        .feature-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .feature-card:hover::after {
+            left: 100%;
+        }
+        
+        /* Glowing Border Effect */
+        .feature-card:hover {
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.1);
+        }
+        
+        /* Counter Animation Glow */
+        .stat-item .value {
+            transition: text-shadow 0.3s ease;
+        }
+        
+        .stat-item:hover .value {
+            text-shadow: 0 0 20px currentColor;
+        }
+        
+        /* Chain Block Animation */
+        .chain-block {
+            transition: all 0.3s ease;
+        }
+        
+        .chain-block:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
+        }
+        
+        .chain-arrow {
+            animation: arrowPulse 1.5s infinite;
+        }
+        
+        @keyframes arrowPulse {
+            0%, 100% { opacity: 0.5; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(5px); }
+        }
+        
+        /* Loading Shimmer */
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* Typing Effect for Hero */
+        .typing-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1em;
+            background: var(--primary);
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .particles-container { display: none; }
+            .reveal-element { transform: translateY(20px); }
+        }
+        
         /* Navigation */
         nav {
             position: fixed;
@@ -1039,6 +1215,163 @@
     </footer>
     
     <script>
+        // ===== ANIMATED FEATURES SHOWCASE =====
+        
+        // Counter Animation
+        function animateCounter(element, target, duration = 2000, suffix = '') {
+            const start = 0;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function (ease-out-expo)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (target - start) * easeOut);
+                
+                element.textContent = current.toLocaleString() + suffix;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+        
+        // Scroll Reveal Animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    
+                    // Trigger counter animation for stat items
+                    if (entry.target.classList.contains('stat-item')) {
+                        const valueEl = entry.target.querySelector('.value');
+                        const text = valueEl.dataset.target || valueEl.textContent;
+                        const num = parseFloat(text.replace(/[^0-9.]/g, ''));
+                        const suffix = text.includes('%') ? '%' : '';
+                        if (!isNaN(num)) {
+                            animateCounter(valueEl, num, 1500, suffix);
+                        }
+                    }
+                    
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        // Apply reveal animation to elements
+        document.querySelectorAll('.feature-card, .problem-card, .stat-item, .chain-block').forEach(el => {
+            el.classList.add('reveal-element');
+            revealObserver.observe(el);
+        });
+        
+        // Stagger animation for grid items
+        document.querySelectorAll('.features-grid, .problem-grid').forEach(grid => {
+            grid.querySelectorAll('.feature-card, .problem-card').forEach((card, index) => {
+                card.style.transitionDelay = `${index * 0.1}s`;
+            });
+        });
+        
+        // Floating Particles
+        function createParticles() {
+            const container = document.createElement('div');
+            container.className = 'particles-container';
+            document.body.appendChild(container);
+            
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                particle.style.animationDuration = (5 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+        
+        // Interactive Signal Card Demo
+        function createSignalDemo() {
+            const demoContainer = document.querySelector('.solution-visual');
+            if (!demoContainer) return;
+            
+            const signals = [
+                { symbol: 'PEPE2', score: 87, risk: 'LOW', change: '+142%', mcap: '$45.2K' },
+                { symbol: 'WOJAK', score: 73, risk: 'MEDIUM', change: '+89%', mcap: '$128K' },
+                { symbol: 'MOCHI', score: 92, risk: 'LOW', change: '+256%', mcap: '$67.8K' }
+            ];
+            
+            let currentIndex = 0;
+            
+            function updateDemo() {
+                const signal = signals[currentIndex];
+                const card = demoContainer.querySelector('.demo-signal-card');
+                if (card) {
+                    card.classList.add('signal-exit');
+                    setTimeout(() => {
+                        card.innerHTML = `
+                            <div class="signal-header">
+                                <span class="signal-symbol">$${signal.symbol}</span>
+                                <span class="signal-score score-${signal.risk.toLowerCase()}">${signal.score}</span>
+                            </div>
+                            <div class="signal-stats">
+                                <div class="signal-stat">
+                                    <span class="label">MCap</span>
+                                    <span class="value">${signal.mcap}</span>
+                                </div>
+                                <div class="signal-stat">
+                                    <span class="label">Change</span>
+                                    <span class="value positive">${signal.change}</span>
+                                </div>
+                                <div class="signal-stat">
+                                    <span class="label">Risk</span>
+                                    <span class="value risk-${signal.risk.toLowerCase()}">${signal.risk}</span>
+                                </div>
+                            </div>
+                            <div class="signal-pulse"></div>
+                        `;
+                        card.classList.remove('signal-exit');
+                        card.classList.add('signal-enter');
+                        setTimeout(() => card.classList.remove('signal-enter'), 500);
+                    }, 300);
+                }
+                currentIndex = (currentIndex + 1) % signals.length;
+            }
+            
+            setInterval(updateDemo, 3000);
+        }
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+        
+        // Parallax effect for background glows
+        document.addEventListener('mousemove', (e) => {
+            const glows = document.querySelectorAll('.bg-glow');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            glows.forEach((glow, i) => {
+                const factor = i === 0 ? 1 : -1;
+                glow.style.transform = `translate(${x * 50 * factor}px, ${y * 50 * factor}px)`;
+            });
+        });
+        
         // Fetch live stats
         async function fetchStats() {
             try {
@@ -1052,15 +1385,25 @@
                 const perf = await perfRes.json();
                 const onchain = await onchainRes.json();
                 
+                // Store targets for counter animation
+                document.getElementById('stat-signals').dataset.target = stats.totalSignals || 147;
+                document.getElementById('stat-winrate').dataset.target = (perf.winRate || 68.5).toFixed(1) + '%';
+                document.getElementById('stat-onchain').dataset.target = onchain.totalSignals || 89;
+                
+                // Set initial display
                 document.getElementById('stat-signals').textContent = stats.totalSignals || 0;
                 document.getElementById('stat-winrate').textContent = (perf.winRate || 0).toFixed(1) + '%';
                 document.getElementById('stat-onchain').textContent = onchain.totalSignals || 0;
             } catch (e) {
                 console.log('Using demo stats');
-                // Demo fallback
-                document.getElementById('stat-signals').textContent = '147';
-                document.getElementById('stat-winrate').textContent = '68.5%';
-                document.getElementById('stat-onchain').textContent = '89';
+                // Demo fallback with animation targets
+                document.getElementById('stat-signals').dataset.target = '147';
+                document.getElementById('stat-winrate').dataset.target = '68.5%';
+                document.getElementById('stat-onchain').dataset.target = '89';
+                
+                document.getElementById('stat-signals').textContent = '0';
+                document.getElementById('stat-winrate').textContent = '0%';
+                document.getElementById('stat-onchain').textContent = '0';
             }
         }
         

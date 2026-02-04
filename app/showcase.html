@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORACLE Alpha - Feature Showcase</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #00d9ff;
+            --secondary: #a855f7;
+            --success: #22c55e;
+            --bg-dark: #0a0a1a;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-dark);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,217,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,217,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 20px 40px;
+            background: rgba(10,10,26,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.3em;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-links a {
+            color: #888;
+            text-decoration: none;
+            margin-left: 30px;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover { color: var(--primary); }
+        
+        .btn {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,217,255,0.3);
+        }
+        
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 40px;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2em, 5vw, 4em);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .hero h1 .gradient {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            color: #888;
+            font-size: 1.2em;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        
+        /* Feature Grid */
+        .features {
+            padding: 100px 40px;
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 60px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,217,255,0.1);
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover::before { transform: scaleX(1); }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(0,217,255,0.1), rgba(168,85,247,0.1));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            color: #888;
+            line-height: 1.6;
+        }
+        
+        .feature-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .feature-stat {
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+        
+        .feature-stat .value {
+            color: var(--primary);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Tech Stack */
+        .tech-stack {
+            padding: 100px 40px;
+            background: linear-gradient(180deg, transparent, rgba(0,0,0,0.3));
+        }
+        
+        .tech-stack h2 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 50px;
+        }
+        
+        .tech-logos {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .tech-logo {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px 30px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+        }
+        
+        .tech-logo:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+        
+        .tech-logo img {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .tech-logo span {
+            font-weight: 500;
+        }
+        
+        /* Signal Flow Animation */
+        .signal-flow {
+            padding: 100px 40px;
+        }
+        
+        .signal-flow h2 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 50px;
+        }
+        
+        .flow-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .flow-step {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            min-width: 180px;
+            position: relative;
+            animation: fadeInUp 0.5s ease backwards;
+        }
+        
+        .flow-step:nth-child(1) { animation-delay: 0.1s; }
+        .flow-step:nth-child(2) { animation-delay: 0.2s; }
+        .flow-step:nth-child(3) { animation-delay: 0.3s; }
+        .flow-step:nth-child(4) { animation-delay: 0.4s; }
+        .flow-step:nth-child(5) { animation-delay: 0.5s; }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .flow-step .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .flow-step h4 {
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+        
+        .flow-step p {
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .flow-arrow {
+            font-size: 1.5em;
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Stats Counter */
+        .stats {
+            padding: 80px 40px;
+            background: linear-gradient(90deg, rgba(0,217,255,0.05), rgba(168,85,247,0.05));
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-item .number {
+            font-size: 3em;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-item .label {
+            color: #888;
+            margin-top: 10px;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            nav { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .hero, .features, .tech-stack, .signal-flow { padding: 60px 20px; }
+            .flow-arrow { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🔮 ORACLE Alpha</div>
+        <div class="nav-links">
+            <a href="landing.html">Home</a>
+            <a href="index.html">Dashboard</a>
+            <a href="https://github.com/dynamolabs/oracle-alpha" target="_blank">GitHub</a>
+            <a href="index.html" class="btn">Launch App</a>
+        </div>
+    </nav>
+    
+    <section class="hero">
+        <div>
+            <h1>See <span class="gradient">ORACLE</span> in Action</h1>
+            <p>Explore the features that make ORACLE Alpha the most transparent signal aggregator on Solana</p>
+            <a href="index.html" class="btn" style="display: inline-block;">View Live Dashboard →</a>
+        </div>
+    </section>
+    
+    <section class="signal-flow">
+        <h2>How It Works</h2>
+        <div class="flow-container">
+            <div class="flow-step">
+                <div class="icon">📡</div>
+                <h4>Aggregate</h4>
+                <p>9 signal sources</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="icon">🧠</div>
+                <h4>Score</h4>
+                <p>AI-weighted ranking</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="icon">⛓️</div>
+                <h4>Publish</h4>
+                <p>On-chain record</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="icon">📈</div>
+                <h4>Track</h4>
+                <p>ATH & performance</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="icon">✅</div>
+                <h4>Verify</h4>
+                <p>Trustless proof</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="number">9</div>
+                <div class="label">Signal Sources</div>
+            </div>
+            <div class="stat-item">
+                <div class="number">24</div>
+                <div class="label">Smart Wallets</div>
+            </div>
+            <div class="stat-item">
+                <div class="number">31</div>
+                <div class="label">KOLs Tracked</div>
+            </div>
+            <div class="stat-item">
+                <div class="number">193</div>
+                <div class="label">Unit Tests</div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="features">
+        <h2>Signal Sources</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👑</div>
+                <h3>Elite Smart Wallets</h3>
+                <p>5 wallets with 65%+ win rate, tracked in real-time for instant signal detection.</p>
+                <div class="feature-stats">
+                    <div class="feature-stat"><span class="value">5</span> wallets</div>
+                    <div class="feature-stat"><span class="value">65%+</span> WR</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Sniper Wallets</h3>
+                <p>19 additional wallets with strong performance, weighted by historical accuracy.</p>
+                <div class="feature-stats">
+                    <div class="feature-stat"><span class="value">19</span> wallets</div>
+                    <div class="feature-stat"><span class="value">41%+</span> WR</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📢</div>
+                <h3>KOL Activity</h3>
+                <p>31 KOLs tracked across S, A, and B tiers with performance-weighted scoring.</p>
+                <div class="feature-stats">
+                    <div class="feature-stat"><span class="value">31</span> KOLs</div>
+                    <div class="feature-stat"><span class="value">3</span> tiers</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3>Volume Spikes</h3>
+                <p>Real-time anomaly detection catches unusual trading activity before others.</p>
+                <div class="feature-stats">
+                    <div class="feature-stat"><span class="value">Real-time</span></div>
+                    <div class="feature-stat"><span class="value">DexScreener</span></div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📰</div>
+                <h3>Narrative Detection</h3>
+                <p>AI identifies trending narratives: AI, Meme, Political, Gaming, DeFi metas.</p>
+                <div class="feature-stats">
+                    <div class="feature-stat"><span class="value">5</span> categories</div>
+                    <div class="feature-stat"><span class="value">AI-powered</span></div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🐋</div>
+                <h3>Whale Tracking</h3>
+                <p>Large wallet movements detected early to spot smart money accumulation.</p>
+                <div class="feature-stats">
+                    <div class="feature-stat"><span class="value">On-chain</span></div>
+                    <div class="feature-stat"><span class="value">Helius</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="tech-stack">
+        <h2>Built With</h2>
+        <div class="tech-logos">
+            <div class="tech-logo">
+                <span>⚡</span>
+                <span>TypeScript</span>
+            </div>
+            <div class="tech-logo">
+                <span>🌐</span>
+                <span>Node.js</span>
+            </div>
+            <div class="tech-logo">
+                <span>☀️</span>
+                <span>Solana</span>
+            </div>
+            <div class="tech-logo">
+                <span>⚓</span>
+                <span>Anchor</span>
+            </div>
+            <div class="tech-logo">
+                <span>🐳</span>
+                <span>Docker</span>
+            </div>
+            <div class="tech-logo">
+                <span>📊</span>
+                <span>Chart.js</span>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <p>Built by ShifuSensei 🐼 for <a href="https://colosseum.org" target="_blank">Colosseum Agent Hackathon 2026</a></p>
+        <p style="margin-top: 10px; color: #666;">
+            <a href="https://github.com/dynamolabs/oracle-alpha" target="_blank">GitHub</a> · 
+            <a href="https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet" target="_blank">Solana Program</a>
+        </p>
+    </footer>
+</body>
+</html>

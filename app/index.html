@@ -731,6 +731,7 @@
                         <button class="filter-btn" onclick="setFilter('smart')">👑 Smart Wallet</button>
                     </div>
                     <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()">🔇 Sound</button>
+                    <button class="sound-toggle" onclick="showShortcuts()" title="Keyboard Shortcuts">⌨️</button>
                     <span class="live-badge" id="live-status">● CONNECTING</span>
                 </div>
             </div>
@@ -762,9 +763,50 @@
             </div>
         </div>
         
+        <!-- Keyboard Shortcuts Modal -->
+        <div class="modal-overlay" id="shortcuts-modal" onclick="hideShortcuts()">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3 class="modal-title">⌨️ Keyboard Shortcuts</h3>
+                    <button class="modal-close" onclick="hideShortcuts()">×</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="shortcut-item"><kbd>S</kbd> Toggle sound</div>
+                    <div class="shortcut-item"><kbd>R</kbd> Refresh data</div>
+                    <div class="shortcut-item"><kbd>1</kbd> All signals</div>
+                    <div class="shortcut-item"><kbd>2</kbd> High score only</div>
+                    <div class="shortcut-item"><kbd>3</kbd> Smart wallet only</div>
+                    <div class="shortcut-item"><kbd>?</kbd> Show shortcuts</div>
+                    <div class="shortcut-item"><kbd>Esc</kbd> Close modal</div>
+                </div>
+                <style>
+                    .shortcut-item { 
+                        display: flex; 
+                        align-items: center; 
+                        gap: 15px; 
+                        padding: 10px;
+                        background: rgba(0,0,0,0.2);
+                        border-radius: 8px;
+                    }
+                    .shortcut-item kbd {
+                        background: rgba(0,217,255,0.2);
+                        border: 1px solid var(--primary);
+                        padding: 5px 12px;
+                        border-radius: 5px;
+                        font-family: 'JetBrains Mono', monospace;
+                        color: var(--primary);
+                        min-width: 40px;
+                        text-align: center;
+                    }
+                </style>
+            </div>
+        </div>
+        
         <footer>
             <p>Built by ShifuSensei 🐼 for Colosseum Agent Hackathon 2026</p>
             <p style="margin-top: 10px;">
+                <a href="/landing.html">Home</a> · 
+                <a href="/showcase.html">Feature Showcase</a> · 
                 <a href="https://explorer.solana.com/address/AL9bxB2BUHnPptqzospgwyeet8RwBbd4NmYmxuiNNzXd?cluster=devnet" target="_blank">
                    View On-Chain Program ⛓️
                 </a>
