@@ -3,6 +3,28 @@
  * Track positions and calculate profit/loss
  */
 
+import {
+  WatchlistAlert,
+  AlertType,
+  createAlert,
+  getAlertsForToken,
+  deleteAlertsForToken,
+  updateAlert as updateWatchlistAlert,
+  deleteAlert as deleteWatchlistAlert,
+  toggleAlert as toggleWatchlistAlertEnabled
+} from './watchlist-alerts';
+
+// Re-export alert types for convenience
+export type { WatchlistAlert, AlertType };
+export {
+  createAlert,
+  getAlertsForToken,
+  deleteAlertsForToken,
+  updateWatchlistAlert,
+  deleteWatchlistAlert,
+  toggleWatchlistAlertEnabled
+};
+
 // Watchlist entry
 export interface WatchlistEntry {
   id: string;
@@ -13,6 +35,7 @@ export interface WatchlistEntry {
   signalId?: string;
   signalScore?: number;
   notes?: string;
+  alertCount?: number; // Number of active alerts
   alerts: {
     priceAbove?: number;
     priceBelow?: number;

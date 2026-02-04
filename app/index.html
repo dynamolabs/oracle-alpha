@@ -28,19 +28,249 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        /* ========================================
+           THEME CSS VARIABLES
+           Dark theme (default)
+           ======================================== */
         :root {
+            /* Primary colors */
             --primary: #00d9ff;
             --secondary: #a855f7;
             --success: #22c55e;
             --warning: #eab308;
             --danger: #ef4444;
-            --bg-dark: #0a0a1a;
+            --orange: #f97316;
+            
+            /* Background colors */
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #1a1a3a;
+            --bg-tertiary: #161b22;
+            --bg-card: rgba(0,0,0,0.3);
+            --bg-card-hover: rgba(0,0,0,0.4);
+            --bg-overlay: rgba(0,0,0,0.8);
+            --bg-input: rgba(255,255,255,0.05);
+            
+            /* Text colors */
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-tertiary: #666;
+            --text-muted: #555;
+            
+            /* Border colors */
+            --border-primary: #333;
+            --border-secondary: #444;
+            --border-subtle: rgba(255,255,255,0.05);
+            --border-hover: var(--primary);
+            
+            /* Gradient backgrounds */
+            --gradient-main: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+            --gradient-card: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(20,20,40,0.4) 100%);
+            --gradient-accent: linear-gradient(90deg, #00d9ff, #a855f7);
+            --gradient-success: linear-gradient(135deg, #22c55e, #16a34a);
+            
+            /* Grid background */
+            --grid-color: rgba(0,217,255,0.02);
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.4);
+            --shadow-glow: 0 0 20px rgba(0, 217, 255, 0.3);
+            
+            /* Chart colors */
+            --chart-grid: rgba(255,255,255,0.1);
+            --chart-text: #888;
+            
+            /* Misc */
+            --scrollbar-bg: #1a1a3a;
+            --scrollbar-thumb: #444;
+        }
+        
+        /* ========================================
+           LIGHT THEME
+           ======================================== */
+        [data-theme="light"] {
+            /* Primary colors - slightly adjusted for light bg */
+            --primary: #0284c7;
+            --secondary: #9333ea;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --danger: #dc2626;
+            --orange: #ea580c;
+            
+            /* Background colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eef1f5;
+            --bg-card: rgba(255,255,255,0.9);
+            --bg-card-hover: rgba(255,255,255,1);
+            --bg-overlay: rgba(255,255,255,0.95);
+            --bg-input: rgba(0,0,0,0.03);
+            
+            /* Text colors */
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --text-tertiary: #8b949e;
+            --text-muted: #adb5bd;
+            
+            /* Border colors */
+            --border-primary: #d0d7de;
+            --border-secondary: #e1e4e8;
+            --border-subtle: rgba(0,0,0,0.05);
+            --border-hover: var(--primary);
+            
+            /* Gradient backgrounds */
+            --gradient-main: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
+            --gradient-card: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(246,248,250,0.95) 100%);
+            --gradient-accent: linear-gradient(90deg, #0284c7, #9333ea);
+            --gradient-success: linear-gradient(135deg, #16a34a, #22c55e);
+            
+            /* Grid background */
+            --grid-color: rgba(0,100,150,0.03);
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --shadow-glow: 0 0 15px rgba(2, 132, 199, 0.2);
+            
+            /* Chart colors */
+            --chart-grid: rgba(0,0,0,0.1);
+            --chart-text: #57606a;
+            
+            /* Misc */
+            --scrollbar-bg: #f0f0f0;
+            --scrollbar-thumb: #c1c1c1;
+        }
+        
+        /* ========================================
+           THEME TRANSITION
+           ======================================== */
+        html {
+            transition: background-color 0.3s ease;
+        }
+        
+        body,
+        .container,
+        header,
+        .signals-section,
+        .stat-card,
+        .signal-card,
+        .modal,
+        .chart-container,
+        .filter-btn,
+        .action-btn,
+        input,
+        select,
+        button {
+            transition: background-color 0.3s ease, 
+                        border-color 0.3s ease, 
+                        color 0.3s ease,
+                        box-shadow 0.3s ease;
+        }
+        
+        /* ========================================
+           GLOBAL SCROLLBAR STYLING
+           ======================================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-bg);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+        
+        /* Firefox scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+        }
+        
+        /* ========================================
+           THEME TOGGLE BUTTON
+           ======================================== */
+        .theme-toggle {
+            background: var(--bg-input);
+            border: 1px solid var(--border-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .theme-toggle:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .theme-toggle .theme-icon {
+            transition: transform 0.5s ease, opacity 0.3s ease;
+        }
+        
+        .theme-toggle .sun-icon {
+            position: absolute;
+            opacity: 0;
+            transform: rotate(-90deg) scale(0);
+        }
+        
+        .theme-toggle .moon-icon {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+        
+        [data-theme="light"] .theme-toggle .sun-icon {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+        
+        [data-theme="light"] .theme-toggle .moon-icon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0);
+        }
+        
+        /* Header controls spacing for theme toggle */
+        .header-right-controls {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header-right-controls {
+                position: static;
+                transform: none;
+                justify-content: center;
+                margin-top: 10px;
+            }
         }
         
         body {
             font-family: 'Space Grotesk', -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
-            color: #e0e0e0;
+            background: var(--gradient-main);
+            color: var(--text-primary);
             min-height: 100vh;
             padding: 20px;
             position: relative;
@@ -55,8 +285,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(rgba(0,217,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,217,255,0.02) 1px, transparent 1px);
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 50px 50px;
             pointer-events: none;
             z-index: -1;
@@ -67,7 +297,7 @@
         header {
             text-align: center;
             padding: 20px 0;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--border-primary);
             margin-bottom: 20px;
             position: relative;
         }
@@ -80,11 +310,11 @@
         }
         
         .header-nav a {
-            color: #888;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.9em;
             padding: 8px 16px;
-            border: 1px solid #333;
+            border: 1px solid var(--border-primary);
             border-radius: 8px;
             transition: all 0.3s;
         }
@@ -104,11 +334,11 @@
             margin-bottom: 10px;
         }
         
-        .subtitle { color: #888; font-size: 1em; }
+        .subtitle { color: var(--text-secondary); font-size: 1em; }
         
         /* Chart Section */
         .chart-container {
-            background: rgba(0,0,0,0.2);
+            background: var(--bg-card);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 15px;
@@ -128,9 +358,9 @@
         .chart-stat {
             text-align: center;
             padding: 15px;
-            background: rgba(255,255,255,0.03);
+            background: var(--bg-input);
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid var(--border-subtle);
         }
         
         .chart-stat-value {
@@ -141,7 +371,7 @@
         }
         
         .chart-stat-label {
-            color: #666;
+            color: var(--text-tertiary);
             font-size: 0.8em;
             margin-top: 5px;
             display: block;
@@ -200,30 +430,30 @@
         }
         
         .stat-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #333;
+            background: var(--bg-input);
+            border: 1px solid var(--border-primary);
             border-radius: 12px;
             padding: 15px;
             text-align: center;
-            transition: transform 0.2s, border-color 0.2s;
+            transition: transform 0.2s, border-color 0.2s, background-color 0.3s;
         }
         
         .stat-card:hover {
             transform: translateY(-2px);
-            border-color: #00d9ff;
+            border-color: var(--primary);
         }
         
         .stat-value {
             font-size: 1.8em;
             font-weight: bold;
-            color: #00d9ff;
+            color: var(--primary);
         }
         
-        .stat-label { color: #888; margin-top: 5px; font-size: 0.85em; }
+        .stat-label { color: var(--text-secondary); margin-top: 5px; font-size: 0.85em; }
         
         .signals-section {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid #333;
+            background: var(--bg-input);
+            border: 1px solid var(--border-primary);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
@@ -238,7 +468,7 @@
             gap: 10px;
         }
         
-        .section-title { font-size: 1.2em; color: #a855f7; }
+        .section-title { font-size: 1.2em; color: var(--secondary); }
         
         .header-controls {
             display: flex;
@@ -256,34 +486,34 @@
         }
         
         .sound-toggle {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #444;
-            color: #888;
+            background: var(--bg-input);
+            border: 1px solid var(--border-secondary);
+            color: var(--text-secondary);
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.8em;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .sound-toggle:hover { border-color: #00d9ff; color: #00d9ff; }
-        .sound-toggle.active { background: #00d9ff; color: #000; border-color: #00d9ff; }
+        .sound-toggle:hover { border-color: var(--primary); color: var(--primary); }
+        .sound-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
         
         .filter-buttons {
             display: flex;
             gap: 8px;
         }
         .filter-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #333;
-            color: #888;
+            background: var(--bg-input);
+            border: 1px solid var(--border-primary);
+            color: var(--text-secondary);
             padding: 5px 12px;
             border-radius: 15px;
             font-size: 0.75em;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .filter-btn:hover { border-color: #a855f7; color: #a855f7; }
-        .filter-btn.active { background: #a855f7; color: #000; border-color: #a855f7; }
+        .filter-btn:hover { border-color: var(--secondary); color: var(--secondary); }
+        .filter-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); }
         
         /* Wallet Connect Button */
         .wallet-connect-btn {
@@ -582,8 +812,8 @@
         .signal-list { display: flex; flex-direction: column; gap: 12px; }
         
         .signal-card {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid #444;
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
             border-radius: 10px;
             padding: 15px;
             display: grid;
@@ -595,13 +825,13 @@
         }
         
         .signal-card:hover {
-            border-color: #00d9ff;
+            border-color: var(--primary);
             transform: translateX(3px);
         }
         
         .signal-card.new {
             animation: slideIn 0.5s ease, glow 1s ease-out;
-            border-color: #22c55e;
+            border-color: var(--success);
         }
         
         @keyframes slideIn {
@@ -619,10 +849,10 @@
         .token-symbol {
             font-size: 1.3em;
             font-weight: bold;
-            color: #fff;
+            color: var(--text-primary);
         }
         
-        .token-name { color: #888; font-size: 0.85em; }
+        .token-name { color: var(--text-secondary); font-size: 0.85em; }
         
         .signal-details {
             display: grid;
@@ -631,8 +861,8 @@
         }
         
         .detail-item { text-align: center; }
-        .detail-value { font-weight: bold; font-size: 0.95em; }
-        .detail-label { font-size: 0.7em; color: #666; }
+        .detail-value { font-weight: bold; font-size: 0.95em; color: var(--text-primary); }
+        .detail-label { font-size: 0.7em; color: var(--text-tertiary); }
         
         .signal-score { text-align: center; }
         
@@ -648,9 +878,9 @@
             margin: 0 auto;
         }
         
-        .score-high { background: linear-gradient(135deg, #22c55e, #16a34a); }
-        .score-medium { background: linear-gradient(135deg, #eab308, #ca8a04); }
-        .score-low { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .score-high { background: linear-gradient(135deg, var(--success), #16a34a); color: #000; }
+        .score-medium { background: linear-gradient(135deg, var(--warning), #ca8a04); color: #000; }
+        .score-low { background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff; }
         
         .risk-badge {
             display: inline-block;
@@ -660,20 +890,20 @@
             margin-top: 5px;
         }
         
-        .risk-LOW { background: #22c55e; color: #000; }
-        .risk-MEDIUM { background: #eab308; color: #000; }
-        .risk-HIGH { background: #f97316; color: #000; }
-        .risk-EXTREME { background: #ef4444; color: #fff; }
+        .risk-LOW { background: var(--success); color: #000; }
+        .risk-MEDIUM { background: var(--warning); color: #000; }
+        .risk-HIGH { background: var(--orange); color: #000; }
+        .risk-EXTREME { background: var(--danger); color: #fff; }
         
         .token-address {
             font-family: monospace;
             font-size: 0.65em;
-            color: #555;
+            color: var(--text-muted);
             word-break: break-all;
             margin-top: 3px;
             cursor: pointer;
         }
-        .token-address:hover { color: #00d9ff; }
+        .token-address:hover { color: var(--primary); }
         
         .signal-actions {
             position: absolute;
@@ -687,20 +917,20 @@
         .signal-card:hover .signal-actions { opacity: 1; }
         
         .action-btn {
-            background: rgba(255,255,255,0.1);
+            background: var(--bg-input);
             border: none;
-            color: #888;
+            color: var(--text-secondary);
             padding: 5px 8px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.75em;
         }
-        .action-btn:hover { background: #00d9ff; color: #000; }
+        .action-btn:hover { background: var(--primary); color: #000; }
         
         .signal-meta {
             grid-column: span 3;
             padding-top: 10px;
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--border-primary);
             margin-top: 5px;
             display: flex;
             justify-content: space-between;
@@ -713,8 +943,8 @@
         
         .narrative-tag {
             background: rgba(168, 85, 247, 0.2);
-            border: 1px solid #a855f7;
-            color: #a855f7;
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 0.7em;
@@ -726,20 +956,20 @@
         }
         
         .signal-links a {
-            color: #666;
+            color: var(--text-tertiary);
             text-decoration: none;
             font-size: 0.75em;
             padding: 2px 6px;
-            border: 1px solid #444;
+            border: 1px solid var(--border-secondary);
             border-radius: 5px;
             transition: all 0.2s;
         }
-        .signal-links a:hover { border-color: #00d9ff; color: #00d9ff; }
+        .signal-links a:hover { border-color: var(--primary); color: var(--primary); }
         
         .empty-state {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: var(--text-tertiary);
         }
         
         .connection-status {
@@ -752,8 +982,8 @@
             z-index: 100;
         }
         
-        .connected { background: #22c55e; color: #000; }
-        .disconnected { background: #ef4444; color: #fff; }
+        .connected { background: var(--success); color: #000; }
+        .disconnected { background: var(--danger); color: #fff; }
         
         /* Performance History Section */
         .perf-grid {
@@ -768,20 +998,20 @@
             padding: 10px;
             background: rgba(0,0,0,0.2);
             border-radius: 8px;
-            border-left: 3px solid #22c55e;
+            border-left: 3px solid var(--success);
         }
-        .perf-item.loss { border-left-color: #ef4444; }
+        .perf-item.loss { border-left-color: var(--danger); }
         
         footer {
             text-align: center;
             padding: 20px;
-            color: #666;
-            border-top: 1px solid #333;
+            color: var(--text-tertiary);
+            border-top: 1px solid var(--border-primary);
             margin-top: 20px;
             font-size: 0.85em;
         }
         
-        footer a { color: #a855f7; text-decoration: none; }
+        footer a { color: var(--secondary); text-decoration: none; }
         footer a:hover { text-decoration: underline; }
         
         /* Toast Notification */
@@ -815,7 +1045,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: var(--bg-overlay);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -827,8 +1057,8 @@
         .modal-overlay.active { opacity: 1; visibility: visible; }
         
         .modal {
-            background: linear-gradient(135deg, #1a1a3a, #0a0a1a);
-            border: 1px solid #444;
+            background: var(--gradient-main);
+            border: 1px solid var(--border-secondary);
             border-radius: 15px;
             padding: 25px;
             max-width: 600px;
@@ -836,7 +1066,7 @@
             max-height: 80vh;
             overflow-y: auto;
             transform: scale(0.9);
-            transition: transform 0.3s;
+            transition: transform 0.3s, background 0.3s;
         }
         .modal-overlay.active .modal { transform: scale(1); }
         
@@ -846,23 +1076,23 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--border-primary);
         }
-        .modal-title { font-size: 1.3em; color: #a855f7; }
+        .modal-title { font-size: 1.3em; color: var(--secondary); }
         .modal-close {
             background: none;
             border: none;
-            color: #888;
+            color: var(--text-secondary);
             font-size: 1.5em;
             cursor: pointer;
         }
-        .modal-close:hover { color: #fff; }
+        .modal-close:hover { color: var(--text-primary); }
         
         .explanation-section {
             margin-bottom: 20px;
         }
         .explanation-section h4 {
-            color: #00d9ff;
+            color: var(--primary);
             margin-bottom: 10px;
             font-size: 0.95em;
         }
@@ -872,9 +1102,9 @@
         }
         .explanation-section li {
             padding: 8px 0;
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid var(--border-subtle);
             font-size: 0.9em;
-            color: #ccc;
+            color: var(--text-secondary);
         }
         .explanation-section li:before {
             content: "• ";
@@ -3847,6 +4077,15 @@
                     <span id="wallet-btn-text">🔗 Connect Wallet</span>
                 </button>
             </div>
+            
+            <!-- Theme Toggle Button -->
+            <div class="header-right-controls">
+                <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Theme (Shift+T)" aria-label="Toggle theme">
+                    <span class="theme-icon moon-icon">🌙</span>
+                    <span class="theme-icon sun-icon">☀️</span>
+                </button>
+            </div>
+            
             <h1>🔮 ORACLE Alpha</h1>
             <p class="subtitle">On-chain Reliable Alpha Compilation & Learning Engine</p>
         </header>
@@ -3859,6 +4098,7 @@
             <button onclick="showAchievementsModal(); toggleMobileNav();">🏆 Achievements</button>
             <button onclick="showPortfolioModal(); toggleMobileNav();">💰 Portfolio</button>
             <button onclick="toggleSound(); toggleMobileNav();">🔊 Toggle Sound</button>
+            <button onclick="toggleTheme(); toggleMobileNav();" id="mobile-theme-btn">🌙 Toggle Theme</button>
             <button onclick="showShortcuts(); toggleMobileNav();">⌨️ Keyboard Shortcuts</button>
             <a href="https://github.com/dynamolabs/oracle-alpha" target="_blank">📂 GitHub</a>
         </div>
@@ -4266,6 +4506,8 @@
                         <button class="filter-btn" onclick="setFilter('smart')">👑 Smart Wallet</button>
                     </div>
                     <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="Toggle Sound (T)">🔇 Sound</button>
+                    <button class="sound-toggle" id="voice-toggle" onclick="toggleVoice()" title="Toggle Voice Alerts (V)">🔇 Voice</button>
+                    <button class="sound-toggle" onclick="showVoiceSettings()" title="Voice Settings">⚙️</button>
                     <button class="sound-toggle" onclick="showExportModal()" title="Export Signals (E)">📥 Export</button>
                     <button class="sound-toggle" onclick="showShortcuts()" title="Keyboard Shortcuts (?)">⌨️</button>
                     <span class="live-badge" id="live-status">● CONNECTING</span>
@@ -4691,9 +4933,9 @@
                 
                 .sim-input-group input[type="number"],
                 .sim-input-group select {
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid #444;
-                    color: #fff;
+                    background: var(--bg-input);
+                    border: 1px solid var(--border-secondary);
+                    color: var(--text-primary);
                     padding: 12px;
                     border-radius: 8px;
                     font-size: 1em;
@@ -4708,7 +4950,7 @@
                 
                 .sim-input-group input[type="range"] {
                     -webkit-appearance: none;
-                    background: linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%);
+                    background: linear-gradient(to right, var(--success) 0%, var(--warning) 50%, var(--danger) 100%);
                     height: 6px;
                     border-radius: 3px;
                     cursor: pointer;
@@ -4718,14 +4960,15 @@
                     -webkit-appearance: none;
                     width: 18px;
                     height: 18px;
-                    background: #fff;
+                    background: var(--bg-primary);
+                    border: 2px solid var(--primary);
                     border-radius: 50%;
                     cursor: pointer;
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                    box-shadow: var(--shadow-sm);
                 }
                 
                 .sim-range-value {
-                    color: #00d9ff;
+                    color: var(--primary);
                     font-weight: bold;
                     font-family: 'JetBrains Mono', monospace;
                 }
@@ -4916,17 +5159,199 @@
                     width: 6px;
                 }
                 .sim-trades-container::-webkit-scrollbar-track {
-                    background: rgba(0,0,0,0.2);
+                    background: var(--scrollbar-bg);
                     border-radius: 3px;
                 }
                 .sim-trades-container::-webkit-scrollbar-thumb {
-                    background: #444;
+                    background: var(--scrollbar-thumb);
                     border-radius: 3px;
                 }
                 .sim-trades-container::-webkit-scrollbar-thumb:hover {
-                    background: #555;
+                    background: var(--text-tertiary);
                 }
             </style>
+        </div>
+        
+        <!-- Portfolio Sync Section (Real Wallet Holdings) -->
+        <div class="signals-section" id="portfolio-sync-section">
+            <div class="section-header">
+                <h2 class="section-title">💼 Synced Portfolio</h2>
+                <div class="header-controls">
+                    <span class="live-badge" id="sync-status-badge" style="background: #666;">NOT SYNCED</span>
+                    <button class="filter-btn" onclick="showImportWalletModal()">➕ Import Wallet</button>
+                </div>
+            </div>
+            
+            <div class="sync-intro" id="sync-intro">
+                <p style="color: #888; margin-bottom: 15px;">
+                    🔗 <strong style="color: #00d9ff;">Import your real wallet</strong> - 
+                    Track actual holdings, portfolio value, and compare vs paper trading. Read-only, no private keys needed.
+                </p>
+                <div class="sync-features">
+                    <span class="sync-feature">✅ Read-only</span>
+                    <span class="sync-feature">🔒 No private keys</span>
+                    <span class="sync-feature">📊 Real-time values</span>
+                    <span class="sync-feature">📈 PnL tracking</span>
+                </div>
+            </div>
+            
+            <!-- Synced Portfolio Display (hidden until synced) -->
+            <div class="synced-portfolio-content" id="synced-portfolio-content" style="display: none;">
+                <div class="sync-summary-panel">
+                    <div class="sync-wallet-header">
+                        <div class="sync-wallet-info">
+                            <span class="sync-wallet-label" id="sync-wallet-label">My Wallet</span>
+                            <span class="sync-wallet-address" id="sync-wallet-address">-</span>
+                        </div>
+                        <div class="sync-wallet-actions">
+                            <button class="sync-action-btn" onclick="refreshSyncedPortfolio()" title="Refresh">🔄</button>
+                            <button class="sync-action-btn danger" onclick="removeSyncedPortfolio()" title="Remove">🗑️</button>
+                        </div>
+                    </div>
+                    
+                    <div class="sync-value-hero">
+                        <div class="sync-total-value">
+                            <span class="sync-value-label">Total Value</span>
+                            <span class="sync-value-amount" id="sync-total-value">$0.00</span>
+                        </div>
+                        <div class="sync-change" id="sync-change-24h">
+                            <span class="sync-change-value">+$0.00</span>
+                            <span class="sync-change-pct">(+0.00%)</span>
+                            <span class="sync-change-label">24h</span>
+                        </div>
+                    </div>
+                    
+                    <div class="sync-quick-stats">
+                        <div class="sync-quick-stat">
+                            <span class="sync-quick-value" id="sync-sol-balance">0 SOL</span>
+                            <span class="sync-quick-label">SOL Balance</span>
+                        </div>
+                        <div class="sync-quick-stat">
+                            <span class="sync-quick-value" id="sync-token-count">0</span>
+                            <span class="sync-quick-label">Tokens</span>
+                        </div>
+                        <div class="sync-quick-stat">
+                            <span class="sync-quick-value" id="sync-7d-change">+0%</span>
+                            <span class="sync-quick-label">7d Change</span>
+                        </div>
+                        <div class="sync-quick-stat">
+                            <span class="sync-quick-value" id="sync-last-refresh">-</span>
+                            <span class="sync-quick-label">Last Refresh</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sync-allocation-panel">
+                    <h4 style="color: #a855f7; margin-bottom: 15px;">📊 Allocation</h4>
+                    <div class="sync-allocation-container">
+                        <canvas id="syncAllocationChart" height="200"></canvas>
+                        <div class="sync-allocation-legend" id="sync-allocation-legend"></div>
+                    </div>
+                </div>
+                
+                <div class="sync-holdings-panel">
+                    <h4 style="color: #a855f7; margin-bottom: 15px;">🪙 Holdings</h4>
+                    <div class="sync-holdings-list" id="sync-holdings-list"></div>
+                </div>
+                
+                <div class="sync-compare-panel" id="sync-compare-panel" style="display: none;">
+                    <h4 style="color: #a855f7; margin-bottom: 15px;">⚖️ Real vs Paper Portfolio</h4>
+                    <div class="sync-compare-summary" id="sync-compare-summary"></div>
+                </div>
+            </div>
+            
+            <style>
+                .sync-features { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+                .sync-feature { background: rgba(0,217,255,0.1); border: 1px solid rgba(0,217,255,0.3); padding: 5px 12px; border-radius: 20px; font-size: 0.8em; color: #00d9ff; }
+                .sync-summary-panel, .sync-allocation-panel, .sync-holdings-panel, .sync-compare-panel { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+                .sync-wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+                .sync-wallet-label { font-weight: 600; color: #fff; font-size: 1.1em; }
+                .sync-wallet-address { display: block; color: #666; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; margin-top: 5px; }
+                .sync-wallet-actions { display: flex; gap: 8px; }
+                .sync-action-btn { background: rgba(255,255,255,0.1); border: 1px solid #444; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; }
+                .sync-action-btn:hover { border-color: #00d9ff; }
+                .sync-action-btn.danger:hover { border-color: #ef4444; }
+                .sync-value-hero { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+                .sync-total-value { display: flex; flex-direction: column; }
+                .sync-value-label { color: #888; font-size: 0.85em; margin-bottom: 5px; }
+                .sync-value-amount { font-size: 2.5em; font-weight: 700; font-family: 'JetBrains Mono', monospace; background: linear-gradient(90deg, #00d9ff, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+                .sync-change { text-align: right; padding: 10px 15px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; }
+                .sync-change.negative { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+                .sync-change-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #22c55e; font-size: 1.1em; }
+                .sync-change.negative .sync-change-value { color: #ef4444; }
+                .sync-change-pct { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; color: #22c55e; }
+                .sync-change.negative .sync-change-pct { color: #ef4444; }
+                .sync-change-label { display: block; color: #666; font-size: 0.75em; margin-top: 5px; }
+                .sync-quick-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+                .sync-quick-stat { text-align: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+                .sync-quick-value { display: block; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #fff; font-size: 1.1em; }
+                .sync-quick-label { display: block; color: #666; font-size: 0.75em; margin-top: 5px; }
+                .sync-allocation-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; }
+                .sync-allocation-legend { display: flex; flex-direction: column; gap: 8px; }
+                .sync-legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.9em; }
+                .sync-legend-color { width: 12px; height: 12px; border-radius: 3px; }
+                .sync-legend-symbol { flex: 1; color: #ccc; }
+                .sync-legend-pct { font-family: 'JetBrains Mono', monospace; color: #888; }
+                .sync-holdings-list { max-height: 350px; overflow-y: auto; }
+                .sync-holding-item { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; }
+                .sync-holding-item:last-child { border-bottom: none; }
+                .sync-holding-info { display: flex; flex-direction: column; gap: 4px; }
+                .sync-holding-symbol { font-weight: 600; color: #fff; }
+                .sync-holding-amount { color: #666; font-size: 0.85em; font-family: 'JetBrains Mono', monospace; }
+                .sync-holding-value { text-align: right; }
+                .sync-holding-usd { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #00d9ff; }
+                .sync-holding-pct { display: block; color: #666; font-size: 0.8em; }
+                .sync-holding-change { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; padding: 4px 10px; border-radius: 6px; min-width: 70px; text-align: center; }
+                .sync-holding-change.positive { background: rgba(34,197,94,0.1); color: #22c55e; }
+                .sync-holding-change.negative { background: rgba(239,68,68,0.1); color: #ef4444; }
+                @media (max-width: 768px) { .sync-quick-stats { grid-template-columns: repeat(2, 1fr); } .sync-value-amount { font-size: 1.8em; } .sync-allocation-container { grid-template-columns: 1fr; } .sync-holding-item { grid-template-columns: 1fr 1fr; } .sync-holding-change { display: none; } }
+            </style>
+        </div>
+        
+        <!-- Import Wallet Modal -->
+        <div class="modal-overlay" id="import-wallet-modal">
+            <div class="modal" style="max-width: 450px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">💼 Import Wallet</h3>
+                    <button class="modal-close" onclick="hideImportWalletModal()">×</button>
+                </div>
+                <div class="import-wallet-form">
+                    <p style="color: #888; margin-bottom: 20px; font-size: 0.9em;">
+                        Enter your Solana wallet address to sync your holdings. 
+                        <strong style="color: #22c55e;">This is read-only</strong> - we only fetch public balance data.
+                    </p>
+                    <div class="import-field">
+                        <label>Wallet Address</label>
+                        <input type="text" id="import-wallet-address" placeholder="Your Solana wallet address...">
+                    </div>
+                    <div class="import-field">
+                        <label>Label (optional)</label>
+                        <input type="text" id="import-wallet-label" placeholder="e.g., Main Wallet, Trading Wallet...">
+                    </div>
+                    <div class="import-options">
+                        <label class="import-checkbox">
+                            <input type="checkbox" id="import-auto-refresh" checked>
+                            <span>Auto-refresh every 5 minutes</span>
+                        </label>
+                    </div>
+                    <button class="import-submit-btn" onclick="importWallet()" id="import-submit-btn">🔗 Import Wallet</button>
+                    <div class="import-error" id="import-error" style="display: none;"></div>
+                </div>
+                <style>
+                    .import-wallet-form { display: flex; flex-direction: column; gap: 15px; }
+                    .import-field { display: flex; flex-direction: column; gap: 8px; }
+                    .import-field label { color: #888; font-size: 0.85em; }
+                    .import-field input { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+                    .import-field input:focus { border-color: #00d9ff; outline: none; }
+                    .import-options { padding: 10px 0; }
+                    .import-checkbox { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #888; font-size: 0.9em; }
+                    .import-checkbox input { width: 18px; height: 18px; accent-color: #00d9ff; }
+                    .import-submit-btn { background: linear-gradient(90deg, #00d9ff, #a855f7); color: #000; border: none; padding: 14px 24px; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 10px; }
+                    .import-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,217,255,0.4); }
+                    .import-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+                    .import-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 12px; border-radius: 8px; font-size: 0.9em; }
+                </style>
+            </div>
         </div>
         
         <!-- Auto-Copy Trading Section -->
@@ -6026,6 +6451,7 @@
                     <div class="shortcut-item"><kbd>P</kbd> Open Portfolio</div>
                     <div class="shortcut-item"><kbd>R</kbd> Refresh signals</div>
                     <div class="shortcut-item"><kbd>T</kbd> Toggle sound</div>
+                    <div class="shortcut-item"><kbd>V</kbd> Toggle voice alerts</div>
                     <div class="shortcut-item"><kbd>E</kbd> Export signals</div>
                     <div class="shortcut-item"><kbd>1</kbd> All signals</div>
                     <div class="shortcut-item"><kbd>2</kbd> High score only</div>
@@ -6117,6 +6543,271 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Voice Settings Modal -->
+        <div class="modal-overlay" id="voice-modal" onclick="closeVoiceSettings(event)">
+            <div class="modal" onclick="event.stopPropagation()" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">🔊 Voice Alert Settings</h3>
+                    <button class="modal-close" onclick="closeVoiceSettings()">×</button>
+                </div>
+                <div class="voice-settings-content">
+                    <p style="color: #888; margin-bottom: 20px;">Configure text-to-speech announcements for new signals.</p>
+                    
+                    <!-- Voice Enable Toggle -->
+                    <div class="voice-setting-row">
+                        <label class="voice-setting-label">
+                            <span>Voice Alerts</span>
+                            <span class="voice-setting-hint">Enable/disable voice announcements</span>
+                        </label>
+                        <label class="voice-switch">
+                            <input type="checkbox" id="voice-enabled" onchange="updateVoiceSettings()">
+                            <span class="voice-switch-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Min Score Slider -->
+                    <div class="voice-setting-row">
+                        <label class="voice-setting-label">
+                            <span>Minimum Score: <span id="voice-min-score-display">70</span></span>
+                            <span class="voice-setting-hint">Only announce signals above this score</span>
+                        </label>
+                        <input type="range" id="voice-min-score" min="0" max="100" value="70" 
+                               oninput="document.getElementById('voice-min-score-display').textContent = this.value"
+                               onchange="updateVoiceSettings()">
+                    </div>
+                    
+                    <!-- Voice Selection -->
+                    <div class="voice-setting-row">
+                        <label class="voice-setting-label">
+                            <span>Voice</span>
+                            <span class="voice-setting-hint">Select browser voice</span>
+                        </label>
+                        <select id="voice-select" onchange="updateVoiceSettings()">
+                            <option value="default">Default</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Speech Rate -->
+                    <div class="voice-setting-row">
+                        <label class="voice-setting-label">
+                            <span>Speech Rate: <span id="voice-rate-display">1.0</span>x</span>
+                            <span class="voice-setting-hint">Speed of speech (0.5 - 2.0)</span>
+                        </label>
+                        <input type="range" id="voice-rate" min="0.5" max="2" step="0.1" value="1"
+                               oninput="document.getElementById('voice-rate-display').textContent = parseFloat(this.value).toFixed(1)"
+                               onchange="updateVoiceSettings()">
+                    </div>
+                    
+                    <!-- Volume -->
+                    <div class="voice-setting-row">
+                        <label class="voice-setting-label">
+                            <span>Volume: <span id="voice-volume-display">80</span>%</span>
+                            <span class="voice-setting-hint">Announcement volume</span>
+                        </label>
+                        <input type="range" id="voice-volume" min="0" max="100" value="80"
+                               oninput="document.getElementById('voice-volume-display').textContent = this.value"
+                               onchange="updateVoiceSettings()">
+                    </div>
+                    
+                    <!-- Risk Warnings Toggle -->
+                    <div class="voice-setting-row">
+                        <label class="voice-setting-label">
+                            <span>Announce Risk Warnings</span>
+                            <span class="voice-setting-hint">Include safety warnings in announcements</span>
+                        </label>
+                        <label class="voice-switch">
+                            <input type="checkbox" id="voice-risk-warnings" checked onchange="updateVoiceSettings()">
+                            <span class="voice-switch-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Priority Only Toggle -->
+                    <div class="voice-setting-row">
+                        <label class="voice-setting-label">
+                            <span>High Conviction Only</span>
+                            <span class="voice-setting-hint">Only announce HIGH_CONVICTION or ULTRA signals</span>
+                        </label>
+                        <label class="voice-switch">
+                            <input type="checkbox" id="voice-priority-only" onchange="updateVoiceSettings()">
+                            <span class="voice-switch-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="voice-actions">
+                        <button class="voice-btn voice-btn-test" onclick="testVoice()">
+                            🔊 Test Voice
+                        </button>
+                        <button class="voice-btn voice-btn-reset" onclick="resetVoiceSettings()">
+                            🔄 Reset to Defaults
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            /* Voice Settings Styles */
+            .voice-settings-content {
+                padding: 10px;
+            }
+            
+            .voice-setting-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 0;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .voice-setting-row:last-of-type {
+                border-bottom: none;
+            }
+            
+            .voice-setting-label {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .voice-setting-label > span:first-child {
+                color: #e0e0e0;
+                font-weight: 500;
+            }
+            
+            .voice-setting-hint {
+                color: #666;
+                font-size: 0.8em;
+            }
+            
+            .voice-setting-row input[type="range"] {
+                width: 150px;
+                height: 6px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 3px;
+                cursor: pointer;
+                accent-color: #00d9ff;
+            }
+            
+            .voice-setting-row select {
+                background: rgba(0,0,0,0.3);
+                border: 1px solid #444;
+                color: #e0e0e0;
+                padding: 8px 12px;
+                border-radius: 8px;
+                min-width: 150px;
+                cursor: pointer;
+            }
+            
+            .voice-setting-row select:hover {
+                border-color: #00d9ff;
+            }
+            
+            /* Toggle Switch */
+            .voice-switch {
+                position: relative;
+                display: inline-block;
+                width: 50px;
+                height: 26px;
+            }
+            
+            .voice-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            
+            .voice-switch-slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(255,255,255,0.1);
+                transition: 0.3s;
+                border-radius: 26px;
+            }
+            
+            .voice-switch-slider:before {
+                position: absolute;
+                content: "";
+                height: 20px;
+                width: 20px;
+                left: 3px;
+                bottom: 3px;
+                background: white;
+                transition: 0.3s;
+                border-radius: 50%;
+            }
+            
+            .voice-switch input:checked + .voice-switch-slider {
+                background: linear-gradient(90deg, #00d9ff, #a855f7);
+            }
+            
+            .voice-switch input:checked + .voice-switch-slider:before {
+                transform: translateX(24px);
+            }
+            
+            /* Action Buttons */
+            .voice-actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 20px;
+                padding-top: 15px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .voice-btn {
+                flex: 1;
+                padding: 12px 20px;
+                border: none;
+                border-radius: 8px;
+                font-family: 'Space Grotesk', sans-serif;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .voice-btn-test {
+                background: linear-gradient(135deg, #00d9ff, #a855f7);
+                color: #000;
+            }
+            
+            .voice-btn-test:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 20px rgba(0,217,255,0.3);
+            }
+            
+            .voice-btn-reset {
+                background: rgba(255,255,255,0.1);
+                color: #888;
+                border: 1px solid #444;
+            }
+            
+            .voice-btn-reset:hover {
+                border-color: #00d9ff;
+                color: #00d9ff;
+            }
+            
+            @media (max-width: 768px) {
+                .voice-setting-row {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 10px;
+                }
+                
+                .voice-setting-row input[type="range"],
+                .voice-setting-row select {
+                    width: 100%;
+                }
+                
+                .voice-actions {
+                    flex-direction: column;
+                }
+            }
+        </style>
         
         <style>
             /* PWA Install Banner */
@@ -7639,6 +8330,148 @@
         let soundEnabled = false;
         let currentFilter = 'all';
         
+        // ========================================
+        // THEME MANAGEMENT
+        // ========================================
+        
+        // Theme state
+        let currentTheme = 'dark';
+        
+        // Initialize theme on page load
+        function initTheme() {
+            // Check localStorage first
+            const savedTheme = localStorage.getItem('oracle-theme');
+            
+            if (savedTheme) {
+                currentTheme = savedTheme;
+            } else {
+                // Check system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                currentTheme = prefersDark ? 'dark' : 'light';
+            }
+            
+            applyTheme(currentTheme);
+            
+            // Listen for system preference changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                // Only auto-switch if no user preference saved
+                if (!localStorage.getItem('oracle-theme')) {
+                    currentTheme = e.matches ? 'dark' : 'light';
+                    applyTheme(currentTheme);
+                }
+            });
+        }
+        
+        // Apply theme to document
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            currentTheme = theme;
+            
+            // Update meta theme-color for mobile browsers
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) {
+                metaTheme.content = theme === 'dark' ? '#0a0a1a' : '#ffffff';
+            }
+            
+            // Update mobile nav button text
+            const mobileThemeBtn = document.getElementById('mobile-theme-btn');
+            if (mobileThemeBtn) {
+                mobileThemeBtn.textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+            }
+            
+            // Update charts if they exist
+            updateChartsForTheme(theme);
+            
+            // Sync with API (non-blocking)
+            syncThemePreference(theme);
+        }
+        
+        // Toggle between themes
+        function toggleTheme() {
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('oracle-theme', newTheme);
+            applyTheme(newTheme);
+            
+            // Visual feedback
+            const toggle = document.getElementById('theme-toggle');
+            if (toggle) {
+                toggle.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    toggle.style.transform = '';
+                }, 150);
+            }
+        }
+        
+        // Update chart colors for theme
+        function updateChartsForTheme(theme) {
+            const isDark = theme === 'dark';
+            const textColor = isDark ? '#888' : '#57606a';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            
+            // Update all Chart.js instances
+            if (typeof Chart !== 'undefined') {
+                Chart.defaults.color = textColor;
+                Chart.defaults.borderColor = gridColor;
+                
+                // Update existing charts
+                Object.values(Chart.instances || {}).forEach(chart => {
+                    if (chart.options.scales) {
+                        Object.values(chart.options.scales).forEach(scale => {
+                            if (scale.ticks) scale.ticks.color = textColor;
+                            if (scale.grid) scale.grid.color = gridColor;
+                        });
+                    }
+                    chart.update('none');
+                });
+            }
+        }
+        
+        // Sync theme preference with API
+        async function syncThemePreference(theme) {
+            try {
+                await fetch(`${API_BASE}/api/user/preferences`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theme }),
+                });
+            } catch (err) {
+                // Silent fail - localStorage is the primary source
+                console.debug('Theme sync failed:', err.message);
+            }
+        }
+        
+        // Load theme preference from API
+        async function loadThemePreference() {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/preferences`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.theme && !localStorage.getItem('oracle-theme')) {
+                        // Only apply API theme if no local preference
+                        applyTheme(data.theme);
+                    }
+                }
+            } catch (err) {
+                console.debug('Failed to load theme preference:', err.message);
+            }
+        }
+        
+        // Initialize theme immediately
+        initTheme();
+        
+        // Also load from API after page load (may override if logged in)
+        document.addEventListener('DOMContentLoaded', () => {
+            loadThemePreference();
+        });
+        
+        // Keyboard shortcut for theme toggle (Shift+T)
+        document.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                toggleTheme();
+            }
+        });
+        
         // ===== WALLET STATE =====
         const walletState = {
             connected: false,
@@ -8199,6 +9032,241 @@
                 audio.play().catch(() => {});
             } catch (e) {}
         }
+        
+        // ===== VOICE ALERTS SYSTEM =====
+        let voiceEnabled = false;
+        let voiceSettings = {
+            enabled: false,
+            minScore: 70,
+            voice: 'default',
+            rate: 1.0,
+            volume: 0.8,
+            pitch: 1.0,
+            announceRiskWarnings: true,
+            cooldownSeconds: 10,
+            priorityOnly: false
+        };
+        let availableVoices = [];
+        let speechSynthesis = window.speechSynthesis;
+        
+        // Initialize voices
+        function initVoices() {
+            availableVoices = speechSynthesis.getVoices();
+            const select = document.getElementById('voice-select');
+            if (select && availableVoices.length > 0) {
+                select.innerHTML = '<option value="default">Default</option>';
+                availableVoices.forEach((voice, i) => {
+                    const option = document.createElement('option');
+                    option.value = voice.name;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    select.appendChild(option);
+                });
+            }
+        }
+        
+        // Load voices when available
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = initVoices;
+        }
+        setTimeout(initVoices, 500);
+        
+        // Toggle voice alerts
+        function toggleVoice() {
+            voiceEnabled = !voiceEnabled;
+            const btn = document.getElementById('voice-toggle');
+            btn.textContent = voiceEnabled ? '🔊 Voice' : '🔇 Voice';
+            btn.classList.toggle('active', voiceEnabled);
+            
+            // Update server setting
+            fetch(`${API_BASE}/api/voice/settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: voiceEnabled })
+            }).catch(() => {});
+            
+            if (voiceEnabled) {
+                testVoice();
+            }
+        }
+        
+        // Show voice settings modal
+        function showVoiceSettings() {
+            loadVoiceSettings();
+            document.getElementById('voice-modal').classList.add('active');
+        }
+        
+        // Close voice settings modal
+        function closeVoiceSettings(event) {
+            if (!event || event.target.id === 'voice-modal') {
+                document.getElementById('voice-modal').classList.remove('active');
+            }
+        }
+        
+        // Load voice settings from server
+        async function loadVoiceSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/api/voice/settings`);
+                const settings = await res.json();
+                voiceSettings = settings;
+                voiceEnabled = settings.enabled;
+                
+                // Update UI
+                document.getElementById('voice-enabled').checked = settings.enabled;
+                document.getElementById('voice-min-score').value = settings.minScore;
+                document.getElementById('voice-min-score-display').textContent = settings.minScore;
+                document.getElementById('voice-rate').value = settings.rate;
+                document.getElementById('voice-rate-display').textContent = settings.rate.toFixed(1);
+                document.getElementById('voice-volume').value = settings.volume * 100;
+                document.getElementById('voice-volume-display').textContent = Math.round(settings.volume * 100);
+                document.getElementById('voice-risk-warnings').checked = settings.announceRiskWarnings;
+                document.getElementById('voice-priority-only').checked = settings.priorityOnly;
+                
+                // Set voice selection
+                const voiceSelect = document.getElementById('voice-select');
+                if (voiceSelect && settings.voice) {
+                    voiceSelect.value = settings.voice;
+                }
+                
+                // Update toggle button
+                const btn = document.getElementById('voice-toggle');
+                btn.textContent = voiceEnabled ? '🔊 Voice' : '🔇 Voice';
+                btn.classList.toggle('active', voiceEnabled);
+            } catch (e) {
+                console.log('Failed to load voice settings:', e);
+            }
+        }
+        
+        // Update voice settings
+        async function updateVoiceSettings() {
+            const settings = {
+                enabled: document.getElementById('voice-enabled').checked,
+                minScore: parseInt(document.getElementById('voice-min-score').value),
+                voice: document.getElementById('voice-select').value,
+                rate: parseFloat(document.getElementById('voice-rate').value),
+                volume: parseInt(document.getElementById('voice-volume').value) / 100,
+                announceRiskWarnings: document.getElementById('voice-risk-warnings').checked,
+                priorityOnly: document.getElementById('voice-priority-only').checked
+            };
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/voice/settings`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    voiceSettings = data.settings;
+                    voiceEnabled = data.settings.enabled;
+                    
+                    // Update toggle button
+                    const btn = document.getElementById('voice-toggle');
+                    btn.textContent = voiceEnabled ? '🔊 Voice' : '🔇 Voice';
+                    btn.classList.toggle('active', voiceEnabled);
+                }
+            } catch (e) {
+                console.log('Failed to save voice settings:', e);
+            }
+        }
+        
+        // Reset voice settings
+        async function resetVoiceSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/api/voice/settings/reset`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    voiceSettings = data.settings;
+                    loadVoiceSettings();
+                    showToast('🔄 Voice settings reset to defaults');
+                }
+            } catch (e) {
+                console.log('Failed to reset voice settings:', e);
+            }
+        }
+        
+        // Test voice
+        async function testVoice() {
+            try {
+                const res = await fetch(`${API_BASE}/api/voice/test`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success && data.message) {
+                    speakMessage(data.message);
+                }
+            } catch (e) {
+                console.log('Failed to test voice:', e);
+                // Fallback: speak locally
+                speakText('Voice alerts are working. This is a test message.');
+            }
+        }
+        
+        // Speak a message using Web Speech API
+        function speakMessage(voiceMessage) {
+            if (!speechSynthesis) return;
+            
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(voiceMessage.text);
+            
+            // Apply settings
+            utterance.rate = voiceMessage.settings?.rate || voiceSettings.rate;
+            utterance.pitch = voiceMessage.settings?.pitch || voiceSettings.pitch || 1;
+            utterance.volume = voiceMessage.settings?.volume || voiceSettings.volume;
+            
+            // Set voice if specified
+            const voiceName = voiceSettings.voice;
+            if (voiceName && voiceName !== 'default') {
+                const voice = availableVoices.find(v => v.name === voiceName);
+                if (voice) utterance.voice = voice;
+            }
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        // Speak plain text
+        function speakText(text) {
+            if (!speechSynthesis) return;
+            
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = voiceSettings.rate;
+            utterance.volume = voiceSettings.volume;
+            
+            const voiceName = voiceSettings.voice;
+            if (voiceName && voiceName !== 'default') {
+                const voice = availableVoices.find(v => v.name === voiceName);
+                if (voice) utterance.voice = voice;
+            }
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        // Speak a signal (called when clicking speak button on signal card)
+        async function speakSignal(signalId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/voice/speak/${signalId}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success && data.message) {
+                    speakMessage(data.message);
+                }
+            } catch (e) {
+                console.log('Failed to speak signal:', e);
+            }
+        }
+        
+        // Handle voice alert from WebSocket
+        function handleVoiceAlert(event) {
+            if (!voiceEnabled) return;
+            if (event.type === 'voice_alert' && event.message) {
+                speakMessage(event.message);
+            }
+        }
+        
+        // Load voice settings on page load
+        setTimeout(loadVoiceSettings, 1000);
+        
+        // ===== END VOICE ALERTS SYSTEM =====
         
         function showToast(message) {
             const toast = document.createElement('div');
@@ -9214,6 +10282,7 @@
                         <button class="action-btn trade-btn" onclick="showTradeModal('${signal.id}', '${signal.token}', '${signal.symbol}', ${signal.score})" title="Paper Trade">📝</button>
                         <button class="action-btn risk-btn" onclick="calculateRiskForSignal('${signal.id}', '${signal.symbol}', ${signal.score}, '${signal.riskLevel}')" title="Calculate Risk">📊</button>
                         <button class="action-btn why-btn" onclick="showExplanation('${signal.id}')" title="Why this signal?">🧠 Why?</button>
+                        <button class="action-btn" onclick="speakSignal('${signal.id}')" title="Speak Signal">🔊</button>
                         <button class="action-btn" onclick="copyToClipboard('${signal.token}')" title="Copy CA">📋</button>
                         <a class="action-btn" href="https://dexscreener.com/solana/${signal.token}" target="_blank" title="DexScreener">📊</a>
                     </div>
@@ -9286,6 +10355,9 @@
                     // Trade executed notification
                     const t = message.data;
                     showToast(`💱 Trade: ${t.type} $${t.outputSymbol} for $${t.inputAmount.toFixed(2)}`);
+                } else if (message.type === 'voice_alert') {
+                    // Voice alert for high-score signals
+                    handleVoiceAlert(message);
                 }
             };
             
@@ -10355,6 +11427,11 @@
                     // Toggle sound
                     toggleSound();
                     break;
+                case 'v':
+                    // Toggle voice alerts
+                    toggleVoice();
+                    showToast(voiceEnabled ? '🔊 Voice alerts enabled' : '🔇 Voice alerts disabled');
+                    break;
                 case 'e':
                     // Export modal
                     showExportModal();
@@ -10385,6 +11462,7 @@
                     closeTradeModal();
                     closePortfolioModal();
                     closeExportModal();
+                    closeVoiceSettings();
                     hideShortcuts();
                     endTour();
                     break;
@@ -10643,6 +11721,316 @@
         if (window.matchMedia('(display-mode: standalone)').matches) {
             console.log('[PWA] Running in standalone mode');
         }
+        
+        // ===== PORTFOLIO SYNC (Real Wallet Holdings) =====
+        let syncedWallet = null;
+        let syncAllocationChart = null;
+        
+        function showImportWalletModal() {
+            document.getElementById('import-wallet-modal').classList.add('active');
+            document.getElementById('import-wallet-address').focus();
+        }
+        
+        function hideImportWalletModal() {
+            document.getElementById('import-wallet-modal').classList.remove('active');
+            document.getElementById('import-error').style.display = 'none';
+            document.getElementById('import-wallet-address').value = '';
+            document.getElementById('import-wallet-label').value = '';
+        }
+        
+        async function importWallet() {
+            const address = document.getElementById('import-wallet-address').value.trim();
+            const label = document.getElementById('import-wallet-label').value.trim();
+            const autoRefresh = document.getElementById('import-auto-refresh').checked;
+            const errorEl = document.getElementById('import-error');
+            const btn = document.getElementById('import-submit-btn');
+            
+            if (!address) {
+                errorEl.textContent = 'Please enter a wallet address';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            // Basic validation (32-44 base58 chars)
+            if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
+                errorEl.textContent = 'Invalid Solana wallet address format';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Syncing...';
+            errorEl.style.display = 'none';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/portfolio/sync/${address}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ label, autoRefresh })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to sync wallet');
+                }
+                
+                syncedWallet = address;
+                hideImportWalletModal();
+                showToast(`✅ Wallet synced: $${data.portfolio.totalValue.toLocaleString()}`);
+                displaySyncedPortfolio(data);
+                
+            } catch (e) {
+                console.error('Import wallet error:', e);
+                errorEl.textContent = e.message || 'Failed to import wallet. Please try again.';
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔗 Import Wallet';
+            }
+        }
+        
+        function displaySyncedPortfolio(data) {
+            const intro = document.getElementById('sync-intro');
+            const content = document.getElementById('synced-portfolio-content');
+            const badge = document.getElementById('sync-status-badge');
+            
+            intro.style.display = 'none';
+            content.style.display = 'block';
+            badge.textContent = 'SYNCED';
+            badge.style.background = '#22c55e';
+            
+            // Wallet info
+            document.getElementById('sync-wallet-label').textContent = data.portfolio.label || 'My Wallet';
+            document.getElementById('sync-wallet-address').textContent = 
+                data.portfolio.wallet.slice(0, 8) + '...' + data.portfolio.wallet.slice(-4);
+            
+            // Total value
+            document.getElementById('sync-total-value').textContent = 
+                '$' + data.portfolio.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            // 24h change
+            const change24hEl = document.getElementById('sync-change-24h');
+            const change24h = data.pnl?.change24h || 0;
+            const change24hPct = data.pnl?.change24hPct || 0;
+            change24hEl.querySelector('.sync-change-value').textContent = 
+                (change24h >= 0 ? '+' : '') + '$' + Math.abs(change24h).toFixed(2);
+            change24hEl.querySelector('.sync-change-pct').textContent = 
+                '(' + (change24hPct >= 0 ? '+' : '') + change24hPct.toFixed(2) + '%)';
+            change24hEl.classList.toggle('negative', change24h < 0);
+            
+            // Quick stats
+            document.getElementById('sync-sol-balance').textContent = 
+                data.portfolio.solBalance.toFixed(4) + ' SOL';
+            document.getElementById('sync-token-count').textContent = data.portfolio.tokenCount;
+            
+            const change7dPct = data.pnl?.change7dPct || 0;
+            const change7dEl = document.getElementById('sync-7d-change');
+            change7dEl.textContent = (change7dPct >= 0 ? '+' : '') + change7dPct.toFixed(2) + '%';
+            change7dEl.style.color = change7dPct >= 0 ? '#22c55e' : '#ef4444';
+            
+            document.getElementById('sync-last-refresh').textContent = 
+                new Date(data.portfolio.lastRefresh).toLocaleTimeString();
+            
+            // Render allocation chart
+            renderSyncAllocationChart(data.allocation || []);
+            
+            // Render holdings list
+            renderSyncHoldings(data.holdings || [], data.portfolio.totalValue);
+            
+            // Try to load paper portfolio for comparison
+            loadPortfolioComparison();
+        }
+        
+        function renderSyncAllocationChart(allocation) {
+            const ctx = document.getElementById('syncAllocationChart')?.getContext('2d');
+            if (!ctx) return;
+            
+            if (syncAllocationChart) {
+                syncAllocationChart.destroy();
+            }
+            
+            const labels = allocation.map(a => a.symbol);
+            const values = allocation.map(a => a.value);
+            const colors = allocation.map(a => a.color);
+            
+            syncAllocationChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderColor: 'rgba(0,0,0,0.5)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = ((value / total) * 100).toFixed(1);
+                                    return `$${value.toLocaleString()} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+            
+            // Render legend
+            const legendEl = document.getElementById('sync-allocation-legend');
+            legendEl.innerHTML = allocation.slice(0, 8).map(a => `
+                <div class="sync-legend-item">
+                    <span class="sync-legend-color" style="background: ${a.color}"></span>
+                    <span class="sync-legend-symbol">${a.symbol}</span>
+                    <span class="sync-legend-pct">${a.percentage.toFixed(1)}%</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderSyncHoldings(holdings, totalValue) {
+            const container = document.getElementById('sync-holdings-list');
+            
+            if (!holdings.length) {
+                container.innerHTML = '<div class="empty-state">No holdings found</div>';
+                return;
+            }
+            
+            container.innerHTML = holdings.map(h => {
+                const pct = ((h.usdValue / totalValue) * 100).toFixed(1);
+                const change = h.change24hPct || 0;
+                const changeClass = change >= 0 ? 'positive' : 'negative';
+                
+                return `
+                    <div class="sync-holding-item">
+                        <div class="sync-holding-info">
+                            <span class="sync-holding-symbol">${h.symbol}</span>
+                            <span class="sync-holding-amount">${h.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                        </div>
+                        <div class="sync-holding-value">
+                            <span class="sync-holding-usd">$${h.usdValue.toFixed(2)}</span>
+                            <span class="sync-holding-pct">${pct}%</span>
+                        </div>
+                        <span class="sync-holding-change ${changeClass}">
+                            ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        async function refreshSyncedPortfolio() {
+            if (!syncedWallet) return;
+            
+            showToast('🔄 Refreshing portfolio...');
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/portfolio/${syncedWallet}/refresh`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    // Reload full portfolio data
+                    const fullRes = await fetch(`${API_BASE}/api/portfolio/${syncedWallet}`);
+                    const fullData = await fullRes.json();
+                    displaySyncedPortfolio({ portfolio: fullData, pnl: fullData.pnl, holdings: fullData.holdings, allocation: fullData.allocation });
+                    showToast(`✅ Portfolio refreshed: $${fullData.totalValue.toLocaleString()}`);
+                } else {
+                    showToast('❌ Failed to refresh portfolio');
+                }
+            } catch (e) {
+                console.error('Refresh error:', e);
+                showToast('❌ Failed to refresh portfolio');
+            }
+        }
+        
+        async function removeSyncedPortfolio() {
+            if (!syncedWallet) return;
+            
+            if (!confirm('Remove synced portfolio? This will stop tracking this wallet.')) return;
+            
+            try {
+                await fetch(`${API_BASE}/api/portfolio/${syncedWallet}`, { method: 'DELETE' });
+                
+                syncedWallet = null;
+                document.getElementById('sync-intro').style.display = 'block';
+                document.getElementById('synced-portfolio-content').style.display = 'none';
+                document.getElementById('sync-status-badge').textContent = 'NOT SYNCED';
+                document.getElementById('sync-status-badge').style.background = '#666';
+                
+                showToast('✅ Portfolio removed');
+            } catch (e) {
+                console.error('Remove error:', e);
+                showToast('❌ Failed to remove portfolio');
+            }
+        }
+        
+        async function loadPortfolioComparison() {
+            if (!syncedWallet) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/portfolio/${syncedWallet}/compare`);
+                if (!res.ok) return;
+                
+                const data = await res.json();
+                const panel = document.getElementById('sync-compare-panel');
+                const summary = document.getElementById('sync-compare-summary');
+                
+                panel.style.display = 'block';
+                
+                const diffClass = data.comparison.difference >= 0 ? '' : 'behind';
+                summary.innerHTML = `
+                    <div class="sync-compare-side">
+                        <div class="sync-compare-label">Real Portfolio</div>
+                        <div class="sync-compare-value">$${data.comparison.syncedTotal.toLocaleString()}</div>
+                    </div>
+                    <div class="sync-compare-vs">vs</div>
+                    <div class="sync-compare-side">
+                        <div class="sync-compare-label">Paper Portfolio</div>
+                        <div class="sync-compare-value">$${data.comparison.paperTotal.toLocaleString()}</div>
+                    </div>
+                    <div class="sync-compare-diff ${diffClass}" style="grid-column: 1 / -1;">
+                        ${data.summary}
+                    </div>
+                `;
+            } catch (e) {
+                console.log('No paper portfolio for comparison');
+            }
+        }
+        
+        // Load synced portfolio on page load
+        async function loadSyncedPortfolio() {
+            try {
+                const res = await fetch(`${API_BASE}/api/portfolios`);
+                const data = await res.json();
+                
+                if (data.portfolios && data.portfolios.length > 0) {
+                    // Load the first synced portfolio
+                    syncedWallet = data.portfolios[0].wallet;
+                    const fullRes = await fetch(`${API_BASE}/api/portfolio/${syncedWallet}`);
+                    const fullData = await fullRes.json();
+                    displaySyncedPortfolio({ 
+                        portfolio: fullData, 
+                        pnl: fullData.pnl, 
+                        holdings: fullData.holdings, 
+                        allocation: fullData.allocation 
+                    });
+                }
+            } catch (e) {
+                console.log('No synced portfolio found');
+            }
+        }
+        
+        // Initialize portfolio sync on page load
+        setTimeout(() => loadSyncedPortfolio(), 1500);
         
         // ===== AUTO-COPY TRADING =====
         let autoCopyEnabled = false;

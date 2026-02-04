@@ -23,6 +23,17 @@ import {
 } from '../onchain/publisher';
 import { sendTelegramAlert, shouldAlert } from '../notifications/telegram';
 import {
+  getVoiceSettings,
+  updateVoiceSettings,
+  resetVoiceSettings,
+  generateVoiceMessage,
+  generateTestMessage,
+  shouldAnnounce,
+  createVoiceAlertEvent,
+  VoiceAlertSettings,
+  VoiceMessage
+} from '../notifications/voice-alerts';
+import {
   setSignalStore as setTelegramSignalStore,
   broadcastSignal as broadcastTelegramSignal,
   processUpdate as processTelegramUpdate,
@@ -46,6 +57,20 @@ import { DemoRunner, generateDemoSignal, generateHistoricalSignals } from '../de
 import { generateTextCard, generateHtmlCard, generateSvgCard } from './share-card';
 import { exportSignals, exportPerformanceReport } from '../export/data-export';
 import { explainSignal, formatExplanation } from '../analysis/explainer';
+import {
+  analyzeToken,
+  simulateEntry,
+  testStrategy,
+  compareTokens,
+  formatBacktestResult,
+  getChartData,
+  fetchPriceHistory,
+  clearHistoryCache,
+  getHistoryCacheStats,
+  EntryPoint,
+  StrategyConfig,
+  CandleInterval
+} from '../backtest';
 import {
   generateExplanation,
   formatExplanationText,
@@ -78,6 +103,19 @@ import {
   SOL_MINT,
   USDC_MINT
 } from '../trading/jupiter';
+import {
+  syncWallet,
+  getPortfolio,
+  getAllPortfolios,
+  getPortfolioHistory,
+  getPortfolioPnL,
+  removePortfolio,
+  updatePortfolioSettings,
+  compareWithPaperPortfolio,
+  getPortfolioSummary,
+  formatPortfolioDisplay,
+  isValidWalletAddress
+} from '../portfolio/sync';
 import {
   getMarketCondition,
   formatMarketCondition,
@@ -282,6 +320,90 @@ import {
   KOLStats,
   KOLLeaderboard
 } from '../analytics/kol-reliability';
+import {
+  createEntry as createJournalEntry,
+  getEntry as getJournalEntry,
+  updateEntry as updateJournalEntry,
+  deleteEntry as deleteJournalEntry,
+  getEntries as getJournalEntries,
+  getAllTags as getJournalTags,
+  searchEntries as searchJournalEntries,
+  getAnalytics as getJournalAnalytics,
+  getJournalSummary,
+  exportJournal,
+  generateDemoJournal,
+  addSignalNote,
+  recordLesson,
+  recordTradeEntry,
+  recordIdea,
+  getEntriesForSignal,
+  getEntriesForTrade,
+  JournalEntry,
+  JournalFilter,
+  JournalAnalytics
+} from '../journal';
+import {
+  createAlert as createWatchlistAlert,
+  getAlert as getWatchlistAlert,
+  getAllAlerts as getAllWatchlistAlerts,
+  getAlertsForToken,
+  getEnabledAlerts,
+  updateAlert as updateWatchlistAlertFn,
+  deleteAlert as deleteWatchlistAlertFn,
+  toggleAlert,
+  getTriggeredAlerts,
+  getTriggeredAlertsForToken,
+  checkAlerts as checkWatchlistAlerts,
+  checkSignalAlert,
+  checkWalletAlert,
+  startAlertChecker,
+  stopAlertChecker,
+  getCheckerState,
+  setWsBroadcast,
+  setTelegramSend,
+  createPriceAboveAlert,
+  createPriceBelowAlert,
+  createPumpAlert,
+  createDumpAlert,
+  createVolumeAlert,
+  createSignalAlert,
+  createWalletAlert,
+  getAlertStats,
+  exportAlerts,
+  importAlerts,
+  clearAllAlerts,
+  getCachedPrice,
+  WatchlistAlert,
+  AlertType,
+  TriggeredAlert
+} from '../portfolio/watchlist-alerts';
+import {
+  getCurrentWeights,
+  getActiveProfile,
+  getActiveProfileName,
+  getAllProfiles,
+  getPresets,
+  getPreset,
+  updateWeights,
+  updateSourceWeights,
+  updateRiskPenalties,
+  resetToDefaults,
+  applyPreset,
+  createProfile,
+  deleteProfile,
+  switchProfile,
+  calculateCustomScore,
+  rescoreSignals,
+  previewWeightChange,
+  exportConfig as exportScoringConfig,
+  importConfig as importScoringConfig,
+  loadWeightsConfig,
+  SourceWeights,
+  RiskPenalties,
+  ScoringProfile,
+  ScoringPreset,
+  ScoreImpact
+} from '../scoring';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -1140,6 +1262,77 @@ app.get('/api/leaderboard/dashboard', (req, res) => {
 app.post('/api/leaderboard/demo', (req, res) => {
   generateDemoLeaderboard();
   res.json({ success: true, message: 'Demo leaderboard data generated' });
+});
+
+// === USER PREFERENCES API ===
+
+// In-memory user preferences storage (in production, use a database)
+const userPreferences: Map<string, {
+  theme: 'dark' | 'light';
+  soundEnabled: boolean;
+  notifications: boolean;
+  updatedAt: number;
+}> = new Map();
+
+// Get user preferences
+app.get('/api/user/preferences', (req, res) => {
+  const userId = (req.query.userId as string) || req.ip || 'anonymous';
+  
+  try {
+    const prefs = userPreferences.get(userId) || {
+      theme: 'dark',
+      soundEnabled: false,
+      notifications: true,
+      updatedAt: Date.now()
+    };
+    
+    res.json({
+      ...prefs,
+      userId
+    });
+  } catch (error) {
+    console.error('[PREFERENCES] Error getting preferences:', error);
+    res.status(500).json({ error: 'Failed to get preferences' });
+  }
+});
+
+// Update user preferences
+app.put('/api/user/preferences', (req, res) => {
+  const userId = (req.query.userId as string) || req.ip || 'anonymous';
+  const updates = req.body;
+  
+  try {
+    const currentPrefs = userPreferences.get(userId) || {
+      theme: 'dark',
+      soundEnabled: false,
+      notifications: true,
+      updatedAt: Date.now()
+    };
+    
+    // Validate theme value
+    if (updates.theme && !['dark', 'light'].includes(updates.theme)) {
+      return res.status(400).json({ error: 'Invalid theme value. Must be "dark" or "light"' });
+    }
+    
+    const newPrefs = {
+      ...currentPrefs,
+      ...updates,
+      updatedAt: Date.now()
+    };
+    
+    userPreferences.set(userId, newPrefs);
+    
+    res.json({
+      success: true,
+      preferences: {
+        ...newPrefs,
+        userId
+      }
+    });
+  } catch (error) {
+    console.error('[PREFERENCES] Error updating preferences:', error);
+    res.status(500).json({ error: 'Failed to update preferences' });
+  }
 });
 
 // === ACHIEVEMENT & GAMIFICATION API ===
@@ -3141,6 +3334,592 @@ function formatKOLCall(call: KOLCall) {
   };
 }
 
+// === TRADING JOURNAL API ===
+// Notes, lessons learned, mood tracking, and trade analytics
+
+// List journal entries with filters
+app.get('/api/journal', (req, res) => {
+  try {
+    const filter: JournalFilter = {};
+    
+    if (req.query.type) filter.type = req.query.type as any;
+    if (req.query.mood) filter.mood = req.query.mood as any;
+    if (req.query.token) filter.token = req.query.token as string;
+    if (req.query.signalId) filter.signalId = req.query.signalId as string;
+    if (req.query.tradeId) filter.tradeId = req.query.tradeId as string;
+    if (req.query.outcome) filter.outcome = req.query.outcome as string;
+    if (req.query.startDate) filter.startDate = parseInt(req.query.startDate as string);
+    if (req.query.endDate) filter.endDate = parseInt(req.query.endDate as string);
+    if (req.query.tags) filter.tags = (req.query.tags as string).split(',');
+    if (req.query.limit) filter.limit = parseInt(req.query.limit as string);
+    if (req.query.offset) filter.offset = parseInt(req.query.offset as string);
+    
+    const entries = getJournalEntries(filter);
+    const summary = getJournalSummary();
+    
+    res.json({
+      timestamp: Date.now(),
+      count: entries.length,
+      summary,
+      entries
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch journal entries' });
+  }
+});
+
+// Create new journal entry
+app.post('/api/journal', (req, res) => {
+  try {
+    const { type, title, content, tags, mood, signalId, tradeId, token, outcome, pnl, screenshot, lessonCategory } = req.body;
+    
+    if (!type || !title || !content) {
+      return res.status(400).json({ error: 'Missing required fields: type, title, content' });
+    }
+    
+    const entry = createJournalEntry({
+      type,
+      title,
+      content,
+      tags: tags || [],
+      mood,
+      signalId,
+      tradeId,
+      token,
+      outcome,
+      pnl,
+      screenshot,
+      lessonCategory
+    });
+    
+    res.status(201).json({
+      success: true,
+      message: 'Journal entry created',
+      entry
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create journal entry' });
+  }
+});
+
+// Get single journal entry
+app.get('/api/journal/:id', (req, res) => {
+  const { id } = req.params;
+  const entry = getJournalEntry(id);
+  
+  if (!entry) {
+    return res.status(404).json({ error: 'Journal entry not found', id });
+  }
+  
+  res.json({ entry });
+});
+
+// Update journal entry
+app.put('/api/journal/:id', (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  
+  // Don't allow changing id or timestamp
+  delete updates.id;
+  delete updates.timestamp;
+  
+  const entry = updateJournalEntry(id, updates);
+  
+  if (!entry) {
+    return res.status(404).json({ error: 'Journal entry not found', id });
+  }
+  
+  res.json({
+    success: true,
+    message: 'Journal entry updated',
+    entry
+  });
+});
+
+// Delete journal entry
+app.delete('/api/journal/:id', (req, res) => {
+  const { id } = req.params;
+  const success = deleteJournalEntry(id);
+  
+  if (!success) {
+    return res.status(404).json({ error: 'Journal entry not found', id });
+  }
+  
+  res.json({
+    success: true,
+    message: 'Journal entry deleted',
+    id
+  });
+});
+
+// Get all tags
+app.get('/api/journal/tags', (req, res) => {
+  const tags = getJournalTags();
+  res.json({
+    timestamp: Date.now(),
+    count: tags.length,
+    tags
+  });
+});
+
+// Search journal entries
+app.get('/api/journal/search', (req, res) => {
+  const query = req.query.q as string;
+  const limit = parseInt(req.query.limit as string) || 50;
+  
+  if (!query) {
+    return res.status(400).json({ error: 'Missing search query parameter: q' });
+  }
+  
+  const entries = searchJournalEntries(query, limit);
+  
+  res.json({
+    timestamp: Date.now(),
+    query,
+    count: entries.length,
+    entries
+  });
+});
+
+// Get journal analytics
+app.get('/api/journal/analytics', (req, res) => {
+  try {
+    const analytics = getJournalAnalytics();
+    res.json({
+      timestamp: Date.now(),
+      analytics
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to compute journal analytics' });
+  }
+});
+
+// Get entries for a specific signal
+app.get('/api/journal/signal/:signalId', (req, res) => {
+  const { signalId } = req.params;
+  const entries = getEntriesForSignal(signalId);
+  
+  res.json({
+    timestamp: Date.now(),
+    signalId,
+    count: entries.length,
+    entries
+  });
+});
+
+// Get entries for a specific trade
+app.get('/api/journal/trade/:tradeId', (req, res) => {
+  const { tradeId } = req.params;
+  const entries = getEntriesForTrade(tradeId);
+  
+  res.json({
+    timestamp: Date.now(),
+    tradeId,
+    count: entries.length,
+    entries
+  });
+});
+
+// Quick add note to signal
+app.post('/api/journal/signal/:signalId/note', (req, res) => {
+  const { signalId } = req.params;
+  const { note, tags } = req.body;
+  
+  if (!note) {
+    return res.status(400).json({ error: 'Missing required field: note' });
+  }
+  
+  const entry = addSignalNote(signalId, note, tags || []);
+  
+  res.status(201).json({
+    success: true,
+    message: 'Note added to signal',
+    entry
+  });
+});
+
+// Record a lesson
+app.post('/api/journal/lesson', (req, res) => {
+  const { title, content, category, signalId, tradeId } = req.body;
+  
+  if (!title || !content || !category) {
+    return res.status(400).json({ error: 'Missing required fields: title, content, category' });
+  }
+  
+  const entry = recordLesson(title, content, category, signalId, tradeId);
+  
+  res.status(201).json({
+    success: true,
+    message: 'Lesson recorded',
+    entry
+  });
+});
+
+// Record a trade entry with mood
+app.post('/api/journal/trade', (req, res) => {
+  const { tradeId, signalId, token, title, content, mood, outcome, pnl, tags, screenshot } = req.body;
+  
+  if (!tradeId || !title || !content || !mood) {
+    return res.status(400).json({ error: 'Missing required fields: tradeId, title, content, mood' });
+  }
+  
+  const entry = recordTradeEntry(tradeId, signalId, token, title, content, mood, outcome, pnl, tags, screenshot);
+  
+  res.status(201).json({
+    success: true,
+    message: 'Trade entry recorded',
+    entry
+  });
+});
+
+// Record an idea
+app.post('/api/journal/idea', (req, res) => {
+  const { title, content, tags } = req.body;
+  
+  if (!title || !content) {
+    return res.status(400).json({ error: 'Missing required fields: title, content' });
+  }
+  
+  const entry = recordIdea(title, content, tags || []);
+  
+  res.status(201).json({
+    success: true,
+    message: 'Idea recorded',
+    entry
+  });
+});
+
+// Export journal
+app.get('/api/journal/export', (req, res) => {
+  const format = (req.query.format as string) === 'csv' ? 'csv' : 'json';
+  const data = exportJournal(format);
+  
+  const contentType = format === 'csv' ? 'text/csv' : 'application/json';
+  const filename = `journal-export-${Date.now()}.${format}`;
+  
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(data);
+});
+
+// Generate demo journal data
+app.post('/api/journal/demo', (req, res) => {
+  generateDemoJournal();
+  const summary = getJournalSummary();
+  
+  res.json({
+    success: true,
+    message: 'Demo journal data generated',
+    summary
+  });
+});
+
+// === TOKEN BACKTEST API ===
+// Historical token analysis and what-if scenarios
+
+// Full backtest analysis for a token
+app.get('/api/backtest/:token', async (req, res) => {
+  const { token } = req.params;
+  const interval = (req.query.interval as CandleInterval) || '1h';
+  const days = parseInt(req.query.days as string) || 30;
+  const entryDate = req.query.entryDate as string | undefined;
+  const entryPrice = req.query.entryPrice ? parseFloat(req.query.entryPrice as string) : undefined;
+  
+  try {
+    let entry: EntryPoint | undefined;
+    
+    if (entryDate) {
+      entry = { type: 'date', date: entryDate };
+    } else if (entryPrice) {
+      entry = { type: 'price', price: entryPrice };
+    }
+    
+    const result = await analyzeToken(token, entry, interval, days);
+    
+    res.json({
+      success: true,
+      backtest: result,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[BACKTEST] Error:', error);
+    res.status(500).json({ 
+      error: 'Backtest failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Text-formatted backtest result
+app.get('/api/backtest/:token/text', async (req, res) => {
+  const { token } = req.params;
+  const interval = (req.query.interval as CandleInterval) || '1h';
+  const days = parseInt(req.query.days as string) || 30;
+  
+  try {
+    const result = await analyzeToken(token, undefined, interval, days);
+    const formatted = formatBacktestResult(result);
+    res.type('text/plain').send(formatted);
+  } catch (error) {
+    res.status(500).send(`Backtest failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+// Simulate entry at specific price/date
+app.get('/api/backtest/:token/entry', async (req, res) => {
+  const { token } = req.params;
+  const price = parseFloat(req.query.price as string);
+  const date = req.query.date as string | undefined;
+  const interval = (req.query.interval as CandleInterval) || '1h';
+  const days = parseInt(req.query.days as string) || 30;
+  
+  if (!price && !date) {
+    return res.status(400).json({ error: 'Must provide either price or date query parameter' });
+  }
+  
+  try {
+    const result = await simulateEntry(token, price || 0, date, interval, days);
+    
+    res.json({
+      success: true,
+      entry: {
+        price: result.entry.price,
+        date: result.entry.dateString
+      },
+      current: {
+        price: result.current.price,
+        date: result.current.dateString
+      },
+      roi: result.roi.total,
+      roiFormatted: `${result.roi.total >= 0 ? '+' : ''}${result.roi.total.toFixed(2)}%`,
+      ath: {
+        price: result.ath.price,
+        roi: result.ath.fromEntry,
+        date: result.ath.dateString
+      },
+      maxDrawdown: result.drawdown.maxDrawdownPct,
+      optimalExit: result.optimalExit,
+      holdResult: result.strategies.hold,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[BACKTEST] Entry simulation error:', error);
+    res.status(500).json({ 
+      error: 'Entry simulation failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Test strategy with TP/SL
+app.get('/api/backtest/:token/strategy', async (req, res) => {
+  const { token } = req.params;
+  const tp = req.query.tp ? parseFloat(req.query.tp as string) : undefined;
+  const sl = req.query.sl ? parseFloat(req.query.sl as string) : undefined;
+  const trailingStop = req.query.trailing ? parseFloat(req.query.trailing as string) : undefined;
+  const holdDays = req.query.holdDays ? parseFloat(req.query.holdDays as string) : undefined;
+  const interval = (req.query.interval as CandleInterval) || '1h';
+  const days = parseInt(req.query.days as string) || 30;
+  
+  const strategy: StrategyConfig = {};
+  if (tp) strategy.takeProfitPct = tp;
+  if (sl) strategy.stopLossPct = sl;
+  if (trailingStop) strategy.trailingStopPct = trailingStop;
+  if (holdDays) strategy.holdDays = holdDays;
+  
+  try {
+    const result = await testStrategy(token, strategy, undefined, interval, days);
+    
+    res.json({
+      success: true,
+      strategy,
+      result: result.result,
+      comparison: {
+        vsHold: `${result.comparison.vsHold >= 0 ? '+' : ''}${result.comparison.vsHold.toFixed(2)}%`,
+        vsOptimal: `${result.comparison.vsOptimal.toFixed(2)}%`
+      },
+      message: result.comparison.vsHold > 0 
+        ? `Strategy outperformed hold by ${result.comparison.vsHold.toFixed(1)}%`
+        : `Strategy underperformed hold by ${Math.abs(result.comparison.vsHold).toFixed(1)}%`,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[BACKTEST] Strategy test error:', error);
+    res.status(500).json({ 
+      error: 'Strategy test failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Compare multiple tokens
+app.get('/api/backtest/compare', async (req, res) => {
+  const tokensParam = req.query.tokens as string;
+  
+  if (!tokensParam) {
+    return res.status(400).json({ error: 'Must provide tokens query parameter (comma-separated)' });
+  }
+  
+  const tokens = tokensParam.split(',').map(t => t.trim()).filter(t => t);
+  
+  if (tokens.length === 0) {
+    return res.status(400).json({ error: 'No valid tokens provided' });
+  }
+  
+  if (tokens.length > 10) {
+    return res.status(400).json({ error: 'Maximum 10 tokens for comparison' });
+  }
+  
+  const interval = (req.query.interval as CandleInterval) || '1h';
+  const days = parseInt(req.query.days as string) || 30;
+  
+  try {
+    const result = await compareTokens(tokens, undefined, interval, days);
+    
+    res.json({
+      success: true,
+      comparison: result,
+      message: `Compared ${result.tokens.length} tokens. Best: ${result.bestPerformer} (ROI: ${result.tokens[0]?.roi.toFixed(1)}%)`,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[BACKTEST] Comparison error:', error);
+    res.status(500).json({ 
+      error: 'Comparison failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Get chart data for visualization
+app.get('/api/backtest/:token/chart', async (req, res) => {
+  const { token } = req.params;
+  const interval = (req.query.interval as CandleInterval) || '1h';
+  const days = parseInt(req.query.days as string) || 30;
+  const entryTimestamp = req.query.entry ? parseInt(req.query.entry as string) : undefined;
+  
+  try {
+    const chartData = await getChartData(token, interval, days, entryTimestamp);
+    
+    res.json({
+      success: true,
+      token,
+      interval,
+      days,
+      candleCount: chartData.candles.length,
+      candles: chartData.candles,
+      markers: {
+        entry: chartData.entryMarker || null,
+        ath: chartData.athMarker || null,
+        atl: chartData.atlMarker || null
+      },
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[BACKTEST] Chart data error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get chart data', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Get price history only
+app.get('/api/backtest/:token/history', async (req, res) => {
+  const { token } = req.params;
+  const interval = (req.query.interval as CandleInterval) || '1h';
+  const days = parseInt(req.query.days as string) || 30;
+  
+  try {
+    const history = await fetchPriceHistory(token, interval, days);
+    
+    res.json({
+      success: true,
+      token,
+      symbol: history.symbol,
+      name: history.name,
+      dataSource: history.dataSource,
+      interval,
+      days,
+      currentPrice: history.currentPrice,
+      marketCap: history.marketCap,
+      liquidity: history.liquidity,
+      candleCount: history.candles.length,
+      startTime: history.startTime,
+      endTime: history.endTime,
+      candles: history.candles,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[BACKTEST] History error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get price history', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Clear backtest cache
+app.post('/api/backtest/cache/clear', (req, res) => {
+  clearHistoryCache();
+  res.json({
+    success: true,
+    message: 'Backtest cache cleared',
+    timestamp: Date.now()
+  });
+});
+
+// Get backtest cache stats
+app.get('/api/backtest/cache/stats', (req, res) => {
+  const stats = getHistoryCacheStats();
+  res.json({
+    ...stats,
+    timestamp: Date.now()
+  });
+});
+
+// Agent-optimized backtest endpoint
+app.get('/api/agent/backtest/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  try {
+    const result = await analyzeToken(token, undefined, '1h', 7);
+    
+    // Simplified response for agents
+    res.json({
+      token,
+      symbol: result.symbol,
+      entry: {
+        price: result.entry.price,
+        date: result.entry.dateString
+      },
+      current: {
+        price: result.current.price,
+        roi: `${result.roi.total >= 0 ? '+' : ''}${result.roi.total.toFixed(1)}%`
+      },
+      ath: {
+        price: result.ath.price,
+        roi: `+${result.ath.fromEntry.toFixed(1)}%`,
+        date: result.ath.dateString
+      },
+      maxDrawdown: `-${result.drawdown.maxDrawdownPct.toFixed(1)}%`,
+      optimalTP: `+${result.optimalExit.roi.toFixed(1)}%`,
+      volatility: result.volatility.volatilityScore,
+      dataSource: result.dataSource,
+      recommendation: result.roi.total > 0 
+        ? (result.drawdown.currentDrawdownFromATH < 20 ? 'HOLD' : 'CONSIDER_TP')
+        : (result.roi.total < -30 ? 'CUT_LOSS' : 'HOLD'),
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Backtest failed',
+      token,
+      timestamp: Date.now()
+    });
+  }
+});
+
 // === AGENT COMPOSABILITY API ===
 // Endpoints optimized for agent consumption (Colosseum skill.json compatible)
 
@@ -4279,6 +5058,370 @@ app.post('/api/risk/batch', (req, res) => {
         : 0
     }
   });
+});
+
+// === CUSTOM SCORING WEIGHTS API ===
+
+// Get current weights
+app.get('/api/scoring/weights', (req, res) => {
+  try {
+    const weights = getCurrentWeights();
+    const profile = getActiveProfile();
+    
+    res.json({
+      activeProfile: getActiveProfileName(),
+      profileName: profile?.name || 'Default',
+      profileDescription: profile?.description || '',
+      lastUpdated: profile?.updatedAt || Date.now(),
+      ...weights
+    });
+  } catch (error) {
+    console.error('[SCORING] Get weights error:', error);
+    res.status(500).json({ error: 'Failed to get weights' });
+  }
+});
+
+// Update weights
+app.put('/api/scoring/weights', (req, res) => {
+  try {
+    const { sourceWeights, riskPenalties } = req.body;
+    
+    const updated = updateWeights(sourceWeights || {}, riskPenalties || {});
+    const profile = getActiveProfile();
+    
+    res.json({
+      success: true,
+      message: 'Weights updated successfully',
+      activeProfile: getActiveProfileName(),
+      profileName: profile?.name || 'Default',
+      lastUpdated: profile?.updatedAt || Date.now(),
+      ...updated
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Update weights error:', error);
+    res.status(400).json({ error: error.message || 'Failed to update weights' });
+  }
+});
+
+// Reset to defaults
+app.post('/api/scoring/reset', (req, res) => {
+  try {
+    const weights = resetToDefaults();
+    const profile = getActiveProfile();
+    
+    res.json({
+      success: true,
+      message: 'Weights reset to defaults',
+      activeProfile: getActiveProfileName(),
+      profileName: profile?.name || 'Default',
+      lastUpdated: profile?.updatedAt || Date.now(),
+      ...weights
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Reset error:', error);
+    res.status(500).json({ error: error.message || 'Failed to reset weights' });
+  }
+});
+
+// Get presets
+app.get('/api/scoring/presets', (req, res) => {
+  try {
+    const presets = getPresets();
+    res.json({
+      count: presets.length,
+      presets: presets.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description
+      }))
+    });
+  } catch (error) {
+    console.error('[SCORING] Get presets error:', error);
+    res.status(500).json({ error: 'Failed to get presets' });
+  }
+});
+
+// Get preset details
+app.get('/api/scoring/presets/:presetId', (req, res) => {
+  try {
+    const { presetId } = req.params;
+    const preset = getPreset(presetId);
+    
+    if (!preset) {
+      return res.status(404).json({ error: 'Preset not found' });
+    }
+    
+    res.json(preset);
+  } catch (error) {
+    console.error('[SCORING] Get preset error:', error);
+    res.status(500).json({ error: 'Failed to get preset' });
+  }
+});
+
+// Apply preset
+app.post('/api/scoring/apply-preset/:presetId', (req, res) => {
+  try {
+    const { presetId } = req.params;
+    const weights = applyPreset(presetId);
+    const preset = getPreset(presetId);
+    
+    res.json({
+      success: true,
+      message: `Applied preset: ${preset?.name || presetId}`,
+      preset: preset?.name || presetId,
+      presetDescription: preset?.description || '',
+      ...weights
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Apply preset error:', error);
+    res.status(400).json({ error: error.message || 'Failed to apply preset' });
+  }
+});
+
+// Get all profiles
+app.get('/api/scoring/profiles', (req, res) => {
+  try {
+    const profiles = getAllProfiles();
+    const activeProfile = getActiveProfileName();
+    
+    res.json({
+      activeProfile,
+      count: Object.keys(profiles).length,
+      profiles: Object.entries(profiles).map(([id, p]) => ({
+        id,
+        name: p.name,
+        description: p.description,
+        isActive: id === activeProfile,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt
+      }))
+    });
+  } catch (error) {
+    console.error('[SCORING] Get profiles error:', error);
+    res.status(500).json({ error: 'Failed to get profiles' });
+  }
+});
+
+// Create profile
+app.post('/api/scoring/profiles', (req, res) => {
+  try {
+    const { name, description } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Profile name is required' });
+    }
+    
+    const profile = createProfile(name, description);
+    
+    res.json({
+      success: true,
+      message: `Profile "${name}" created`,
+      profile: {
+        id: name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        ...profile
+      }
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Create profile error:', error);
+    res.status(400).json({ error: error.message || 'Failed to create profile' });
+  }
+});
+
+// Switch profile
+app.post('/api/scoring/profiles/:profileId/switch', (req, res) => {
+  try {
+    const { profileId } = req.params;
+    const profile = switchProfile(profileId);
+    
+    res.json({
+      success: true,
+      message: `Switched to profile: ${profile.name}`,
+      activeProfile: profileId,
+      profileName: profile.name,
+      sourceWeights: profile.sourceWeights,
+      riskPenalties: profile.riskPenalties
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Switch profile error:', error);
+    res.status(400).json({ error: error.message || 'Failed to switch profile' });
+  }
+});
+
+// Delete profile
+app.delete('/api/scoring/profiles/:profileId', (req, res) => {
+  try {
+    const { profileId } = req.params;
+    
+    if (profileId === 'default') {
+      return res.status(400).json({ error: 'Cannot delete default profile' });
+    }
+    
+    const deleted = deleteProfile(profileId);
+    
+    if (!deleted) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: `Profile "${profileId}" deleted`,
+      activeProfile: getActiveProfileName()
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Delete profile error:', error);
+    res.status(400).json({ error: error.message || 'Failed to delete profile' });
+  }
+});
+
+// Re-score signals with current weights
+app.post('/api/scoring/rescore', (req, res) => {
+  try {
+    const { signalIds, limit = 50 } = req.body;
+    
+    // Get signals to re-score
+    let signals: AggregatedSignal[];
+    if (signalIds && Array.isArray(signalIds)) {
+      signals = signalStore.filter(s => signalIds.includes(s.id)).slice(0, limit);
+    } else {
+      signals = signalStore.slice(0, limit);
+    }
+    
+    if (signals.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        signals: []
+      });
+    }
+    
+    const rescored = rescoreSignals(signals);
+    
+    res.json({
+      success: true,
+      count: rescored.length,
+      signals: rescored.map(({ signal, impact }) => ({
+        id: signal.id,
+        symbol: signal.symbol,
+        token: signal.token,
+        originalScore: impact.originalScore,
+        adjustedScore: impact.adjustedScore,
+        delta: impact.delta,
+        breakdown: impact.breakdown
+      })),
+      summary: {
+        avgDelta: rescored.reduce((sum, r) => sum + r.impact.delta, 0) / rescored.length,
+        improved: rescored.filter(r => r.impact.delta > 0).length,
+        degraded: rescored.filter(r => r.impact.delta < 0).length,
+        unchanged: rescored.filter(r => r.impact.delta === 0).length
+      }
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Rescore error:', error);
+    res.status(500).json({ error: error.message || 'Failed to rescore signals' });
+  }
+});
+
+// Preview weight change impact on a signal
+app.post('/api/scoring/preview', (req, res) => {
+  try {
+    const { signalId, sourceWeights, riskPenalties } = req.body;
+    
+    if (!signalId) {
+      return res.status(400).json({ error: 'signalId is required' });
+    }
+    
+    const signal = signalStore.find(s => s.id === signalId);
+    if (!signal) {
+      return res.status(404).json({ error: 'Signal not found' });
+    }
+    
+    // Get current score with current weights
+    const currentImpact = calculateCustomScore(signal);
+    
+    // Get preview score with proposed weights
+    const previewImpact = previewWeightChange(signal, sourceWeights, riskPenalties);
+    
+    res.json({
+      signal: {
+        id: signal.id,
+        symbol: signal.symbol,
+        token: signal.token,
+        sources: signal.sources.map(s => s.source)
+      },
+      current: currentImpact,
+      preview: previewImpact,
+      comparison: {
+        scoreDelta: previewImpact.adjustedScore - currentImpact.adjustedScore,
+        improved: previewImpact.adjustedScore > currentImpact.adjustedScore
+      }
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Preview error:', error);
+    res.status(500).json({ error: error.message || 'Failed to preview weight change' });
+  }
+});
+
+// Get score for a specific signal with current weights
+app.get('/api/scoring/signal/:signalId', (req, res) => {
+  try {
+    const { signalId } = req.params;
+    
+    const signal = signalStore.find(s => s.id === signalId);
+    if (!signal) {
+      return res.status(404).json({ error: 'Signal not found' });
+    }
+    
+    const impact = calculateCustomScore(signal);
+    const weights = getCurrentWeights();
+    
+    res.json({
+      signal: {
+        id: signal.id,
+        symbol: signal.symbol,
+        token: signal.token,
+        originalScore: signal.score,
+        sources: signal.sources
+      },
+      customScore: impact,
+      weightsUsed: weights
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Get signal score error:', error);
+    res.status(500).json({ error: error.message || 'Failed to get signal score' });
+  }
+});
+
+// Export scoring configuration
+app.get('/api/scoring/export', (req, res) => {
+  try {
+    const config = exportScoringConfig();
+    res.json(config);
+  } catch (error) {
+    console.error('[SCORING] Export error:', error);
+    res.status(500).json({ error: 'Failed to export scoring configuration' });
+  }
+});
+
+// Import scoring configuration
+app.post('/api/scoring/import', (req, res) => {
+  try {
+    const config = req.body;
+    
+    if (!config || typeof config !== 'object') {
+      return res.status(400).json({ error: 'Invalid configuration' });
+    }
+    
+    importScoringConfig(config);
+    
+    res.json({
+      success: true,
+      message: 'Scoring configuration imported',
+      activeProfile: getActiveProfileName()
+    });
+  } catch (error: any) {
+    console.error('[SCORING] Import error:', error);
+    res.status(400).json({ error: error.message || 'Failed to import configuration' });
+  }
 });
 
 // === BUNDLE/INSIDER DETECTION API ===
@@ -5878,6 +7021,429 @@ app.post('/api/discord/send/:signalId', async (req, res) => {
   });
 });
 
+// === PORTFOLIO SYNC API ===
+// Import and sync actual wallet holdings from Solana
+
+// Sync a wallet (import portfolio)
+app.post('/api/portfolio/sync/:wallet', async (req, res) => {
+  const { wallet } = req.params;
+  const { label, autoRefresh, refreshIntervalMs } = req.body;
+  
+  // Validate wallet address
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ 
+      error: 'Invalid wallet address',
+      wallet,
+      hint: 'Provide a valid Solana wallet address (32-44 characters)'
+    });
+  }
+  
+  try {
+    const portfolio = await syncWallet(wallet, { 
+      label, 
+      autoRefresh: autoRefresh ?? false,
+      refreshIntervalMs 
+    });
+    
+    if (!portfolio) {
+      return res.status(500).json({ 
+        error: 'Failed to sync wallet',
+        wallet,
+        hint: 'Check if the wallet exists and has any tokens'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: `Synced wallet ${wallet.slice(0, 8)}...`,
+      portfolio: {
+        wallet: portfolio.wallet,
+        label: portfolio.label,
+        totalValue: Math.round(portfolio.totalValue * 100) / 100,
+        solBalance: Math.round(portfolio.solBalance * 10000) / 10000,
+        solValue: Math.round(portfolio.solValue * 100) / 100,
+        tokenCount: portfolio.holdings.length,
+        autoRefresh: portfolio.autoRefresh,
+        syncedAt: portfolio.syncedAt,
+        lastRefresh: portfolio.lastRefresh
+      },
+      holdings: portfolio.holdings.slice(0, 20).map(h => ({
+        mint: h.mint,
+        symbol: h.symbol,
+        name: h.name,
+        amount: h.amount,
+        usdValue: Math.round(h.usdValue * 100) / 100,
+        pricePerToken: h.pricePerToken,
+        percentage: Math.round((h.usdValue / portfolio.totalValue) * 10000) / 100
+      })),
+      allocation: portfolio.allocation,
+      pnl: {
+        change24h: Math.round(portfolio.pnl.change24h * 100) / 100,
+        change24hPct: Math.round(portfolio.pnl.change24hPct * 100) / 100,
+        change7d: Math.round(portfolio.pnl.change7d * 100) / 100,
+        change7dPct: Math.round(portfolio.pnl.change7dPct * 100) / 100
+      },
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[PORTFOLIO-SYNC] Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to sync wallet',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get synced portfolio holdings
+app.get('/api/portfolio/:wallet', (req, res) => {
+  const { wallet } = req.params;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const portfolio = getPortfolio(wallet);
+  
+  if (!portfolio) {
+    return res.status(404).json({ 
+      error: 'Portfolio not synced',
+      wallet,
+      hint: 'Call POST /api/portfolio/sync/:wallet first to import this wallet'
+    });
+  }
+  
+  res.json({
+    wallet: portfolio.wallet,
+    label: portfolio.label,
+    totalValue: Math.round(portfolio.totalValue * 100) / 100,
+    solBalance: Math.round(portfolio.solBalance * 10000) / 10000,
+    solValue: Math.round(portfolio.solValue * 100) / 100,
+    tokenCount: portfolio.holdings.length,
+    autoRefresh: portfolio.autoRefresh,
+    syncedAt: portfolio.syncedAt,
+    lastRefresh: portfolio.lastRefresh,
+    synced: true,
+    holdings: portfolio.holdings.map(h => ({
+      mint: h.mint,
+      symbol: h.symbol,
+      name: h.name,
+      amount: h.amount,
+      decimals: h.decimals,
+      usdValue: Math.round(h.usdValue * 100) / 100,
+      pricePerToken: h.pricePerToken,
+      percentage: Math.round((h.usdValue / portfolio.totalValue) * 10000) / 100,
+      logoURI: h.logoURI
+    })),
+    allocation: portfolio.allocation,
+    pnl: {
+      change24h: Math.round(portfolio.pnl.change24h * 100) / 100,
+      change24hPct: Math.round(portfolio.pnl.change24hPct * 100) / 100,
+      change7d: Math.round(portfolio.pnl.change7d * 100) / 100,
+      change7dPct: Math.round(portfolio.pnl.change7dPct * 100) / 100,
+      topChanges: portfolio.pnl.byToken.slice(0, 5).map(t => ({
+        symbol: t.symbol,
+        mint: t.mint,
+        change24h: Math.round(t.change24h * 100) / 100,
+        change24hPct: Math.round(t.change24hPct * 100) / 100
+      }))
+    },
+    timestamp: Date.now()
+  });
+});
+
+// Get portfolio value history
+app.get('/api/portfolio/:wallet/history', (req, res) => {
+  const { wallet } = req.params;
+  const limit = parseInt(req.query.limit as string) || 100;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const history = getPortfolioHistory(wallet);
+  
+  if (history.length === 0) {
+    return res.status(404).json({ 
+      error: 'No history found',
+      wallet,
+      hint: 'Portfolio needs to be synced first and accumulate snapshots over time'
+    });
+  }
+  
+  // Format for charting
+  const chartData = history.slice(-limit).map(snapshot => ({
+    timestamp: snapshot.timestamp,
+    date: new Date(snapshot.timestamp).toISOString(),
+    totalValue: Math.round(snapshot.totalValue * 100) / 100,
+    solValue: Math.round(snapshot.solValue * 100) / 100,
+    tokenCount: snapshot.tokenCount
+  }));
+  
+  // Calculate stats
+  const oldest = history[0];
+  const newest = history[history.length - 1];
+  const change = newest.totalValue - oldest.totalValue;
+  const changePct = oldest.totalValue > 0 ? (change / oldest.totalValue) * 100 : 0;
+  
+  res.json({
+    wallet,
+    dataPoints: chartData.length,
+    timeRangeMs: newest.timestamp - oldest.timestamp,
+    stats: {
+      startValue: Math.round(oldest.totalValue * 100) / 100,
+      endValue: Math.round(newest.totalValue * 100) / 100,
+      change: Math.round(change * 100) / 100,
+      changePct: Math.round(changePct * 100) / 100,
+      highValue: Math.round(Math.max(...history.map(h => h.totalValue)) * 100) / 100,
+      lowValue: Math.round(Math.min(...history.map(h => h.totalValue)) * 100) / 100
+    },
+    chartData,
+    timestamp: Date.now()
+  });
+});
+
+// Get detailed PnL breakdown
+app.get('/api/portfolio/:wallet/pnl', (req, res) => {
+  const { wallet } = req.params;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const pnl = getPortfolioPnL(wallet);
+  
+  if (!pnl) {
+    return res.status(404).json({ 
+      error: 'Portfolio not synced',
+      wallet
+    });
+  }
+  
+  res.json({
+    wallet,
+    summary: {
+      totalUnrealizedPnl: Math.round(pnl.totalUnrealizedPnl * 100) / 100,
+      totalUnrealizedPnlPct: Math.round(pnl.totalUnrealizedPnlPct * 100) / 100,
+      change24h: Math.round(pnl.change24h * 100) / 100,
+      change24hPct: Math.round(pnl.change24hPct * 100) / 100,
+      change7d: Math.round(pnl.change7d * 100) / 100,
+      change7dPct: Math.round(pnl.change7dPct * 100) / 100
+    },
+    byToken: pnl.byToken.map(t => ({
+      mint: t.mint,
+      symbol: t.symbol,
+      currentValue: Math.round(t.currentValue * 100) / 100,
+      entryValue: t.entryValue ? Math.round(t.entryValue * 100) / 100 : null,
+      unrealizedPnl: t.unrealizedPnl ? Math.round(t.unrealizedPnl * 100) / 100 : null,
+      unrealizedPnlPct: t.unrealizedPnlPct ? Math.round(t.unrealizedPnlPct * 100) / 100 : null,
+      change24h: Math.round(t.change24h * 100) / 100,
+      change24hPct: Math.round(t.change24hPct * 100) / 100
+    })),
+    topGainers: pnl.byToken
+      .filter(t => t.change24h > 0)
+      .slice(0, 5)
+      .map(t => ({ symbol: t.symbol, change: Math.round(t.change24hPct * 100) / 100 })),
+    topLosers: pnl.byToken
+      .filter(t => t.change24h < 0)
+      .sort((a, b) => a.change24h - b.change24h)
+      .slice(0, 5)
+      .map(t => ({ symbol: t.symbol, change: Math.round(t.change24hPct * 100) / 100 })),
+    timestamp: Date.now()
+  });
+});
+
+// Update portfolio settings
+app.put('/api/portfolio/:wallet', (req, res) => {
+  const { wallet } = req.params;
+  const { label, autoRefresh, refreshIntervalMs } = req.body;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const portfolio = updatePortfolioSettings(wallet, { 
+    label, 
+    autoRefresh, 
+    refreshIntervalMs 
+  });
+  
+  if (!portfolio) {
+    return res.status(404).json({ error: 'Portfolio not synced' });
+  }
+  
+  res.json({
+    success: true,
+    message: 'Portfolio settings updated',
+    settings: {
+      wallet: portfolio.wallet,
+      label: portfolio.label,
+      autoRefresh: portfolio.autoRefresh,
+      refreshIntervalMs: portfolio.refreshIntervalMs
+    }
+  });
+});
+
+// Remove synced portfolio
+app.delete('/api/portfolio/:wallet', (req, res) => {
+  const { wallet } = req.params;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const removed = removePortfolio(wallet);
+  
+  if (!removed) {
+    return res.status(404).json({ error: 'Portfolio not found or already removed' });
+  }
+  
+  res.json({
+    success: true,
+    message: `Portfolio ${wallet.slice(0, 8)}... removed`,
+    wallet
+  });
+});
+
+// Get all synced portfolios
+app.get('/api/portfolios', (req, res) => {
+  const portfolios = getAllPortfolios();
+  
+  res.json({
+    count: portfolios.length,
+    totalValue: Math.round(portfolios.reduce((sum, p) => sum + p.totalValue, 0) * 100) / 100,
+    portfolios: portfolios.map(p => ({
+      wallet: p.wallet,
+      label: p.label,
+      totalValue: Math.round(p.totalValue * 100) / 100,
+      tokenCount: p.holdings.length,
+      change24hPct: Math.round(p.pnl.change24hPct * 100) / 100,
+      autoRefresh: p.autoRefresh,
+      lastRefresh: p.lastRefresh
+    })),
+    timestamp: Date.now()
+  });
+});
+
+// Compare synced portfolio with paper portfolio
+app.get('/api/portfolio/:wallet/compare', (req, res) => {
+  const { wallet } = req.params;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const paperPortfolio = getPaperPortfolio();
+  if (!paperPortfolio) {
+    return res.status(400).json({ 
+      error: 'No paper portfolio to compare',
+      hint: 'Initialize paper portfolio first with POST /api/trade/portfolio/reset'
+    });
+  }
+  
+  // Convert paper portfolio holdings to comparison format
+  const paperHoldings = Array.from(paperPortfolio.holdings.values()).map(h => ({
+    mint: h.mint,
+    symbol: h.symbol,
+    value: h.value
+  }));
+  
+  const comparison = compareWithPaperPortfolio(wallet, paperHoldings);
+  
+  res.json({
+    wallet,
+    comparison: {
+      syncedTotal: Math.round(comparison.syncedTotal * 100) / 100,
+      paperTotal: Math.round(comparison.paperTotal * 100) / 100,
+      difference: Math.round(comparison.difference * 100) / 100,
+      differencePct: Math.round(comparison.differencePct * 100) / 100
+    },
+    breakdown: comparison.breakdown.slice(0, 20).map(b => ({
+      symbol: b.symbol,
+      mint: b.mint,
+      syncedValue: Math.round(b.syncedValue * 100) / 100,
+      paperValue: Math.round(b.paperValue * 100) / 100,
+      diff: Math.round(b.diff * 100) / 100,
+      diffPct: Math.round(b.diffPct * 100) / 100
+    })),
+    summary: comparison.difference >= 0
+      ? `Real portfolio is $${Math.abs(comparison.difference).toFixed(2)} (${Math.abs(comparison.differencePct).toFixed(1)}%) AHEAD of paper portfolio`
+      : `Real portfolio is $${Math.abs(comparison.difference).toFixed(2)} (${Math.abs(comparison.differencePct).toFixed(1)}%) BEHIND paper portfolio`,
+    timestamp: Date.now()
+  });
+});
+
+// Get portfolio summary (quick view)
+app.get('/api/portfolio/:wallet/summary', (req, res) => {
+  const { wallet } = req.params;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const summary = getPortfolioSummary(wallet);
+  
+  if (!summary) {
+    return res.status(404).json({ error: 'Portfolio not synced' });
+  }
+  
+  res.json(summary);
+});
+
+// Get portfolio as formatted text
+app.get('/api/portfolio/:wallet/text', (req, res) => {
+  const { wallet } = req.params;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).send('Invalid wallet address');
+  }
+  
+  const text = formatPortfolioDisplay(wallet);
+  res.type('text/plain').send(text);
+});
+
+// Refresh portfolio (re-sync)
+app.post('/api/portfolio/:wallet/refresh', async (req, res) => {
+  const { wallet } = req.params;
+  
+  if (!isValidWalletAddress(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const existing = getPortfolio(wallet);
+  if (!existing) {
+    return res.status(404).json({ 
+      error: 'Portfolio not synced',
+      hint: 'Call POST /api/portfolio/sync/:wallet first'
+    });
+  }
+  
+  try {
+    const portfolio = await syncWallet(wallet, {
+      label: existing.label,
+      autoRefresh: existing.autoRefresh,
+      refreshIntervalMs: existing.refreshIntervalMs
+    });
+    
+    if (!portfolio) {
+      return res.status(500).json({ error: 'Failed to refresh portfolio' });
+    }
+    
+    res.json({
+      success: true,
+      message: `Portfolio refreshed`,
+      totalValue: Math.round(portfolio.totalValue * 100) / 100,
+      tokenCount: portfolio.holdings.length,
+      change24hPct: Math.round(portfolio.pnl.change24hPct * 100) / 100,
+      lastRefresh: portfolio.lastRefresh
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to refresh portfolio',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Manual trigger scan (for testing)
 app.post('/api/scan', async (req, res) => {
   try {
@@ -5928,6 +7494,29 @@ function broadcastSignal(signal: AggregatedSignal) {
     data: signal
   });
 
+  for (const client of wsClients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  }
+  
+  // Check if voice alert should be sent
+  const voiceEvent = createVoiceAlertEvent(signal);
+  if (voiceEvent) {
+    broadcastVoiceAlert(voiceEvent);
+  }
+
+  // Check for watchlist signal alerts
+  checkSignalAlert(signal).catch(e => {
+    console.error('[ALERT] Signal alert check failed:', e);
+  });
+}
+
+function broadcastVoiceAlert(event: ReturnType<typeof createVoiceAlertEvent>) {
+  if (!event) return;
+  
+  const message = JSON.stringify(event);
+  
   for (const client of wsClients) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message);
@@ -6020,6 +7609,344 @@ app.get('/api/telegram/stats', (req, res) => {
     ...stats,
     botEnabled: !!process.env.TELEGRAM_BOT_TOKEN
   });
+});
+
+// === VOICE ALERTS ENDPOINTS ===
+
+// Get voice alert settings
+app.get('/api/voice/settings', (req, res) => {
+  res.json(getVoiceSettings());
+});
+
+// Update voice alert settings
+app.put('/api/voice/settings', (req, res) => {
+  const updates = req.body;
+  const settings = updateVoiceSettings(updates);
+  res.json({
+    success: true,
+    settings
+  });
+});
+
+// Reset voice settings to defaults
+app.post('/api/voice/settings/reset', (req, res) => {
+  const settings = resetVoiceSettings();
+  res.json({
+    success: true,
+    settings
+  });
+});
+
+// Test voice with a sample message
+app.post('/api/voice/test', (req, res) => {
+  const message = generateTestMessage();
+  res.json({
+    success: true,
+    message
+  });
+});
+
+// Get voice message for a specific signal
+app.post('/api/voice/speak/:signalId', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const message = generateVoiceMessage(signal);
+  res.json({
+    success: true,
+    message
+  });
+});
+
+// Check if a signal should trigger voice alert
+app.get('/api/voice/should-announce/:signalId', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const should = shouldAnnounce(signal);
+  res.json({
+    signalId: signal.id,
+    symbol: signal.symbol,
+    score: signal.score,
+    shouldAnnounce: should
+  });
+});
+
+// === WATCHLIST ALERTS API ===
+
+// Get all watchlist alerts
+app.get('/api/watchlist/alerts', (req, res) => {
+  const alerts = getAllWatchlistAlerts();
+  const stats = getAlertStats();
+  res.json({
+    count: alerts.length,
+    alerts,
+    stats
+  });
+});
+
+// Get alerts for a specific token
+app.get('/api/watchlist/:token/alerts', (req, res) => {
+  const alerts = getAlertsForToken(req.params.token);
+  res.json({
+    token: req.params.token,
+    count: alerts.length,
+    alerts
+  });
+});
+
+// Get a specific alert
+app.get('/api/watchlist/alerts/:id', (req, res) => {
+  const alert = getWatchlistAlert(req.params.id);
+  if (!alert) {
+    return res.status(404).json({ error: 'Alert not found' });
+  }
+  res.json(alert);
+});
+
+// Create a new alert for a token
+app.post('/api/watchlist/:token/alert', (req, res) => {
+  const { token } = req.params;
+  const { type, threshold, notifyTelegram, notifyDiscord, notifyBrowser, cooldownMs, oneTime, notes, tokenSymbol, tokenName } = req.body;
+
+  if (!type || !['price_above', 'price_below', 'change_up', 'change_down', 'volume', 'signal', 'wallet'].includes(type)) {
+    return res.status(400).json({ error: 'Invalid alert type' });
+  }
+
+  if (threshold === undefined || typeof threshold !== 'number') {
+    return res.status(400).json({ error: 'threshold is required and must be a number' });
+  }
+
+  const alert = createWatchlistAlert(token, type as AlertType, threshold, {
+    notifyTelegram: notifyTelegram !== false,
+    notifyDiscord: !!notifyDiscord,
+    notifyBrowser: notifyBrowser !== false,
+    cooldownMs: cooldownMs || 5 * 60 * 1000,
+    oneTime: !!oneTime,
+    notes,
+    tokenSymbol,
+    tokenName
+  });
+
+  res.status(201).json({
+    success: true,
+    alert
+  });
+});
+
+// Quick alert creation helpers
+app.post('/api/watchlist/:token/alert/price-above', (req, res) => {
+  const { price, ...options } = req.body;
+  if (!price || typeof price !== 'number') {
+    return res.status(400).json({ error: 'price is required' });
+  }
+  const alert = createPriceAboveAlert(req.params.token, price, options);
+  res.status(201).json({ success: true, alert });
+});
+
+app.post('/api/watchlist/:token/alert/price-below', (req, res) => {
+  const { price, ...options } = req.body;
+  if (!price || typeof price !== 'number') {
+    return res.status(400).json({ error: 'price is required' });
+  }
+  const alert = createPriceBelowAlert(req.params.token, price, options);
+  res.status(201).json({ success: true, alert });
+});
+
+app.post('/api/watchlist/:token/alert/pump', (req, res) => {
+  const { percent = 50, ...options } = req.body;
+  const alert = createPumpAlert(req.params.token, percent, options);
+  res.status(201).json({ success: true, alert });
+});
+
+app.post('/api/watchlist/:token/alert/dump', (req, res) => {
+  const { percent = 30, ...options } = req.body;
+  const alert = createDumpAlert(req.params.token, percent, options);
+  res.status(201).json({ success: true, alert });
+});
+
+app.post('/api/watchlist/:token/alert/volume', (req, res) => {
+  const { multiplier = 5, ...options } = req.body;
+  const alert = createVolumeAlert(req.params.token, multiplier, options);
+  res.status(201).json({ success: true, alert });
+});
+
+app.post('/api/watchlist/:token/alert/signal', (req, res) => {
+  const { minScore = 70, ...options } = req.body;
+  const alert = createSignalAlert(req.params.token, minScore, options);
+  res.status(201).json({ success: true, alert });
+});
+
+app.post('/api/watchlist/:token/alert/wallet', (req, res) => {
+  const alert = createWalletAlert(req.params.token, req.body);
+  res.status(201).json({ success: true, alert });
+});
+
+// Update an alert
+app.put('/api/watchlist/:token/alert/:id', (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  const alert = updateWatchlistAlertFn(id, updates);
+  if (!alert) {
+    return res.status(404).json({ error: 'Alert not found' });
+  }
+
+  res.json({
+    success: true,
+    alert
+  });
+});
+
+// Delete an alert
+app.delete('/api/watchlist/:token/alert/:id', (req, res) => {
+  const { id } = req.params;
+  const deleted = deleteWatchlistAlertFn(id);
+
+  if (!deleted) {
+    return res.status(404).json({ error: 'Alert not found' });
+  }
+
+  res.json({ success: true, message: 'Alert deleted' });
+});
+
+// Toggle alert enabled/disabled
+app.post('/api/watchlist/alerts/:id/toggle', (req, res) => {
+  const alert = toggleAlert(req.params.id);
+  if (!alert) {
+    return res.status(404).json({ error: 'Alert not found' });
+  }
+  res.json({
+    success: true,
+    alert,
+    message: `Alert ${alert.enabled ? 'enabled' : 'disabled'}`
+  });
+});
+
+// Get triggered alerts history
+app.get('/api/watchlist/triggered', (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+  const triggered = getTriggeredAlerts(limit);
+  res.json({
+    count: triggered.length,
+    alerts: triggered
+  });
+});
+
+// Get triggered alerts for a specific token
+app.get('/api/watchlist/:token/triggered', (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+  const triggered = getTriggeredAlertsForToken(req.params.token, limit);
+  res.json({
+    token: req.params.token,
+    count: triggered.length,
+    alerts: triggered
+  });
+});
+
+// Get cached price for a token
+app.get('/api/watchlist/:token/price', (req, res) => {
+  const price = getCachedPrice(req.params.token);
+  if (!price) {
+    return res.status(404).json({ error: 'No cached price data' });
+  }
+  res.json(price);
+});
+
+// Manually trigger alert check
+app.post('/api/watchlist/alerts/check', async (req, res) => {
+  try {
+    const triggered = await checkWatchlistAlerts();
+    res.json({
+      success: true,
+      triggeredCount: triggered.length,
+      triggered
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to check alerts', details: String(error) });
+  }
+});
+
+// Get alert checker status
+app.get('/api/watchlist/alerts/checker', (req, res) => {
+  const state = getCheckerState();
+  res.json(state);
+});
+
+// Start alert checker
+app.post('/api/watchlist/alerts/checker/start', (req, res) => {
+  const intervalMs = req.body?.intervalMs || 30000;
+  startAlertChecker(intervalMs);
+  res.json({
+    success: true,
+    message: `Alert checker started (interval: ${intervalMs}ms)`
+  });
+});
+
+// Stop alert checker
+app.post('/api/watchlist/alerts/checker/stop', (req, res) => {
+  stopAlertChecker();
+  res.json({
+    success: true,
+    message: 'Alert checker stopped'
+  });
+});
+
+// Export alerts
+app.get('/api/watchlist/alerts/export', (req, res) => {
+  const alerts = exportAlerts();
+  res.json({
+    count: alerts.length,
+    exportedAt: Date.now(),
+    alerts
+  });
+});
+
+// Import alerts
+app.post('/api/watchlist/alerts/import', (req, res) => {
+  const { alerts } = req.body;
+  if (!alerts || !Array.isArray(alerts)) {
+    return res.status(400).json({ error: 'alerts array is required' });
+  }
+
+  const count = importAlerts(alerts);
+  res.json({
+    success: true,
+    imported: count
+  });
+});
+
+// Clear all alerts
+app.post('/api/watchlist/alerts/clear', (req, res) => {
+  const count = clearAllAlerts();
+  res.json({
+    success: true,
+    cleared: count
+  });
+});
+
+// Delete all alerts for a token
+app.delete('/api/watchlist/:token/alerts', (req, res) => {
+  const count = getAlertsForToken(req.params.token).length;
+  // Using a loop since we don't have deleteAlertsForToken imported
+  const alerts = getAlertsForToken(req.params.token);
+  for (const alert of alerts) {
+    deleteWatchlistAlertFn(alert.id);
+  }
+  res.json({
+    success: true,
+    deleted: count,
+    token: req.params.token
+  });
+});
+
+// Get alert stats
+app.get('/api/watchlist/alerts/stats', (req, res) => {
+  res.json(getAlertStats());
 });
 
 // === DEMO MODE ENDPOINTS ===
@@ -6197,6 +8124,44 @@ ${DEMO_MODE ? '║  🎬 DEMO MODE: ENABLED                         ║\n' : ''}
     startAthUpdater();
     console.log('[SERVER] ATH tracking ENABLED');
   }
+
+  // Initialize Watchlist Alert Checker
+  // Set up WebSocket broadcast for browser notifications
+  setWsBroadcast((msg) => {
+    const message = JSON.stringify(msg);
+    for (const client of wsClients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    }
+  });
+
+  // Set up Telegram send function for alert notifications
+  if (process.env.TELEGRAM_BOT_TOKEN) {
+    setTelegramSend(async (chatId: string, text: string) => {
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text,
+            parse_mode: 'HTML',
+            disable_web_page_preview: true
+          })
+        });
+        const result = await response.json();
+        return result.ok;
+      } catch (e) {
+        console.error('[ALERT] Telegram send error:', e);
+        return false;
+      }
+    });
+  }
+
+  // Start alert checker (runs every 30 seconds)
+  startAlertChecker(30000);
+  console.log('[SERVER] Watchlist alert checker ENABLED (30s interval)');
 
   // Auto-start demo mode if enabled
   if (DEMO_MODE) {

@@ -205,4 +205,56 @@ export interface PaperTrade {
 }
 
 // Navigation
-export type View = 'feed' | 'signal' | 'stats' | 'trade';
+export type View = 'feed' | 'signal' | 'stats' | 'trade' | 'journal' | 'journal-entry' | 'journal-form' | 'journal-analytics';
+
+// Journal types
+export type JournalEntryType = 'trade' | 'note' | 'lesson' | 'idea';
+export type MoodType = 'confident' | 'uncertain' | 'fomo' | 'fear';
+
+export interface JournalEntry {
+  id: string;
+  tradeId?: string;
+  signalId?: string;
+  token?: string;
+  timestamp: number;
+  type: JournalEntryType;
+  title: string;
+  content: string;
+  tags: string[];
+  mood?: MoodType;
+  screenshot?: string;
+  outcome?: 'win' | 'loss' | 'breakeven' | 'pending';
+  pnl?: number;
+  lessonCategory?: string;
+}
+
+export interface JournalSummary {
+  totalEntries: number;
+  thisWeek: number;
+  lessonsLearned: number;
+  avgMood: string;
+  winRate: number;
+}
+
+export interface JournalAnalytics {
+  totalEntries: number;
+  entriesByType: Record<JournalEntryType, number>;
+  entriesByMood: Record<MoodType, number>;
+  moodVsOutcome: Array<{
+    mood: MoodType;
+    wins: number;
+    losses: number;
+    winRate: number;
+    avgPnl: number;
+  }>;
+  topTags: Array<{ tag: string; count: number }>;
+  commonMistakes: Array<{ lesson: string; count: number; category?: string }>;
+  bestStrategies: Array<{ tag: string; winRate: number; avgPnl: number; trades: number }>;
+  recentLessons: JournalEntry[];
+  streaks: {
+    currentWinStreak: number;
+    maxWinStreak: number;
+    currentLossStreak: number;
+    maxLossStreak: number;
+  };
+}

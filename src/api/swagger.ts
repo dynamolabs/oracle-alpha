@@ -62,6 +62,7 @@ Real-time signals available at \`ws://host:port/ws\`
   ],
   tags: [
     { name: 'Signals', description: 'Signal discovery and retrieval' },
+    { name: 'Scoring', description: 'Custom scoring weights and presets' },
     { name: 'Detection', description: 'Scam detection (honeypot, wash trading, bundles, snipers)' },
     { name: 'Analytics', description: 'Performance analytics, leaderboards, and correlations' },
     { name: 'Trading', description: 'Paper trading and Jupiter DEX integration' },
@@ -73,7 +74,10 @@ Real-time signals available at \`ws://host:port/ws\`
     { name: 'System', description: 'Health, metrics, and system status' },
     { name: 'Export', description: 'Data export and reporting' },
     { name: 'Alerts', description: 'Custom alert rules and notifications' },
-    { name: 'Demo', description: 'Demo mode controls and data seeding' }
+    { name: 'Watchlist Alerts', description: 'Watchlist token price, volume, and signal alerts' },
+    { name: 'Voice Alerts', description: 'Text-to-speech voice alerts for signals' },
+    { name: 'Demo', description: 'Demo mode controls and data seeding' },
+    { name: 'Journal', description: 'Trading journal for notes, lessons, mood tracking, and analytics' }
   ],
   paths: {
     // ========================================
@@ -1025,6 +1029,277 @@ Real-time signals available at \`ws://host:port/ws\`
     },
 
     // ========================================
+    // CUSTOM SCORING WEIGHTS
+    // ========================================
+    '/api/scoring/weights': {
+      get: {
+        tags: ['Scoring'],
+        summary: 'Get current scoring weights',
+        description: 'Retrieve the current source weights and risk penalties for signal scoring',
+        operationId: 'getScoringWeights',
+        responses: {
+          '200': {
+            description: 'Current weights',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ScoringWeightsResponse' }
+              }
+            }
+          }
+        }
+      },
+      put: {
+        tags: ['Scoring'],
+        summary: 'Update scoring weights',
+        description: 'Update source weights and/or risk penalties',
+        operationId: 'updateScoringWeights',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ScoringWeightsUpdate' }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Weights updated' },
+          '400': { description: 'Invalid weights' }
+        }
+      }
+    },
+    '/api/scoring/reset': {
+      post: {
+        tags: ['Scoring'],
+        summary: 'Reset to defaults',
+        description: 'Reset all scoring weights to default values',
+        operationId: 'resetScoringWeights',
+        responses: {
+          '200': { description: 'Weights reset to defaults' }
+        }
+      }
+    },
+    '/api/scoring/presets': {
+      get: {
+        tags: ['Scoring'],
+        summary: 'Get presets',
+        description: 'Get available scoring presets (Conservative, Aggressive, KOL Focused, Smart Money, etc.)',
+        operationId: 'getScoringPresets',
+        responses: {
+          '200': {
+            description: 'Available presets',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ScoringPresetsResponse' }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/scoring/presets/{presetId}': {
+      get: {
+        tags: ['Scoring'],
+        summary: 'Get preset details',
+        description: 'Get full details of a specific preset',
+        operationId: 'getScoringPreset',
+        parameters: [
+          { name: 'presetId', in: 'path', required: true, schema: { type: 'string' }, description: 'Preset ID' }
+        ],
+        responses: {
+          '200': { description: 'Preset details' },
+          '404': { description: 'Preset not found' }
+        }
+      }
+    },
+    '/api/scoring/apply-preset/{presetId}': {
+      post: {
+        tags: ['Scoring'],
+        summary: 'Apply preset',
+        description: 'Apply a scoring preset to the active profile',
+        operationId: 'applyScoringPreset',
+        parameters: [
+          { name: 'presetId', in: 'path', required: true, schema: { type: 'string' }, description: 'Preset ID (conservative, aggressive, kol-focused, smart-money, degen, volume-hunter)' }
+        ],
+        responses: {
+          '200': { description: 'Preset applied' },
+          '400': { description: 'Invalid preset' }
+        }
+      }
+    },
+    '/api/scoring/profiles': {
+      get: {
+        tags: ['Scoring'],
+        summary: 'List profiles',
+        description: 'Get all scoring profiles',
+        operationId: 'listScoringProfiles',
+        responses: {
+          '200': { description: 'Profiles list' }
+        }
+      },
+      post: {
+        tags: ['Scoring'],
+        summary: 'Create profile',
+        description: 'Create a new scoring profile',
+        operationId: 'createScoringProfile',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  description: { type: 'string' }
+                },
+                required: ['name']
+              }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Profile created' },
+          '400': { description: 'Invalid profile' }
+        }
+      }
+    },
+    '/api/scoring/profiles/{profileId}/switch': {
+      post: {
+        tags: ['Scoring'],
+        summary: 'Switch profile',
+        description: 'Switch to a different scoring profile',
+        operationId: 'switchScoringProfile',
+        parameters: [
+          { name: 'profileId', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '200': { description: 'Profile switched' },
+          '404': { description: 'Profile not found' }
+        }
+      }
+    },
+    '/api/scoring/profiles/{profileId}': {
+      delete: {
+        tags: ['Scoring'],
+        summary: 'Delete profile',
+        description: 'Delete a scoring profile (cannot delete default)',
+        operationId: 'deleteScoringProfile',
+        parameters: [
+          { name: 'profileId', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '200': { description: 'Profile deleted' },
+          '400': { description: 'Cannot delete default profile' },
+          '404': { description: 'Profile not found' }
+        }
+      }
+    },
+    '/api/scoring/rescore': {
+      post: {
+        tags: ['Scoring'],
+        summary: 'Re-score signals',
+        description: 'Re-calculate scores for signals with current weights',
+        operationId: 'rescoreSignals',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  signalIds: { type: 'array', items: { type: 'string' } },
+                  limit: { type: 'number', default: 50 }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Re-scored signals',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/RescoreResponse' }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/scoring/preview': {
+      post: {
+        tags: ['Scoring'],
+        summary: 'Preview weight change',
+        description: 'Preview how weight changes would affect a signal score',
+        operationId: 'previewWeightChange',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  signalId: { type: 'string' },
+                  sourceWeights: { type: 'object' },
+                  riskPenalties: { type: 'object' }
+                },
+                required: ['signalId']
+              }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Preview result' },
+          '404': { description: 'Signal not found' }
+        }
+      }
+    },
+    '/api/scoring/signal/{signalId}': {
+      get: {
+        tags: ['Scoring'],
+        summary: 'Get signal score',
+        description: 'Get custom score calculation for a specific signal',
+        operationId: 'getSignalScore',
+        parameters: [
+          { name: 'signalId', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '200': { description: 'Signal score' },
+          '404': { description: 'Signal not found' }
+        }
+      }
+    },
+    '/api/scoring/export': {
+      get: {
+        tags: ['Scoring'],
+        summary: 'Export config',
+        description: 'Export all scoring configuration',
+        operationId: 'exportScoringConfig',
+        responses: {
+          '200': { description: 'Configuration exported' }
+        }
+      }
+    },
+    '/api/scoring/import': {
+      post: {
+        tags: ['Scoring'],
+        summary: 'Import config',
+        description: 'Import scoring configuration',
+        operationId: 'importScoringConfig',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { type: 'object' }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Configuration imported' },
+          '400': { description: 'Invalid configuration' }
+        }
+      }
+    },
+
+    // ========================================
     // ALERT RULES
     // ========================================
     '/api/alerts/rules': {
@@ -1067,6 +1342,459 @@ Real-time signals available at \`ws://host:port/ws\`
         operationId: 'listAlertTemplates',
         responses: {
           '200': { description: 'Templates list' }
+        }
+      }
+    },
+
+    // ========================================
+    // WATCHLIST ALERTS
+    // ========================================
+    '/api/watchlist/alerts': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Get all watchlist alerts',
+        description: 'Retrieve all configured watchlist alerts with stats',
+        operationId: 'getAllWatchlistAlerts',
+        responses: {
+          '200': {
+            description: 'All alerts',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/WatchlistAlertsResponse' }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alerts': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Get alerts for token',
+        description: 'Get all alerts configured for a specific token',
+        operationId: 'getAlertsForToken',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' }, description: 'Token mint address' }
+        ],
+        responses: {
+          '200': { description: 'Token alerts' }
+        }
+      },
+      delete: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Delete all alerts for token',
+        description: 'Remove all alerts configured for a specific token',
+        operationId: 'deleteTokenAlerts',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '200': { description: 'Alerts deleted' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create alert',
+        description: 'Create a new alert for a watchlist token',
+        operationId: 'createWatchlistAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/WatchlistAlertCreate' }
+            }
+          }
+        },
+        responses: {
+          '201': { description: 'Alert created' },
+          '400': { description: 'Invalid request' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/price-above': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create price above alert',
+        description: 'Quick create a price above threshold alert',
+        operationId: 'createPriceAboveAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['price'],
+                properties: {
+                  price: { type: 'number', description: 'Price threshold in USD' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { description: 'Alert created' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/price-below': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create price below alert',
+        description: 'Quick create a price below threshold alert',
+        operationId: 'createPriceBelowAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['price'],
+                properties: {
+                  price: { type: 'number', description: 'Price threshold in USD' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { description: 'Alert created' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/pump': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create pump alert',
+        description: 'Alert when price increases by percentage',
+        operationId: 'createPumpAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  percent: { type: 'number', default: 50, description: 'Price increase % to trigger' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { description: 'Alert created' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/dump': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create dump alert',
+        description: 'Alert when price decreases by percentage',
+        operationId: 'createDumpAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  percent: { type: 'number', default: 30, description: 'Price decrease % to trigger' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { description: 'Alert created' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/volume': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create volume spike alert',
+        description: 'Alert when volume exceeds multiplier of average',
+        operationId: 'createVolumeAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  multiplier: { type: 'number', default: 5, description: 'Volume multiplier (2x, 5x, 10x)' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { description: 'Alert created' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/signal': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create signal alert',
+        description: 'Alert when new ORACLE signal is generated for token',
+        operationId: 'createSignalAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  minScore: { type: 'number', default: 70, description: 'Minimum signal score to trigger' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { description: 'Alert created' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/wallet': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Create wallet activity alert',
+        description: 'Alert when smart wallet activity is detected',
+        operationId: 'createWalletAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '201': { description: 'Alert created' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/alert/{id}': {
+      put: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Update alert',
+        description: 'Update an existing alert configuration',
+        operationId: 'updateWatchlistAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/WatchlistAlertUpdate' }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Alert updated' },
+          '404': { description: 'Alert not found' }
+        }
+      },
+      delete: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Delete alert',
+        description: 'Delete a specific alert',
+        operationId: 'deleteWatchlistAlert',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '200': { description: 'Alert deleted' },
+          '404': { description: 'Alert not found' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/{id}/toggle': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Toggle alert',
+        description: 'Enable or disable an alert',
+        operationId: 'toggleWatchlistAlert',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '200': { description: 'Alert toggled' },
+          '404': { description: 'Alert not found' }
+        }
+      }
+    },
+    '/api/watchlist/triggered': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Get triggered alerts',
+        description: 'Get history of triggered alerts',
+        operationId: 'getTriggeredAlerts',
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 50 } }
+        ],
+        responses: {
+          '200': { description: 'Triggered alerts history' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/triggered': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Get triggered alerts for token',
+        description: 'Get triggered alerts history for a specific token',
+        operationId: 'getTriggeredAlertsForToken',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } }
+        ],
+        responses: {
+          '200': { description: 'Triggered alerts for token' }
+        }
+      }
+    },
+    '/api/watchlist/{token}/price': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Get cached price',
+        description: 'Get cached price data for a token',
+        operationId: 'getCachedPrice',
+        parameters: [
+          { name: 'token', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          '200': { description: 'Price data' },
+          '404': { description: 'No cached price' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/check': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Manual alert check',
+        description: 'Manually trigger alert check for all enabled alerts',
+        operationId: 'checkWatchlistAlerts',
+        responses: {
+          '200': { description: 'Check results' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/checker': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Checker status',
+        description: 'Get alert checker service status',
+        operationId: 'getCheckerStatus',
+        responses: {
+          '200': { description: 'Checker status' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/checker/start': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Start checker',
+        description: 'Start the alert checker service',
+        operationId: 'startAlertChecker',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  intervalMs: { type: 'integer', default: 30000, description: 'Check interval in milliseconds' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Checker started' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/checker/stop': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Stop checker',
+        description: 'Stop the alert checker service',
+        operationId: 'stopAlertChecker',
+        responses: {
+          '200': { description: 'Checker stopped' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/stats': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Alert statistics',
+        description: 'Get watchlist alert statistics',
+        operationId: 'getWatchlistAlertStats',
+        responses: {
+          '200': { description: 'Alert stats' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/export': {
+      get: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Export alerts',
+        description: 'Export all alert configurations',
+        operationId: 'exportWatchlistAlerts',
+        responses: {
+          '200': { description: 'Exported alerts' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/import': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Import alerts',
+        description: 'Import alert configurations',
+        operationId: 'importWatchlistAlerts',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['alerts'],
+                properties: {
+                  alerts: { type: 'array', items: { $ref: '#/components/schemas/WatchlistAlert' } }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Alerts imported' }
+        }
+      }
+    },
+    '/api/watchlist/alerts/clear': {
+      post: {
+        tags: ['Watchlist Alerts'],
+        summary: 'Clear all alerts',
+        description: 'Delete all watchlist alerts',
+        operationId: 'clearWatchlistAlerts',
+        responses: {
+          '200': { description: 'Alerts cleared' }
         }
       }
     },
@@ -1307,6 +2035,192 @@ Real-time signals available at \`ws://host:port/ws\`
     },
 
     // ========================================
+    // VOICE ALERTS ENDPOINTS
+    // ========================================
+    '/api/voice/settings': {
+      get: {
+        tags: ['Voice Alerts'],
+        summary: 'Get voice alert settings',
+        description: 'Get current voice alert settings including enabled status, minimum score, voice selection, and other options',
+        operationId: 'getVoiceSettings',
+        responses: {
+          '200': {
+            description: 'Voice settings',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/VoiceAlertSettings' },
+                example: {
+                  enabled: true,
+                  minScore: 70,
+                  voice: 'default',
+                  rate: 1.0,
+                  volume: 0.8,
+                  pitch: 1.0,
+                  announceRiskWarnings: true,
+                  cooldownSeconds: 10,
+                  priorityOnly: false
+                }
+              }
+            }
+          }
+        }
+      },
+      put: {
+        tags: ['Voice Alerts'],
+        summary: 'Update voice alert settings',
+        description: 'Update voice alert settings. All fields are optional - only provided fields will be updated.',
+        operationId: 'updateVoiceSettings',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/VoiceAlertSettings' },
+              example: {
+                enabled: true,
+                minScore: 75,
+                rate: 1.1
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Settings updated',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    settings: { $ref: '#/components/schemas/VoiceAlertSettings' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/voice/settings/reset': {
+      post: {
+        tags: ['Voice Alerts'],
+        summary: 'Reset voice settings to defaults',
+        description: 'Reset all voice alert settings to their default values',
+        operationId: 'resetVoiceSettings',
+        responses: {
+          '200': {
+            description: 'Settings reset',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    settings: { $ref: '#/components/schemas/VoiceAlertSettings' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/voice/test': {
+      post: {
+        tags: ['Voice Alerts'],
+        summary: 'Test voice with sample message',
+        description: 'Generate a test voice message that can be spoken by the frontend using Web Speech API',
+        operationId: 'testVoice',
+        responses: {
+          '200': {
+            description: 'Test message generated',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    message: { $ref: '#/components/schemas/VoiceMessage' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/voice/speak/{signalId}': {
+      post: {
+        tags: ['Voice Alerts'],
+        summary: 'Generate voice message for signal',
+        description: 'Generate a voice message for a specific signal that can be spoken by the frontend',
+        operationId: 'speakSignal',
+        parameters: [
+          {
+            name: 'signalId',
+            in: 'path',
+            required: true,
+            description: 'Signal ID to generate voice message for',
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Voice message generated',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    message: { $ref: '#/components/schemas/VoiceMessage' }
+                  }
+                }
+              }
+            }
+          },
+          '404': { description: 'Signal not found' }
+        }
+      }
+    },
+    '/api/voice/should-announce/{signalId}': {
+      get: {
+        tags: ['Voice Alerts'],
+        summary: 'Check if signal should trigger voice alert',
+        description: 'Check if a signal meets the criteria to trigger a voice alert based on current settings',
+        operationId: 'shouldAnnounceSignal',
+        parameters: [
+          {
+            name: 'signalId',
+            in: 'path',
+            required: true,
+            description: 'Signal ID to check',
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Announcement status',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    signalId: { type: 'string' },
+                    symbol: { type: 'string' },
+                    score: { type: 'number' },
+                    shouldAnnounce: { type: 'boolean' }
+                  }
+                }
+              }
+            }
+          },
+          '404': { description: 'Signal not found' }
+        }
+      }
+    },
+
+    // ========================================
     // DOCS ENDPOINTS (self-referential)
     // ========================================
     '/api/docs/openapi.json': {
@@ -1334,6 +2248,321 @@ Real-time signals available at \`ws://host:port/ws\`
             description: 'OpenAPI specification',
             content: { 'text/yaml': {} }
           }
+        }
+      }
+    },
+
+    // ==========================================
+    // TRADING JOURNAL ENDPOINTS
+    // ==========================================
+    '/api/journal': {
+      get: {
+        tags: ['Journal'],
+        summary: 'List journal entries',
+        description: 'Get all journal entries with optional filters for type, mood, tags, date range, etc.',
+        operationId: 'getJournalEntries',
+        parameters: [
+          { name: 'type', in: 'query', schema: { type: 'string', enum: ['trade', 'note', 'lesson', 'idea'] }, description: 'Filter by entry type' },
+          { name: 'mood', in: 'query', schema: { type: 'string', enum: ['confident', 'uncertain', 'fomo', 'fear'] }, description: 'Filter by mood' },
+          { name: 'token', in: 'query', schema: { type: 'string' }, description: 'Filter by token address' },
+          { name: 'signalId', in: 'query', schema: { type: 'string' }, description: 'Filter by linked signal ID' },
+          { name: 'tradeId', in: 'query', schema: { type: 'string' }, description: 'Filter by linked trade ID' },
+          { name: 'outcome', in: 'query', schema: { type: 'string', enum: ['win', 'loss', 'breakeven', 'pending'] }, description: 'Filter by outcome' },
+          { name: 'tags', in: 'query', schema: { type: 'string' }, description: 'Comma-separated tags to filter by' },
+          { name: 'startDate', in: 'query', schema: { type: 'integer' }, description: 'Start timestamp (ms)' },
+          { name: 'endDate', in: 'query', schema: { type: 'integer' }, description: 'End timestamp (ms)' },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 50 }, description: 'Max entries to return' },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 }, description: 'Pagination offset' }
+        ],
+        responses: {
+          '200': {
+            description: 'List of journal entries',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalListResponse' } } }
+          }
+        }
+      },
+      post: {
+        tags: ['Journal'],
+        summary: 'Create journal entry',
+        description: 'Create a new journal entry (trade note, lesson, idea, etc.)',
+        operationId: 'createJournalEntry',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/JournalEntryInput' },
+              example: {
+                type: 'lesson',
+                title: 'Wait for pullback on pumps',
+                content: 'After a 50%+ pump, there is almost always a pullback. Wait for consolidation before entering.',
+                tags: ['timing', 'patience'],
+                lessonCategory: 'timing'
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Journal entry created',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntryResponse' } } }
+          },
+          '400': { description: 'Missing required fields' }
+        }
+      }
+    },
+    '/api/journal/{id}': {
+      get: {
+        tags: ['Journal'],
+        summary: 'Get journal entry',
+        description: 'Get a single journal entry by ID',
+        operationId: 'getJournalEntry',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Journal entry ID' }
+        ],
+        responses: {
+          '200': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntry' } } } },
+          '404': { description: 'Entry not found' }
+        }
+      },
+      put: {
+        tags: ['Journal'],
+        summary: 'Update journal entry',
+        description: 'Update an existing journal entry',
+        operationId: 'updateJournalEntry',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Journal entry ID' }
+        ],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntryInput' } } }
+        },
+        responses: {
+          '200': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntryResponse' } } } },
+          '404': { description: 'Entry not found' }
+        }
+      },
+      delete: {
+        tags: ['Journal'],
+        summary: 'Delete journal entry',
+        description: 'Delete a journal entry',
+        operationId: 'deleteJournalEntry',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Journal entry ID' }
+        ],
+        responses: {
+          '200': { description: 'Entry deleted' },
+          '404': { description: 'Entry not found' }
+        }
+      }
+    },
+    '/api/journal/tags': {
+      get: {
+        tags: ['Journal'],
+        summary: 'Get all tags',
+        description: 'Get all unique tags used in journal entries with their counts',
+        operationId: 'getJournalTags',
+        responses: {
+          '200': {
+            description: 'List of tags',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    tags: { type: 'array', items: { type: 'object', properties: { tag: { type: 'string' }, count: { type: 'integer' } } } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/journal/search': {
+      get: {
+        tags: ['Journal'],
+        summary: 'Search journal entries',
+        description: 'Full-text search across journal entries (title, content, tags)',
+        operationId: 'searchJournal',
+        parameters: [
+          { name: 'q', in: 'query', required: true, schema: { type: 'string' }, description: 'Search query' },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 50 }, description: 'Max results' }
+        ],
+        responses: {
+          '200': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalListResponse' } } } },
+          '400': { description: 'Missing search query' }
+        }
+      }
+    },
+    '/api/journal/analytics': {
+      get: {
+        tags: ['Journal'],
+        summary: 'Get journal analytics',
+        description: 'Get comprehensive analytics including mood vs outcome correlation, common mistakes, best strategies, and streaks',
+        operationId: 'getJournalAnalytics',
+        responses: {
+          '200': {
+            description: 'Journal analytics',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalAnalytics' } } }
+          }
+        }
+      }
+    },
+    '/api/journal/signal/{signalId}': {
+      get: {
+        tags: ['Journal'],
+        summary: 'Get entries for signal',
+        description: 'Get all journal entries linked to a specific signal',
+        operationId: 'getJournalEntriesForSignal',
+        parameters: [
+          { name: 'signalId', in: 'path', required: true, schema: { type: 'string' }, description: 'Signal ID' }
+        ],
+        responses: {
+          '200': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalListResponse' } } } }
+        }
+      }
+    },
+    '/api/journal/signal/{signalId}/note': {
+      post: {
+        tags: ['Journal'],
+        summary: 'Quick add note to signal',
+        description: 'Quickly add a note entry linked to a signal',
+        operationId: 'addSignalNote',
+        parameters: [
+          { name: 'signalId', in: 'path', required: true, schema: { type: 'string' }, description: 'Signal ID' }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['note'],
+                properties: {
+                  note: { type: 'string', description: 'Note content' },
+                  tags: { type: 'array', items: { type: 'string' }, description: 'Optional tags' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntryResponse' } } } }
+        }
+      }
+    },
+    '/api/journal/lesson': {
+      post: {
+        tags: ['Journal'],
+        summary: 'Record a lesson',
+        description: 'Record a lesson learned from trading',
+        operationId: 'recordLesson',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title', 'content', 'category'],
+                properties: {
+                  title: { type: 'string' },
+                  content: { type: 'string' },
+                  category: { type: 'string', enum: ['timing', 'risk', 'fomo', 'patience', 'research', 'exit-strategy', 'position-sizing', 'emotional', 'technical'] },
+                  signalId: { type: 'string' },
+                  tradeId: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntryResponse' } } } }
+        }
+      }
+    },
+    '/api/journal/trade': {
+      post: {
+        tags: ['Journal'],
+        summary: 'Record trade entry',
+        description: 'Record a trade entry with mood tracking',
+        operationId: 'recordTradeEntry',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['tradeId', 'title', 'content', 'mood'],
+                properties: {
+                  tradeId: { type: 'string' },
+                  signalId: { type: 'string' },
+                  token: { type: 'string' },
+                  title: { type: 'string' },
+                  content: { type: 'string' },
+                  mood: { type: 'string', enum: ['confident', 'uncertain', 'fomo', 'fear'] },
+                  outcome: { type: 'string', enum: ['win', 'loss', 'breakeven', 'pending'] },
+                  pnl: { type: 'number' },
+                  tags: { type: 'array', items: { type: 'string' } },
+                  screenshot: { type: 'string', format: 'uri' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntryResponse' } } } }
+        }
+      }
+    },
+    '/api/journal/idea': {
+      post: {
+        tags: ['Journal'],
+        summary: 'Record an idea',
+        description: 'Record a trading idea',
+        operationId: 'recordIdea',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title', 'content'],
+                properties: {
+                  title: { type: 'string' },
+                  content: { type: 'string' },
+                  tags: { type: 'array', items: { type: 'string' } }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '201': { content: { 'application/json': { schema: { $ref: '#/components/schemas/JournalEntryResponse' } } } }
+        }
+      }
+    },
+    '/api/journal/export': {
+      get: {
+        tags: ['Journal'],
+        summary: 'Export journal',
+        description: 'Export all journal entries as JSON or CSV',
+        operationId: 'exportJournal',
+        parameters: [
+          { name: 'format', in: 'query', schema: { type: 'string', enum: ['json', 'csv'], default: 'json' }, description: 'Export format' }
+        ],
+        responses: {
+          '200': { description: 'Journal export file' }
+        }
+      }
+    },
+    '/api/journal/demo': {
+      post: {
+        tags: ['Journal', 'Demo'],
+        summary: 'Generate demo journal',
+        description: 'Generate sample journal entries for testing',
+        operationId: 'generateDemoJournal',
+        responses: {
+          '200': { description: 'Demo data generated' }
         }
       }
     }
@@ -1888,6 +3117,110 @@ Real-time signals available at \`ws://host:port/ws\`
           signal: { type: 'object' }
         }
       },
+      // === SCORING SCHEMAS ===
+      ScoringWeightsResponse: {
+        type: 'object',
+        properties: {
+          activeProfile: { type: 'string' },
+          profileName: { type: 'string' },
+          profileDescription: { type: 'string' },
+          lastUpdated: { type: 'integer' },
+          sourceWeights: { $ref: '#/components/schemas/SourceWeights' },
+          riskPenalties: { $ref: '#/components/schemas/RiskPenalties' }
+        }
+      },
+      SourceWeights: {
+        type: 'object',
+        properties: {
+          'smart-wallet-elite': { type: 'integer', minimum: 0, maximum: 100 },
+          'smart-wallet-sniper': { type: 'integer', minimum: 0, maximum: 100 },
+          'volume-spike': { type: 'integer', minimum: 0, maximum: 100 },
+          'kol-tracker': { type: 'integer', minimum: 0, maximum: 100 },
+          narrative: { type: 'integer', minimum: 0, maximum: 100 },
+          whale: { type: 'integer', minimum: 0, maximum: 100 },
+          news: { type: 'integer', minimum: 0, maximum: 100 },
+          'pump-koth': { type: 'integer', minimum: 0, maximum: 100 },
+          dexscreener: { type: 'integer', minimum: 0, maximum: 100 },
+          'kol-social': { type: 'integer', minimum: 0, maximum: 100 },
+          'new-launch': { type: 'integer', minimum: 0, maximum: 100 },
+          'twitter-sentiment': { type: 'integer', minimum: 0, maximum: 100 },
+          'dex-volume-anomaly': { type: 'integer', minimum: 0, maximum: 100 }
+        }
+      },
+      RiskPenalties: {
+        type: 'object',
+        properties: {
+          honeypotPenalty: { type: 'integer', minimum: 0, maximum: 100 },
+          bundlePenalty: { type: 'integer', minimum: 0, maximum: 100 },
+          sniperPenalty: { type: 'integer', minimum: 0, maximum: 100 },
+          washPenalty: { type: 'integer', minimum: 0, maximum: 100 }
+        }
+      },
+      ScoringWeightsUpdate: {
+        type: 'object',
+        properties: {
+          sourceWeights: { $ref: '#/components/schemas/SourceWeights' },
+          riskPenalties: { $ref: '#/components/schemas/RiskPenalties' }
+        }
+      },
+      ScoringPresetsResponse: {
+        type: 'object',
+        properties: {
+          count: { type: 'integer' },
+          presets: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                description: { type: 'string' }
+              }
+            }
+          }
+        }
+      },
+      ScoringPreset: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          sourceWeights: { $ref: '#/components/schemas/SourceWeights' },
+          riskPenalties: { $ref: '#/components/schemas/RiskPenalties' }
+        }
+      },
+      RescoreResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          count: { type: 'integer' },
+          signals: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                symbol: { type: 'string' },
+                token: { type: 'string' },
+                originalScore: { type: 'integer' },
+                adjustedScore: { type: 'integer' },
+                delta: { type: 'integer' },
+                breakdown: { type: 'object' }
+              }
+            }
+          },
+          summary: {
+            type: 'object',
+            properties: {
+              avgDelta: { type: 'number' },
+              improved: { type: 'integer' },
+              degraded: { type: 'integer' },
+              unchanged: { type: 'integer' }
+            }
+          }
+        }
+      },
       AlertRuleRequest: {
         type: 'object',
         required: ['name', 'conditionGroups', 'actions'],
@@ -1912,6 +3245,149 @@ Real-time signals available at \`ws://host:port/ws\`
           allowedRiskLevels: { type: 'array', items: { type: 'string' } },
           slippageBps: { type: 'integer' },
           cooldownMinutes: { type: 'integer' }
+        }
+      },
+      WatchlistAlert: {
+        type: 'object',
+        required: ['id', 'tokenMint', 'type', 'threshold', 'enabled'],
+        properties: {
+          id: { type: 'string', description: 'Unique alert ID' },
+          tokenMint: { type: 'string', description: 'Token mint address' },
+          tokenSymbol: { type: 'string' },
+          tokenName: { type: 'string' },
+          type: { 
+            type: 'string', 
+            enum: ['price_above', 'price_below', 'change_up', 'change_down', 'volume', 'signal', 'wallet'],
+            description: 'Alert type'
+          },
+          threshold: { type: 'number', description: 'Threshold value for triggering' },
+          enabled: { type: 'boolean' },
+          notifyTelegram: { type: 'boolean', default: true },
+          notifyDiscord: { type: 'boolean', default: false },
+          notifyBrowser: { type: 'boolean', default: true },
+          createdAt: { type: 'integer' },
+          updatedAt: { type: 'integer' },
+          lastTriggered: { type: 'integer' },
+          triggerCount: { type: 'integer' },
+          cooldownMs: { type: 'integer', default: 300000 },
+          oneTime: { type: 'boolean', default: false },
+          notes: { type: 'string' }
+        }
+      },
+      WatchlistAlertCreate: {
+        type: 'object',
+        required: ['type', 'threshold'],
+        properties: {
+          type: { 
+            type: 'string', 
+            enum: ['price_above', 'price_below', 'change_up', 'change_down', 'volume', 'signal', 'wallet']
+          },
+          threshold: { type: 'number' },
+          notifyTelegram: { type: 'boolean', default: true },
+          notifyDiscord: { type: 'boolean', default: false },
+          notifyBrowser: { type: 'boolean', default: true },
+          cooldownMs: { type: 'integer', default: 300000 },
+          oneTime: { type: 'boolean', default: false },
+          notes: { type: 'string' },
+          tokenSymbol: { type: 'string' },
+          tokenName: { type: 'string' }
+        }
+      },
+      WatchlistAlertUpdate: {
+        type: 'object',
+        properties: {
+          threshold: { type: 'number' },
+          enabled: { type: 'boolean' },
+          notifyTelegram: { type: 'boolean' },
+          notifyDiscord: { type: 'boolean' },
+          notifyBrowser: { type: 'boolean' },
+          cooldownMs: { type: 'integer' },
+          oneTime: { type: 'boolean' },
+          notes: { type: 'string' }
+        }
+      },
+      WatchlistAlertsResponse: {
+        type: 'object',
+        properties: {
+          count: { type: 'integer' },
+          alerts: { type: 'array', items: { '$ref': '#/components/schemas/WatchlistAlert' } },
+          stats: { '$ref': '#/components/schemas/WatchlistAlertStats' }
+        }
+      },
+      WatchlistAlertStats: {
+        type: 'object',
+        properties: {
+          total: { type: 'integer' },
+          enabled: { type: 'integer' },
+          disabled: { type: 'integer' },
+          byType: {
+            type: 'object',
+            properties: {
+              price_above: { type: 'integer' },
+              price_below: { type: 'integer' },
+              change_up: { type: 'integer' },
+              change_down: { type: 'integer' },
+              volume: { type: 'integer' },
+              signal: { type: 'integer' },
+              wallet: { type: 'integer' }
+            }
+          },
+          triggered: {
+            type: 'object',
+            properties: {
+              total: { type: 'integer' },
+              recentCount: { type: 'integer' }
+            }
+          },
+          checker: {
+            type: 'object',
+            properties: {
+              running: { type: 'boolean' },
+              lastCheck: { type: 'integer' },
+              checksPerformed: { type: 'integer' },
+              alertsTriggered: { type: 'integer' },
+              errors: { type: 'integer' }
+            }
+          }
+        }
+      },
+      TriggeredAlert: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          alertId: { type: 'string' },
+          tokenMint: { type: 'string' },
+          tokenSymbol: { type: 'string' },
+          type: { type: 'string' },
+          threshold: { type: 'number' },
+          actualValue: { type: 'number' },
+          triggeredAt: { type: 'integer' },
+          notificationsSent: {
+            type: 'object',
+            properties: {
+              telegram: { type: 'boolean' },
+              discord: { type: 'boolean' },
+              browser: { type: 'boolean' }
+            }
+          },
+          message: { type: 'string' }
+        }
+      },
+      TokenPriceData: {
+        type: 'object',
+        properties: {
+          mint: { type: 'string' },
+          symbol: { type: 'string' },
+          name: { type: 'string' },
+          price: { type: 'number' },
+          priceUsd: { type: 'number' },
+          mcap: { type: 'number' },
+          volume24h: { type: 'number' },
+          volume5m: { type: 'number' },
+          priceChange1h: { type: 'number' },
+          priceChange24h: { type: 'number' },
+          liquidity: { type: 'number' },
+          lastUpdated: { type: 'integer' }
         }
       },
       MarketCondition: {
@@ -1948,6 +3424,150 @@ Real-time signals available at \`ws://host:port/ws\`
           },
           timestamp: { type: 'integer' },
           cached: { type: 'boolean' }
+        }
+      },
+      VoiceAlertSettings: {
+        type: 'object',
+        description: 'Voice alert configuration settings',
+        properties: {
+          enabled: { type: 'boolean', description: 'Whether voice alerts are enabled' },
+          minScore: { type: 'integer', minimum: 0, maximum: 100, description: 'Minimum signal score to trigger voice alert' },
+          voice: { type: 'string', description: 'Browser voice name (selected on frontend)' },
+          rate: { type: 'number', minimum: 0.5, maximum: 2, description: 'Speech rate (0.5-2.0)' },
+          volume: { type: 'number', minimum: 0, maximum: 1, description: 'Volume (0-1)' },
+          pitch: { type: 'number', minimum: 0, maximum: 2, description: 'Voice pitch (0-2)' },
+          announceRiskWarnings: { type: 'boolean', description: 'Include risk warnings in announcements' },
+          cooldownSeconds: { type: 'integer', minimum: 0, description: 'Minimum seconds between announcements' },
+          priorityOnly: { type: 'boolean', description: 'Only announce HIGH_CONVICTION or ULTRA signals' }
+        }
+      },
+      VoiceMessage: {
+        type: 'object',
+        description: 'Generated voice message for frontend TTS',
+        properties: {
+          text: { type: 'string', description: 'The text to be spoken' },
+          tone: { type: 'string', enum: ['excited', 'normal', 'cautious'], description: 'Tone/emphasis of the message' },
+          signal: {
+            type: 'object',
+            description: 'Signal information',
+            properties: {
+              id: { type: 'string' },
+              symbol: { type: 'string' },
+              score: { type: 'integer' },
+              riskLevel: { type: 'string' }
+            }
+          },
+          settings: {
+            type: 'object',
+            description: 'Adjusted speech settings for this message',
+            properties: {
+              rate: { type: 'number' },
+              pitch: { type: 'number' },
+              volume: { type: 'number' }
+            }
+          }
+        }
+      },
+
+      // ==========================================
+      // JOURNAL SCHEMAS
+      // ==========================================
+      JournalEntry: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Unique entry ID' },
+          tradeId: { type: 'string', description: 'Linked paper trade ID' },
+          signalId: { type: 'string', description: 'Linked signal ID' },
+          token: { type: 'string', description: 'Token contract address' },
+          timestamp: { type: 'integer', description: 'Creation timestamp (ms)' },
+          type: { type: 'string', enum: ['trade', 'note', 'lesson', 'idea'], description: 'Entry type' },
+          title: { type: 'string', description: 'Entry title' },
+          content: { type: 'string', description: 'Entry content (supports markdown)' },
+          tags: { type: 'array', items: { type: 'string' }, description: 'Tags for categorization' },
+          mood: { type: 'string', enum: ['confident', 'uncertain', 'fomo', 'fear'], description: 'Emotional state during trade' },
+          screenshot: { type: 'string', format: 'uri', description: 'Screenshot URL' },
+          outcome: { type: 'string', enum: ['win', 'loss', 'breakeven', 'pending'], description: 'Trade outcome' },
+          pnl: { type: 'number', description: 'Profit/loss percentage' },
+          lessonCategory: { type: 'string', description: 'Category for lessons (timing, risk, etc.)' }
+        }
+      },
+      JournalEntryInput: {
+        type: 'object',
+        required: ['type', 'title', 'content'],
+        properties: {
+          type: { type: 'string', enum: ['trade', 'note', 'lesson', 'idea'] },
+          title: { type: 'string' },
+          content: { type: 'string' },
+          tags: { type: 'array', items: { type: 'string' } },
+          mood: { type: 'string', enum: ['confident', 'uncertain', 'fomo', 'fear'] },
+          signalId: { type: 'string' },
+          tradeId: { type: 'string' },
+          token: { type: 'string' },
+          outcome: { type: 'string', enum: ['win', 'loss', 'breakeven', 'pending'] },
+          pnl: { type: 'number' },
+          screenshot: { type: 'string', format: 'uri' },
+          lessonCategory: { type: 'string' }
+        }
+      },
+      JournalEntryResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
+          entry: { $ref: '#/components/schemas/JournalEntry' }
+        }
+      },
+      JournalListResponse: {
+        type: 'object',
+        properties: {
+          timestamp: { type: 'integer' },
+          count: { type: 'integer' },
+          summary: {
+            type: 'object',
+            properties: {
+              totalEntries: { type: 'integer' },
+              thisWeek: { type: 'integer' },
+              lessonsLearned: { type: 'integer' },
+              avgMood: { type: 'string' },
+              winRate: { type: 'number' }
+            }
+          },
+          entries: { type: 'array', items: { $ref: '#/components/schemas/JournalEntry' } }
+        }
+      },
+      JournalAnalytics: {
+        type: 'object',
+        properties: {
+          totalEntries: { type: 'integer' },
+          entriesByType: { type: 'object', additionalProperties: { type: 'integer' } },
+          entriesByMood: { type: 'object', additionalProperties: { type: 'integer' } },
+          moodVsOutcome: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                mood: { type: 'string' },
+                wins: { type: 'integer' },
+                losses: { type: 'integer' },
+                winRate: { type: 'number' },
+                avgPnl: { type: 'number' }
+              }
+            },
+            description: 'Correlation between emotional state and trade outcomes'
+          },
+          topTags: { type: 'array', items: { type: 'object', properties: { tag: { type: 'string' }, count: { type: 'integer' } } } },
+          commonMistakes: { type: 'array', items: { type: 'object', properties: { lesson: { type: 'string' }, count: { type: 'integer' }, category: { type: 'string' } } }, description: 'Most frequently recorded lessons (mistakes to avoid)' },
+          bestStrategies: { type: 'array', items: { type: 'object', properties: { tag: { type: 'string' }, winRate: { type: 'number' }, avgPnl: { type: 'number' }, trades: { type: 'integer' } } }, description: 'Best performing strategy tags' },
+          recentLessons: { type: 'array', items: { $ref: '#/components/schemas/JournalEntry' } },
+          streaks: {
+            type: 'object',
+            properties: {
+              currentWinStreak: { type: 'integer' },
+              maxWinStreak: { type: 'integer' },
+              currentLossStreak: { type: 'integer' },
+              maxLossStreak: { type: 'integer' }
+            }
+          }
         }
       }
     },
