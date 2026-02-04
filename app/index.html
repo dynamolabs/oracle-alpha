@@ -285,6 +285,295 @@
         .filter-btn:hover { border-color: #a855f7; color: #a855f7; }
         .filter-btn.active { background: #a855f7; color: #000; border-color: #a855f7; }
         
+        /* Wallet Connect Button */
+        .wallet-connect-btn {
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #000;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85em;
+        }
+        .wallet-connect-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+        }
+        .wallet-connect-btn.connected {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+        .wallet-balance-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+        .wallet-balance-display .balance {
+            color: #22c55e;
+            font-weight: 600;
+        }
+        
+        /* Trade Button on Signals */
+        .trade-now-btn {
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75em;
+            margin-left: 8px;
+        }
+        .trade-now-btn:hover {
+            transform: scale(1.05);
+        }
+        .trade-now-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Swap Modal */
+        .swap-modal-content {
+            max-width: 450px;
+        }
+        .swap-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .swap-input-group {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .swap-input-group label {
+            display: block;
+            color: #888;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+        .swap-input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .swap-amount-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.5em;
+            font-family: 'JetBrains Mono', monospace;
+            width: 60%;
+            outline: none;
+        }
+        .swap-token-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        .swap-token-symbol {
+            font-weight: 600;
+        }
+        .swap-balance-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        .max-btn {
+            color: #00d9ff;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 600;
+        }
+        .swap-arrow {
+            text-align: center;
+            font-size: 1.5em;
+            color: #555;
+            margin: -8px 0;
+        }
+        .swap-output-amount {
+            font-size: 1.5em;
+            font-family: 'JetBrains Mono', monospace;
+            color: #22c55e;
+        }
+        .swap-details {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85em;
+        }
+        .swap-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .swap-detail-row:last-child {
+            margin-bottom: 0;
+        }
+        .swap-detail-label {
+            color: #888;
+        }
+        .swap-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .preset-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8em;
+        }
+        .preset-btn:hover, .preset-btn.active {
+            border-color: #00d9ff;
+            color: #00d9ff;
+        }
+        .swap-warnings {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .swap-warning-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+            color: #eab308;
+        }
+        .swap-warning-item:last-child {
+            margin-bottom: 0;
+        }
+        .swap-confirm-btn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            color: #fff;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .swap-confirm-btn:hover {
+            transform: scale(1.02);
+        }
+        .swap-confirm-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .swap-confirm-btn.loading {
+            background: #666;
+        }
+        
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast.success { border-color: #22c55e; }
+        .toast.error { border-color: #ef4444; }
+        .toast.warning { border-color: #eab308; }
+        .toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .toast-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.success .toast-title { color: #22c55e; }
+        .toast.error .toast-title { color: #ef4444; }
+        .toast.warning .toast-title { color: #eab308; }
+        .toast-close {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        .toast-body {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+        .toast-link {
+            color: #00d9ff;
+            text-decoration: none;
+            font-size: 0.85em;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        /* Swap Settings */
+        .swap-settings {
+            margin-bottom: 12px;
+        }
+        .swap-settings label {
+            display: block;
+            color: #888;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+        .swap-signal-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 8px;
+        }
+        .signal-badge {
+            color: #00d9ff;
+        }
+        .signal-score-badge {
+            color: #a855f7;
+        }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -3106,6 +3395,412 @@
             font-family: 'JetBrains Mono', monospace;
         }
         
+        /* === KOL TRACKER STYLES === */
+        
+        .kol-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .kol-overview-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .kol-stat-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .kol-stat-card:hover {
+            border-color: #00d9ff;
+            transform: translateY(-2px);
+        }
+        
+        .kol-stat-card.warning {
+            border-color: #f97316;
+            background: rgba(249, 115, 22, 0.1);
+        }
+        
+        .kol-stat-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .kol-stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #00d9ff;
+        }
+        
+        .kol-stat-card.warning .kol-stat-value {
+            color: #f97316;
+        }
+        
+        .kol-stat-label {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .kol-category-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        
+        .kol-category-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .kol-category-btn:hover {
+            border-color: #a855f7;
+            color: #a855f7;
+        }
+        
+        .kol-category-btn.active {
+            background: linear-gradient(135deg, #a855f7, #00d9ff);
+            color: #000;
+            border-color: transparent;
+            font-weight: 600;
+        }
+        
+        .kol-leaderboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .kol-entry {
+            display: grid;
+            grid-template-columns: 50px 1fr 200px auto;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid #444;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .kol-entry:hover {
+            border-color: #00d9ff;
+            transform: translateX(3px);
+        }
+        
+        .kol-entry.top-performer {
+            border-color: #ffd700;
+            background: linear-gradient(90deg, rgba(255,215,0,0.1), transparent);
+        }
+        
+        .kol-entry.unreliable {
+            border-color: #ef4444;
+            background: linear-gradient(90deg, rgba(239,68,68,0.1), transparent);
+        }
+        
+        .kol-entry.pump-dump {
+            border-color: #f97316;
+            background: linear-gradient(90deg, rgba(249,115,22,0.1), transparent);
+        }
+        
+        .kol-rank {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .kol-rank-number {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #888;
+        }
+        
+        .kol-entry.top-performer .kol-rank-number { color: #ffd700; }
+        
+        .kol-rank-medal { font-size: 1.2em; }
+        
+        .kol-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .kol-primary {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .kol-handle {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .kol-label {
+            font-size: 0.85em;
+            color: #888;
+        }
+        
+        .kol-tier {
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        
+        .kol-tier.tier-S {
+            background: linear-gradient(135deg, #ffd700, #ffb800);
+            color: #000;
+        }
+        
+        .kol-tier.tier-A {
+            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+            color: #000;
+        }
+        
+        .kol-tier.tier-B {
+            background: linear-gradient(135deg, #cd7f32, #b87333);
+            color: #fff;
+        }
+        
+        .kol-tier.tier-UNKNOWN {
+            background: #444;
+            color: #888;
+        }
+        
+        .kol-badges {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .kol-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 600;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid #a855f7;
+            color: #a855f7;
+        }
+        
+        .kol-badge.danger {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        
+        .kol-badge.warning {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: #f97316;
+            color: #f97316;
+        }
+        
+        .kol-badge.success {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+        
+        .kol-badge.gold {
+            background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,184,0,0.2));
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+        
+        .kol-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .kol-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+        }
+        
+        .kol-stat-name { color: #888; }
+        
+        .kol-stat-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        
+        .kol-stat-val.good { color: #22c55e; }
+        .kol-stat-val.bad { color: #ef4444; }
+        .kol-stat-val.neutral { color: #eab308; }
+        
+        .kol-reliability {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .kol-reliability-score {
+            font-size: 2em;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .kol-reliability-score.high { color: #22c55e; }
+        .kol-reliability-score.medium { color: #eab308; }
+        .kol-reliability-score.low { color: #ef4444; }
+        
+        .kol-reliability-label {
+            font-size: 0.75em;
+            color: #666;
+        }
+        
+        .kol-trend {
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .kol-trend.improving { color: #22c55e; }
+        .kol-trend.declining { color: #ef4444; }
+        .kol-trend.stable { color: #888; }
+        
+        /* KOL Detail Panel */
+        .kol-detail-panel {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .kol-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .kol-detail-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .kol-detail-name {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .kol-detail-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+        
+        .kol-detail-close:hover { color: #fff; }
+        
+        .kol-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .kol-history-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 15px;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .kol-history-token {
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .kol-history-date { color: #666; }
+        
+        .kol-history-roi {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        
+        .kol-history-roi.positive { color: #22c55e; }
+        .kol-history-roi.negative { color: #ef4444; }
+        
+        .kol-history-status {
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.8em;
+        }
+        
+        .kol-history-status.WIN {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        .kol-history-status.LOSS {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .kol-history-status.OPEN {
+            background: rgba(0, 217, 255, 0.2);
+            color: #00d9ff;
+        }
+        
+        @media (max-width: 768px) {
+            .kol-overview-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .kol-entry {
+                grid-template-columns: 40px 1fr auto;
+            }
+            
+            .kol-stats {
+                display: none;
+            }
+            
+            .kol-history-item {
+                grid-template-columns: 1fr auto;
+            }
+            
+            .kol-history-date {
+                display: none;
+            }
+        }
+        
         /* Responsive Analytics */
         @media (max-width: 1200px) {
             .analytics-summary-grid {
@@ -3146,7 +3841,11 @@
             
             <div class="header-nav" id="desktop-nav">
                 <a href="/landing.html">← Home</a>
+                <button class="portfolio-btn" onclick="showAchievementsModal()">🏆 Achievements</button>
                 <button class="portfolio-btn" onclick="showPortfolioModal()">💰 Portfolio</button>
+                <button class="wallet-connect-btn" id="wallet-connect-btn" onclick="handleWalletConnect()">
+                    <span id="wallet-btn-text">🔗 Connect Wallet</span>
+                </button>
             </div>
             <h1>🔮 ORACLE Alpha</h1>
             <p class="subtitle">On-chain Reliable Alpha Compilation & Learning Engine</p>
@@ -3156,6 +3855,8 @@
         <div class="mobile-nav-overlay" id="mobile-nav">
             <button class="mobile-nav-close" onclick="toggleMobileNav()">×</button>
             <a href="/landing.html">🏠 Home</a>
+            <button onclick="handleWalletConnect(); toggleMobileNav();" id="mobile-wallet-btn">🔗 Connect Wallet</button>
+            <button onclick="showAchievementsModal(); toggleMobileNav();">🏆 Achievements</button>
             <button onclick="showPortfolioModal(); toggleMobileNav();">💰 Portfolio</button>
             <button onclick="toggleSound(); toggleMobileNav();">🔊 Toggle Sound</button>
             <button onclick="showShortcuts(); toggleMobileNav();">⌨️ Keyboard Shortcuts</button>
@@ -3607,6 +4308,10 @@
                     <span class="leaderboard-tab-icon">📈</span>
                     Analytics
                 </button>
+                <button class="leaderboard-tab" data-tab="kol" onclick="switchLeaderboardTab('kol')">
+                    <span class="leaderboard-tab-icon">👑</span>
+                    KOL Tracker
+                </button>
                 
                 <div class="timeframe-selector">
                     <button class="timeframe-btn active" data-timeframe="24h" onclick="setLeaderboardTimeframe('24h')">24H</button>
@@ -3791,6 +4496,64 @@
                         <div class="analytics-sector-grid" id="analytics-sector-grid">
                             <!-- Populated by JS -->
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KOL Tracker Content -->
+            <div id="leaderboard-content-kol" class="leaderboard-content" style="display: none;">
+                <div class="kol-dashboard">
+                    <!-- KOL Overview Stats -->
+                    <div class="kol-overview-stats" id="kol-overview-stats">
+                        <div class="kol-stat-card">
+                            <div class="kol-stat-icon">👑</div>
+                            <div class="kol-stat-value" id="kol-total-count">-</div>
+                            <div class="kol-stat-label">Tracked KOLs</div>
+                        </div>
+                        <div class="kol-stat-card">
+                            <div class="kol-stat-icon">📊</div>
+                            <div class="kol-stat-value" id="kol-total-calls">-</div>
+                            <div class="kol-stat-label">Total Calls</div>
+                        </div>
+                        <div class="kol-stat-card">
+                            <div class="kol-stat-icon">🎯</div>
+                            <div class="kol-stat-value" id="kol-overall-winrate">-%</div>
+                            <div class="kol-stat-label">Avg Win Rate</div>
+                        </div>
+                        <div class="kol-stat-card warning">
+                            <div class="kol-stat-icon">⚠️</div>
+                            <div class="kol-stat-value" id="kol-pump-dump-count">-</div>
+                            <div class="kol-stat-label">Pump & Dump</div>
+                        </div>
+                    </div>
+                    
+                    <!-- KOL Category Tabs -->
+                    <div class="kol-category-tabs">
+                        <button class="kol-category-btn active" data-category="top" onclick="switchKOLCategory('top')">
+                            👑 Top Reliable
+                        </button>
+                        <button class="kol-category-btn" data-category="unreliable" onclick="switchKOLCategory('unreliable')">
+                            ⚠️ Unreliable
+                        </button>
+                        <button class="kol-category-btn" data-category="rising" onclick="switchKOLCategory('rising')">
+                            🌟 Rising Stars
+                        </button>
+                        <button class="kol-category-btn" data-category="active" onclick="switchKOLCategory('active')">
+                            🔥 Most Active
+                        </button>
+                        <button class="kol-category-btn" data-category="pumpndump" onclick="switchKOLCategory('pumpndump')">
+                            🗑️ Pump & Dump
+                        </button>
+                    </div>
+                    
+                    <!-- KOL Leaderboard -->
+                    <div class="kol-leaderboard-grid" id="kol-leaderboard">
+                        <div class="empty-state">Loading KOL data...</div>
+                    </div>
+                    
+                    <!-- KOL Detail Modal Trigger -->
+                    <div id="kol-detail-panel" class="kol-detail-panel" style="display: none;">
+                        <!-- Populated when a KOL is clicked -->
                     </div>
                 </div>
             </div>
@@ -5685,6 +6448,110 @@
         </div>
     </div>
     
+    <!-- Real Swap Modal -->
+    <div class="modal-overlay" id="swap-modal" onclick="closeSwapModal(event)">
+        <div class="modal swap-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">⚡ Swap</span>
+                <button class="modal-close" onclick="closeSwapModal()">&times;</button>
+            </div>
+            <div class="swap-form" id="swap-form">
+                <!-- Signal Info (if trading from signal) -->
+                <div id="swap-signal-info" class="swap-signal-info" style="display: none;">
+                    <span class="signal-badge">📊 Signal: <strong id="swap-signal-symbol">$TOKEN</strong></span>
+                    <span class="signal-score-badge">Score: <strong id="swap-signal-score">0</strong></span>
+                </div>
+                
+                <!-- Input (From) -->
+                <div class="swap-input-group">
+                    <label>You pay</label>
+                    <div class="swap-input-row">
+                        <input type="number" class="swap-amount-input" id="swap-input-amount" 
+                               placeholder="0.0" step="0.01" min="0" onchange="updateSwapQuote()">
+                        <div class="swap-token-badge">
+                            <span class="swap-token-symbol">SOL</span>
+                        </div>
+                    </div>
+                    <div class="swap-balance-row">
+                        <span>Balance: <span id="swap-sol-balance">0.00</span> SOL</span>
+                        <button class="max-btn" onclick="setMaxInput()">MAX</button>
+                    </div>
+                </div>
+                
+                <div class="swap-arrow">↓</div>
+                
+                <!-- Output (To) -->
+                <div class="swap-input-group">
+                    <label>You receive</label>
+                    <div class="swap-input-row">
+                        <span class="swap-output-amount" id="swap-output-amount">0.00</span>
+                        <div class="swap-token-badge">
+                            <span class="swap-token-symbol" id="swap-output-symbol">TOKEN</span>
+                        </div>
+                    </div>
+                    <div class="swap-balance-row">
+                        <span id="swap-min-received">Min. received: 0.00</span>
+                    </div>
+                </div>
+                
+                <!-- Swap Details -->
+                <div class="swap-details" id="swap-details">
+                    <div class="swap-detail-row">
+                        <span class="swap-detail-label">Price Impact</span>
+                        <span id="swap-price-impact">0.00%</span>
+                    </div>
+                    <div class="swap-detail-row">
+                        <span class="swap-detail-label">Network Fee</span>
+                        <span id="swap-network-fee">~0.00001 SOL</span>
+                    </div>
+                    <div class="swap-detail-row">
+                        <span class="swap-detail-label">Route</span>
+                        <span id="swap-route">-</span>
+                    </div>
+                </div>
+                
+                <!-- Slippage Settings -->
+                <div class="swap-settings">
+                    <label>Slippage Tolerance</label>
+                    <div class="swap-presets" id="slippage-presets">
+                        <button class="preset-btn" data-slippage="50" onclick="setSlippage(50)">0.5%</button>
+                        <button class="preset-btn active" data-slippage="100" onclick="setSlippage(100)">1%</button>
+                        <button class="preset-btn" data-slippage="300" onclick="setSlippage(300)">3%</button>
+                        <button class="preset-btn" data-slippage="500" onclick="setSlippage(500)">5%</button>
+                    </div>
+                </div>
+                
+                <!-- Priority Fee -->
+                <div class="swap-settings">
+                    <label>Transaction Speed</label>
+                    <div class="swap-presets" id="priority-presets">
+                        <button class="preset-btn" data-priority="low" onclick="setPriority('low')">🐢 Slow</button>
+                        <button class="preset-btn active" data-priority="medium" onclick="setPriority('medium')">⚡ Normal</button>
+                        <button class="preset-btn" data-priority="high" onclick="setPriority('high')">🚀 Fast</button>
+                        <button class="preset-btn" data-priority="turbo" onclick="setPriority('turbo')">💨 Turbo</button>
+                    </div>
+                </div>
+                
+                <!-- Warnings -->
+                <div class="swap-warnings" id="swap-warnings" style="display: none;">
+                    <div id="swap-warnings-list"></div>
+                </div>
+                
+                <!-- Confirm Button -->
+                <button class="swap-confirm-btn" id="swap-confirm-btn" onclick="executeSwap()" disabled>
+                    Enter amount
+                </button>
+                
+                <div class="trade-disclaimer" style="margin-top: 12px; text-align: center;">
+                    ⚠️ Real trading with your connected wallet. DYOR.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+    
     <!-- Portfolio Modal -->
     <div class="modal-overlay" id="portfolio-modal" onclick="closePortfolioModal(event)">
         <div class="modal portfolio-modal" onclick="event.stopPropagation()">
@@ -5732,6 +6599,510 @@
             </div>
         </div>
     </div>
+    
+    <!-- Achievements Modal -->
+    <div class="modal-overlay" id="achievements-modal" onclick="closeAchievementsModal(event)">
+        <div class="modal achievements-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">🏆 Achievements & Progress</span>
+                <button class="modal-close" onclick="closeAchievementsModal()">&times;</button>
+            </div>
+            <div id="achievements-content">
+                <!-- XP & Level Section -->
+                <div class="achievements-level-section">
+                    <div class="level-display">
+                        <span class="level-badge" id="ach-level-badge">🌱</span>
+                        <div class="level-info">
+                            <div class="level-title" id="ach-level-title">Novice Trader</div>
+                            <div class="level-number">Level <span id="ach-level">1</span></div>
+                        </div>
+                    </div>
+                    <div class="xp-bar-container">
+                        <div class="xp-bar">
+                            <div class="xp-bar-fill" id="ach-xp-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="xp-text">
+                            <span id="ach-xp">0</span> / <span id="ach-xp-next">100</span> XP
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Daily Challenges Banner -->
+                <div class="daily-challenges-banner">
+                    <h4>🎯 Daily Challenges</h4>
+                    <div class="challenges-list" id="daily-challenges-list">
+                        <div class="challenge-item loading">Loading challenges...</div>
+                    </div>
+                </div>
+                
+                <!-- Achievement Stats -->
+                <div class="achievement-stats">
+                    <div class="ach-stat">
+                        <span class="ach-stat-value" id="ach-unlocked">0</span>
+                        <span class="ach-stat-label">Unlocked</span>
+                    </div>
+                    <div class="ach-stat">
+                        <span class="ach-stat-value" id="ach-total">0</span>
+                        <span class="ach-stat-label">Total</span>
+                    </div>
+                    <div class="ach-stat">
+                        <span class="ach-stat-value" id="ach-xp-total">0</span>
+                        <span class="ach-stat-label">XP Earned</span>
+                    </div>
+                </div>
+                
+                <!-- Category Filters -->
+                <div class="achievement-filters">
+                    <button class="ach-filter active" data-category="ALL" onclick="filterAchievements('ALL')">All</button>
+                    <button class="ach-filter" data-category="TRADING" onclick="filterAchievements('TRADING')">💹 Trading</button>
+                    <button class="ach-filter" data-category="DISCOVERY" onclick="filterAchievements('DISCOVERY')">🔍 Discovery</button>
+                    <button class="ach-filter" data-category="SOCIAL" onclick="filterAchievements('SOCIAL')">🌐 Social</button>
+                    <button class="ach-filter" data-category="SKILL" onclick="filterAchievements('SKILL')">🎯 Skill</button>
+                </div>
+                
+                <!-- Achievements Grid -->
+                <div class="achievements-grid" id="achievements-grid">
+                    <div class="achievement-loading">Loading achievements...</div>
+                </div>
+                
+                <!-- Trophy Case (Recent Unlocks) -->
+                <div class="trophy-case">
+                    <h4>🏅 Recent Unlocks</h4>
+                    <div class="trophy-list" id="trophy-list">
+                        <div class="empty-state">No achievements unlocked yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Achievement Modal Styles */
+        .achievements-modal {
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .achievements-level-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(0,217,255,0.1));
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .level-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .level-badge {
+            font-size: 3em;
+            filter: drop-shadow(0 0 10px rgba(168,85,247,0.5));
+        }
+        
+        .level-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .level-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #a855f7;
+        }
+        
+        .level-number {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .xp-bar-container {
+            flex: 1;
+        }
+        
+        .xp-bar {
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a855f7, #00d9ff);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .xp-text {
+            font-size: 0.8em;
+            color: #888;
+            text-align: right;
+        }
+        
+        .daily-challenges-banner {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .daily-challenges-banner h4 {
+            color: #22c55e;
+            margin: 0 0 12px 0;
+            font-size: 1em;
+        }
+        
+        .challenges-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .challenge-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        
+        .challenge-item.completed {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .challenge-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .challenge-icon { font-size: 1.2em; }
+        
+        .challenge-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.9em;
+        }
+        
+        .challenge-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .challenge-progress-bar {
+            width: 60px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .challenge-progress-fill {
+            height: 100%;
+            background: #22c55e;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .challenge-xp {
+            color: #a855f7;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        
+        .achievement-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .ach-stat {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        
+        .ach-stat-value {
+            display: block;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #00d9ff;
+        }
+        
+        .ach-stat-label {
+            font-size: 0.8em;
+            color: #888;
+        }
+        
+        .achievement-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .ach-filter {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid #444;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+        
+        .ach-filter:hover {
+            border-color: #00d9ff;
+            color: #00d9ff;
+        }
+        
+        .ach-filter.active {
+            background: linear-gradient(90deg, #00d9ff, #a855f7);
+            color: #000;
+            border-color: transparent;
+            font-weight: 600;
+        }
+        
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .achievement-card {
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .achievement-card:hover {
+            border-color: #a855f7;
+            transform: translateY(-2px);
+        }
+        
+        .achievement-card.locked {
+            opacity: 0.5;
+        }
+        
+        .achievement-card.unlocked {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        
+        .achievement-card.unlocked::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #22c55e;
+            color: #000;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+        
+        .achievement-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .achievement-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+            font-size: 0.95em;
+        }
+        
+        .achievement-desc {
+            font-size: 0.75em;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        
+        .achievement-tier {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+        
+        .achievement-tier.BRONZE { background: #CD7F32; color: #000; }
+        .achievement-tier.SILVER { background: #C0C0C0; color: #000; }
+        .achievement-tier.GOLD { background: #FFD700; color: #000; }
+        .achievement-tier.DIAMOND { background: #B9F2FF; color: #000; }
+        .achievement-tier.LEGENDARY { background: linear-gradient(90deg, #FF6B6B, #a855f7); color: #fff; }
+        
+        .achievement-progress {
+            margin-top: 8px;
+        }
+        
+        .achievement-progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .achievement-progress-fill {
+            height: 100%;
+            background: #a855f7;
+            border-radius: 2px;
+        }
+        
+        .achievement-xp {
+            font-size: 0.75em;
+            color: #a855f7;
+            margin-top: 4px;
+        }
+        
+        .trophy-case {
+            border-top: 1px solid #333;
+            padding-top: 15px;
+        }
+        
+        .trophy-case h4 {
+            margin: 0 0 12px 0;
+            color: #FFD700;
+        }
+        
+        .trophy-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .trophy-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        .trophy-icon { font-size: 1.5em; }
+        
+        .trophy-name {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #FFD700;
+        }
+        
+        .trophy-date {
+            font-size: 0.7em;
+            color: #888;
+        }
+        
+        /* Achievement Toast Notification */
+        .achievement-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(168,85,247,0.95), rgba(0,217,255,0.95));
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 5px 30px rgba(168,85,247,0.5);
+            z-index: 10000;
+            animation: slideIn 0.5s ease, fadeOut 0.5s ease 4.5s forwards;
+            min-width: 300px;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .toast-icon { font-size: 2.5em; }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.1em;
+        }
+        
+        .toast-subtitle {
+            font-size: 0.85em;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .toast-xp {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .achievements-modal {
+                max-width: 95vw;
+            }
+            
+            .achievements-level-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .achievement-stats {
+                flex-wrap: wrap;
+            }
+            
+            .ach-stat {
+                min-width: 100px;
+            }
+            
+            .achievements-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .achievement-toast {
+                left: 10px;
+                right: 10px;
+                min-width: auto;
+            }
+        }
+    </style>
     
     <style>
         /* Trade Button Styles */
@@ -6268,6 +7639,515 @@
         let soundEnabled = false;
         let currentFilter = 'all';
         
+        // ===== WALLET STATE =====
+        const walletState = {
+            connected: false,
+            publicKey: null,
+            walletType: null,
+            balances: null,
+            currentQuote: null,
+            currentSignal: null,
+            slippageBps: 100,
+            priorityFee: 'medium',
+        };
+        
+        // Solana mint addresses
+        const SOL_MINT = 'So11111111111111111111111111111111111111112';
+        
+        // ===== WALLET CONNECTION =====
+        async function handleWalletConnect() {
+            if (walletState.connected) {
+                // Show wallet menu or disconnect
+                if (confirm('Disconnect wallet?')) {
+                    await disconnectWallet();
+                }
+                return;
+            }
+            
+            // Check for wallet providers
+            const provider = getWalletProvider();
+            if (!provider) {
+                showToast('error', 'No Wallet Found', 'Please install Phantom, Solflare, or Backpack wallet');
+                return;
+            }
+            
+            try {
+                // Request connection
+                const resp = await provider.connect();
+                const publicKey = resp.publicKey.toString();
+                
+                // Register with backend
+                const result = await fetch(`${API_BASE}/api/wallet/connect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        publicKey,
+                        walletType: getWalletType(),
+                    }),
+                }).then(r => r.json());
+                
+                if (result.success) {
+                    walletState.connected = true;
+                    walletState.publicKey = publicKey;
+                    walletState.walletType = getWalletType();
+                    
+                    updateWalletUI();
+                    await fetchWalletBalances();
+                    
+                    showToast('success', 'Wallet Connected', `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`);
+                } else {
+                    showToast('error', 'Connection Failed', result.message);
+                }
+            } catch (err) {
+                console.error('Wallet connection error:', err);
+                showToast('error', 'Connection Failed', err.message || 'User rejected connection');
+            }
+        }
+        
+        async function disconnectWallet() {
+            const provider = getWalletProvider();
+            if (provider && provider.disconnect) {
+                try {
+                    await provider.disconnect();
+                } catch (e) {
+                    // Ignore disconnect errors
+                }
+            }
+            
+            // Notify backend
+            if (walletState.publicKey) {
+                fetch(`${API_BASE}/api/wallet/disconnect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey: walletState.publicKey }),
+                }).catch(() => {});
+            }
+            
+            walletState.connected = false;
+            walletState.publicKey = null;
+            walletState.balances = null;
+            updateWalletUI();
+            showToast('success', 'Wallet Disconnected', 'You have been disconnected');
+        }
+        
+        function getWalletProvider() {
+            // Check for various wallet providers
+            if (window.phantom?.solana?.isPhantom) {
+                return window.phantom.solana;
+            }
+            if (window.solflare?.isSolflare) {
+                return window.solflare;
+            }
+            if (window.backpack?.isBackpack) {
+                return window.backpack;
+            }
+            // Legacy phantom
+            if (window.solana?.isPhantom) {
+                return window.solana;
+            }
+            return null;
+        }
+        
+        function getWalletType() {
+            if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) return 'phantom';
+            if (window.solflare?.isSolflare) return 'solflare';
+            if (window.backpack?.isBackpack) return 'backpack';
+            return 'unknown';
+        }
+        
+        function updateWalletUI() {
+            const btn = document.getElementById('wallet-connect-btn');
+            const btnText = document.getElementById('wallet-btn-text');
+            
+            if (walletState.connected && walletState.publicKey) {
+                btn.classList.add('connected');
+                const shortAddr = `${walletState.publicKey.slice(0, 4)}...${walletState.publicKey.slice(-4)}`;
+                if (walletState.balances) {
+                    btnText.textContent = `${walletState.balances.sol.toFixed(2)} SOL | ${shortAddr}`;
+                } else {
+                    btnText.textContent = `✓ ${shortAddr}`;
+                }
+            } else {
+                btn.classList.remove('connected');
+                btnText.textContent = '🔗 Connect Wallet';
+            }
+        }
+        
+        async function fetchWalletBalances() {
+            if (!walletState.publicKey) return;
+            
+            try {
+                const balances = await fetch(`${API_BASE}/api/wallet/balance/${walletState.publicKey}`).then(r => r.json());
+                walletState.balances = balances;
+                updateWalletUI();
+                
+                // Update swap modal if open
+                document.getElementById('swap-sol-balance').textContent = balances.sol.toFixed(4);
+            } catch (err) {
+                console.error('Failed to fetch balances:', err);
+            }
+        }
+        
+        // ===== SWAP MODAL =====
+        function openSwapModal(signal = null) {
+            if (!walletState.connected) {
+                showToast('warning', 'Connect Wallet', 'Please connect your wallet first');
+                handleWalletConnect();
+                return;
+            }
+            
+            walletState.currentSignal = signal;
+            walletState.currentQuote = null;
+            
+            const modal = document.getElementById('swap-modal');
+            const signalInfo = document.getElementById('swap-signal-info');
+            
+            // Reset form
+            document.getElementById('swap-input-amount').value = '';
+            document.getElementById('swap-output-amount').textContent = '0.00';
+            document.getElementById('swap-min-received').textContent = 'Min. received: 0.00';
+            document.getElementById('swap-confirm-btn').textContent = 'Enter amount';
+            document.getElementById('swap-confirm-btn').disabled = true;
+            document.getElementById('swap-warnings').style.display = 'none';
+            
+            // Update balance
+            if (walletState.balances) {
+                document.getElementById('swap-sol-balance').textContent = walletState.balances.sol.toFixed(4);
+            }
+            
+            // If trading from signal, show signal info
+            if (signal) {
+                signalInfo.style.display = 'flex';
+                document.getElementById('swap-signal-symbol').textContent = '$' + signal.symbol;
+                document.getElementById('swap-signal-score').textContent = signal.score;
+                document.getElementById('swap-output-symbol').textContent = signal.symbol;
+            } else {
+                signalInfo.style.display = 'none';
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeSwapModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('swap-modal').style.display = 'none';
+            walletState.currentQuote = null;
+        }
+        
+        function setSlippage(bps) {
+            walletState.slippageBps = bps;
+            document.querySelectorAll('#slippage-presets .preset-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.slippage) === bps);
+            });
+            updateSwapQuote();
+        }
+        
+        function setPriority(level) {
+            walletState.priorityFee = level;
+            document.querySelectorAll('#priority-presets .preset-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.priority === level);
+            });
+        }
+        
+        function setMaxInput() {
+            if (!walletState.balances) return;
+            // Leave some SOL for gas
+            const maxAmount = Math.max(0, walletState.balances.sol - 0.01);
+            document.getElementById('swap-input-amount').value = maxAmount.toFixed(4);
+            updateSwapQuote();
+        }
+        
+        let quoteDebounce = null;
+        async function updateSwapQuote() {
+            const amount = parseFloat(document.getElementById('swap-input-amount').value);
+            const confirmBtn = document.getElementById('swap-confirm-btn');
+            
+            if (!amount || amount <= 0) {
+                confirmBtn.textContent = 'Enter amount';
+                confirmBtn.disabled = true;
+                document.getElementById('swap-output-amount').textContent = '0.00';
+                return;
+            }
+            
+            if (!walletState.currentSignal) {
+                confirmBtn.textContent = 'Select a token';
+                confirmBtn.disabled = true;
+                return;
+            }
+            
+            // Check balance
+            if (walletState.balances && amount > walletState.balances.sol) {
+                confirmBtn.textContent = 'Insufficient SOL';
+                confirmBtn.disabled = true;
+                return;
+            }
+            
+            // Debounce quote requests
+            if (quoteDebounce) clearTimeout(quoteDebounce);
+            
+            confirmBtn.textContent = 'Getting quote...';
+            confirmBtn.disabled = true;
+            
+            quoteDebounce = setTimeout(async () => {
+                try {
+                    const quote = await fetch(`${API_BASE}/api/wallet/quote`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            inputMint: SOL_MINT,
+                            outputMint: walletState.currentSignal.token,
+                            amount: amount,
+                            slippageBps: walletState.slippageBps,
+                        }),
+                    }).then(r => r.json());
+                    
+                    if (quote.error) {
+                        confirmBtn.textContent = quote.error;
+                        confirmBtn.disabled = true;
+                        return;
+                    }
+                    
+                    walletState.currentQuote = quote;
+                    
+                    // Update UI
+                    const outputAmount = parseFloat(quote.outputAmount) / Math.pow(10, quote.outputDecimals);
+                    const minReceived = parseFloat(quote.minimumReceived) / Math.pow(10, quote.outputDecimals);
+                    
+                    document.getElementById('swap-output-amount').textContent = formatNumber(outputAmount);
+                    document.getElementById('swap-min-received').textContent = `Min. received: ${formatNumber(minReceived)}`;
+                    document.getElementById('swap-price-impact').textContent = quote.priceImpactPct.toFixed(2) + '%';
+                    document.getElementById('swap-network-fee').textContent = `~${quote.estimatedFeesSol.toFixed(5)} SOL`;
+                    
+                    // Show route
+                    if (quote.route && quote.route.length > 0) {
+                        document.getElementById('swap-route').textContent = quote.route.map(r => r.label).join(' → ');
+                    }
+                    
+                    // Run safety check
+                    const safety = await fetch(`${API_BASE}/api/wallet/safety-check`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tokenMint: walletState.currentSignal.token,
+                            inputAmount: amount,
+                            slippageBps: walletState.slippageBps,
+                        }),
+                    }).then(r => r.json());
+                    
+                    // Show warnings
+                    const warningsDiv = document.getElementById('swap-warnings');
+                    const warningsList = document.getElementById('swap-warnings-list');
+                    
+                    if (safety.warnings && safety.warnings.length > 0) {
+                        warningsList.innerHTML = safety.warnings.map(w => 
+                            `<div class="swap-warning-item">⚠️ ${w}</div>`
+                        ).join('');
+                        warningsDiv.style.display = 'block';
+                    } else {
+                        warningsDiv.style.display = 'none';
+                    }
+                    
+                    // Update confirm button
+                    if (!safety.canProceed) {
+                        confirmBtn.textContent = '⛔ Cannot trade - too risky';
+                        confirmBtn.disabled = true;
+                    } else if (amount > 5) {
+                        confirmBtn.textContent = `⚠️ Confirm Swap (${amount.toFixed(2)} SOL)`;
+                        confirmBtn.disabled = false;
+                    } else {
+                        confirmBtn.textContent = 'Confirm Swap';
+                        confirmBtn.disabled = false;
+                    }
+                    
+                } catch (err) {
+                    console.error('Quote error:', err);
+                    confirmBtn.textContent = 'Failed to get quote';
+                    confirmBtn.disabled = true;
+                }
+            }, 500);
+        }
+        
+        async function executeSwap() {
+            if (!walletState.connected || !walletState.currentQuote) return;
+            
+            const confirmBtn = document.getElementById('swap-confirm-btn');
+            confirmBtn.textContent = 'Building transaction...';
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('loading');
+            
+            try {
+                // Build transaction
+                const txResponse = await fetch(`${API_BASE}/api/wallet/swap/build`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        quoteId: walletState.currentQuote.quoteId,
+                        publicKey: walletState.publicKey,
+                        priorityFee: walletState.priorityFee,
+                    }),
+                }).then(r => r.json());
+                
+                if (txResponse.error) {
+                    showToast('error', 'Transaction Failed', txResponse.error);
+                    confirmBtn.textContent = 'Confirm Swap';
+                    confirmBtn.disabled = false;
+                    confirmBtn.classList.remove('loading');
+                    return;
+                }
+                
+                // Sign transaction with wallet
+                confirmBtn.textContent = 'Sign in wallet...';
+                
+                const provider = getWalletProvider();
+                const txBuffer = Uint8Array.from(atob(txResponse.serializedTransaction), c => c.charCodeAt(0));
+                
+                // Sign and send
+                const { signature } = await provider.signAndSendTransaction({
+                    serialize: () => txBuffer,
+                });
+                
+                confirmBtn.textContent = 'Confirming...';
+                
+                // Confirm with backend
+                const result = await fetch(`${API_BASE}/api/wallet/swap/confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        signature,
+                        blockhash: txResponse.blockhash,
+                        lastValidBlockHeight: txResponse.lastValidBlockHeight,
+                        publicKey: walletState.publicKey,
+                        quote: walletState.currentQuote,
+                    }),
+                }).then(r => r.json());
+                
+                if (result.success) {
+                    showToast('success', 'Swap Successful!', 
+                        `Swapped ${result.inputAmount.toFixed(4)} ${result.inputSymbol} for ${formatNumber(result.outputAmount)} ${result.outputSymbol}`,
+                        result.explorerUrl
+                    );
+                    closeSwapModal();
+                    fetchWalletBalances();
+                } else {
+                    showToast('error', 'Swap Failed', result.error || 'Transaction failed');
+                }
+                
+            } catch (err) {
+                console.error('Swap error:', err);
+                if (err.message?.includes('User rejected')) {
+                    showToast('warning', 'Cancelled', 'Transaction was cancelled');
+                } else {
+                    showToast('error', 'Swap Failed', err.message || 'Unknown error');
+                }
+            } finally {
+                confirmBtn.textContent = 'Confirm Swap';
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('loading');
+            }
+        }
+        
+        // ===== TOAST NOTIFICATIONS =====
+        function showToast(type, title, message, link = null) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+            
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <span class="toast-title">${icon} ${title}</span>
+                    <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="toast-body">${message}</div>
+                ${link ? `<a class="toast-link" href="${link}" target="_blank">View on Explorer →</a>` : ''}
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 5s
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            if (num >= 1) return num.toFixed(2);
+            if (num >= 0.0001) return num.toFixed(4);
+            return num.toExponential(2);
+        }
+        
+        // Trade Now button click handler
+        function tradeNow(signalId) {
+            const signal = signals.find(s => s.id === signalId);
+            if (signal) {
+                openSwapModal(signal);
+            }
+        }
+        
+        // Check wallet connection on page load
+        async function checkWalletConnection() {
+            const provider = getWalletProvider();
+            if (provider && provider.isConnected) {
+                try {
+                    const publicKey = provider.publicKey?.toString();
+                    if (publicKey) {
+                        // Re-register with backend
+                        const result = await fetch(`${API_BASE}/api/wallet/connect`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                publicKey,
+                                walletType: getWalletType(),
+                            }),
+                        }).then(r => r.json());
+                        
+                        if (result.success) {
+                            walletState.connected = true;
+                            walletState.publicKey = publicKey;
+                            walletState.walletType = getWalletType();
+                            updateWalletUI();
+                            fetchWalletBalances();
+                        }
+                    }
+                } catch (e) {
+                    console.log('No existing wallet connection');
+                }
+            }
+        }
+        
+        // Listen for wallet events
+        function setupWalletListeners() {
+            const provider = getWalletProvider();
+            if (provider) {
+                provider.on?.('disconnect', () => {
+                    walletState.connected = false;
+                    walletState.publicKey = null;
+                    walletState.balances = null;
+                    updateWalletUI();
+                });
+                
+                provider.on?.('accountChanged', (publicKey) => {
+                    if (publicKey) {
+                        walletState.publicKey = publicKey.toString();
+                        fetchWalletBalances();
+                    } else {
+                        disconnectWallet();
+                    }
+                });
+            }
+        }
+        
+        // Initialize wallet on load
+        setTimeout(() => {
+            checkWalletConnection();
+            setupWalletListeners();
+        }, 500);
+        
         // Mobile Navigation Toggle
         function toggleMobileNav() {
             const mobileNav = document.getElementById('mobile-nav');
@@ -6768,6 +8648,291 @@
         }
         
         // Portfolio Functions
+        // === ACHIEVEMENTS SYSTEM ===
+        let achievementsData = [];
+        let currentAchievementFilter = 'ALL';
+        const ACHIEVEMENT_USER_ID = localStorage.getItem('oracle_user_id') || 'user_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('oracle_user_id', ACHIEVEMENT_USER_ID);
+        
+        function showAchievementsModal() {
+            document.getElementById('achievements-modal').classList.add('active');
+            loadAchievementsData();
+        }
+        
+        function closeAchievementsModal(event) {
+            if (event && event.target && !event.target.classList.contains('modal-overlay')) return;
+            document.getElementById('achievements-modal').classList.remove('active');
+        }
+        
+        async function loadAchievementsData() {
+            try {
+                // Load user progress
+                const userRes = await fetch(`${API_BASE}/api/achievements/user/${ACHIEVEMENT_USER_ID}`);
+                const userData = await userRes.json();
+                
+                // Update level display
+                document.getElementById('ach-level-badge').textContent = userData.level.badge;
+                document.getElementById('ach-level-title').textContent = userData.level.title;
+                document.getElementById('ach-level').textContent = userData.level.current;
+                document.getElementById('ach-xp').textContent = userData.level.xp;
+                document.getElementById('ach-xp-next').textContent = userData.level.xp + userData.level.xpToNextLevel;
+                document.getElementById('ach-xp-bar').style.width = userData.level.xpProgress + '%';
+                
+                // Update stats
+                document.getElementById('ach-unlocked').textContent = userData.achievements.unlocked;
+                document.getElementById('ach-total').textContent = userData.achievements.total;
+                document.getElementById('ach-xp-total').textContent = userData.level.xp;
+                
+                // Load daily challenges
+                renderDailyChallenges(userData.challenges.daily);
+                
+                // Load all achievements
+                const achRes = await fetch(`${API_BASE}/api/achievements?userId=${ACHIEVEMENT_USER_ID}`);
+                const achData = await achRes.json();
+                achievementsData = achData.achievements;
+                
+                renderAchievements(achievementsData);
+                
+                // Render recent unlocks
+                renderTrophyCase(userData.achievements.recent);
+                
+            } catch (error) {
+                console.error('Failed to load achievements:', error);
+                document.getElementById('achievements-grid').innerHTML = 
+                    '<div class="empty-state">Failed to load achievements</div>';
+            }
+        }
+        
+        function renderDailyChallenges(challenges) {
+            const container = document.getElementById('daily-challenges-list');
+            
+            if (!challenges || challenges.length === 0) {
+                container.innerHTML = '<div class="empty-state">No challenges available</div>';
+                return;
+            }
+            
+            container.innerHTML = challenges.map(c => {
+                const progressPct = Math.min(100, (c.progress / c.requirement.threshold) * 100);
+                return `
+                    <div class="challenge-item ${c.completed ? 'completed' : ''}">
+                        <div class="challenge-info">
+                            <span class="challenge-icon">${c.icon}</span>
+                            <span class="challenge-name">${c.name}</span>
+                        </div>
+                        <div class="challenge-progress">
+                            <div class="challenge-progress-bar">
+                                <div class="challenge-progress-fill" style="width: ${progressPct}%"></div>
+                            </div>
+                            <span class="challenge-xp">${c.completed ? '✓' : `+${c.xpReward} XP`}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderAchievements(achievements) {
+            const container = document.getElementById('achievements-grid');
+            
+            // Filter by category
+            let filtered = achievements;
+            if (currentAchievementFilter !== 'ALL') {
+                filtered = achievements.filter(a => a.category === currentAchievementFilter);
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">No achievements in this category</div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(a => {
+                const progressPct = a.progressPercent || 0;
+                return `
+                    <div class="achievement-card ${a.unlocked ? 'unlocked' : 'locked'}" 
+                         onclick="showAchievementDetails('${a.id}')" 
+                         title="${a.description}">
+                        <div class="achievement-icon">${a.icon}</div>
+                        <div class="achievement-name">${a.name}</div>
+                        <div class="achievement-desc">${a.description}</div>
+                        <span class="achievement-tier ${a.tier}">${a.tier}</span>
+                        ${!a.unlocked ? `
+                            <div class="achievement-progress">
+                                <div class="achievement-progress-bar">
+                                    <div class="achievement-progress-fill" style="width: ${progressPct}%"></div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div class="achievement-xp">+${a.xpReward} XP</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderTrophyCase(recent) {
+            const container = document.getElementById('trophy-list');
+            
+            if (!recent || recent.length === 0) {
+                container.innerHTML = '<div class="empty-state">No achievements unlocked yet</div>';
+                return;
+            }
+            
+            container.innerHTML = recent.map(r => {
+                const achievement = achievementsData.find(a => a.id === r.achievementId) || {};
+                const date = new Date(r.unlockedAt);
+                return `
+                    <div class="trophy-item">
+                        <span class="trophy-icon">${achievement.icon || '🏆'}</span>
+                        <div>
+                            <div class="trophy-name">${achievement.name || 'Achievement'}</div>
+                            <div class="trophy-date">${date.toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filterAchievements(category) {
+            currentAchievementFilter = category;
+            
+            // Update active button
+            document.querySelectorAll('.ach-filter').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+            
+            renderAchievements(achievementsData);
+        }
+        
+        function showAchievementDetails(achievementId) {
+            const achievement = achievementsData.find(a => a.id === achievementId);
+            if (!achievement) return;
+            
+            // Could show a detailed modal, for now just show an alert with share option
+            if (achievement.unlocked) {
+                const share = confirm(`🏆 ${achievement.name}\n\n${achievement.description}\n\nTier: ${achievement.tier}\nXP: +${achievement.xpReward}\n\nShare this achievement?`);
+                if (share) {
+                    shareAchievement(achievementId);
+                }
+            } else {
+                alert(`🔒 ${achievement.name}\n\n${achievement.description}\n\nProgress: ${achievement.progressPercent?.toFixed(0) || 0}%\n\nKeep trading to unlock!`);
+            }
+        }
+        
+        async function shareAchievement(achievementId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/achievements/${achievementId}/share?userId=${ACHIEVEMENT_USER_ID}`);
+                const data = await res.json();
+                
+                if (navigator.share) {
+                    await navigator.share({
+                        title: `🏆 ${data.achievement.name}`,
+                        text: data.shareText,
+                        url: data.shareUrl
+                    });
+                } else {
+                    // Fallback: copy to clipboard
+                    navigator.clipboard.writeText(data.shareText);
+                    showToast('Copied to clipboard!', 'success');
+                }
+            } catch (error) {
+                console.error('Share failed:', error);
+            }
+        }
+        
+        // Show achievement toast notification
+        function showAchievementToast(achievement) {
+            const toast = document.createElement('div');
+            toast.className = 'achievement-toast';
+            toast.innerHTML = `
+                <span class="toast-icon">${achievement.icon}</span>
+                <div class="toast-content">
+                    <div class="toast-title">🎉 Achievement Unlocked!</div>
+                    <div class="toast-subtitle">${achievement.name}</div>
+                </div>
+                <span class="toast-xp">+${achievement.xpReward} XP</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Play sound if enabled
+            if (typeof playSound === 'function') {
+                playSound('achievement');
+            }
+            
+            // Remove after animation
+            setTimeout(() => toast.remove(), 5000);
+        }
+        
+        // Record signal view for achievements
+        async function recordSignalViewForAchievements(signalId) {
+            try {
+                await fetch(`${API_BASE}/api/achievements/view`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: ACHIEVEMENT_USER_ID, signalId })
+                });
+            } catch (e) { /* ignore */ }
+        }
+        
+        // Record share for achievements
+        async function recordShareForAchievements(signalId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/achievements/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: ACHIEVEMENT_USER_ID, signalId })
+                });
+                const data = await res.json();
+                
+                // Show toast for any new unlocks
+                if (data.unlocks && data.unlocks.length > 0) {
+                    data.unlocks.forEach(u => {
+                        showAchievementToast(u);
+                    });
+                }
+            } catch (e) { /* ignore */ }
+        }
+        
+        // Check for unnotified achievements on page load
+        async function checkUnnotifiedAchievements() {
+            try {
+                const res = await fetch(`${API_BASE}/api/achievements/unnotified?userId=${ACHIEVEMENT_USER_ID}`);
+                const data = await res.json();
+                
+                if (data.achievements && data.achievements.length > 0) {
+                    // Show toast for each
+                    data.achievements.forEach((a, i) => {
+                        setTimeout(() => {
+                            showAchievementToast(a);
+                            // Mark as notified
+                            fetch(`${API_BASE}/api/achievements/${a.id}/notified`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: ACHIEVEMENT_USER_ID })
+                            });
+                        }, i * 2000);
+                    });
+                }
+            } catch (e) { /* ignore */ }
+        }
+        
+        // Generate demo achievements data
+        async function generateDemoAchievements() {
+            try {
+                await fetch(`${API_BASE}/api/achievements/demo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: ACHIEVEMENT_USER_ID })
+                });
+                loadAchievementsData();
+            } catch (e) {
+                console.error('Failed to generate demo achievements:', e);
+            }
+        }
+        
+        // Load achievements check on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkUnnotifiedAchievements, 3000);
+        });
+        
         function showPortfolioModal() {
             document.getElementById('portfolio-modal').classList.add('active');
             loadPortfolio();
@@ -7045,7 +9210,8 @@
                 return `
                 <div class="signal-card ${idx === 0 ? 'new' : ''}">
                     <div class="signal-actions">
-                        <button class="action-btn trade-btn" onclick="showTradeModal('${signal.id}', '${signal.token}', '${signal.symbol}', ${signal.score})" title="Trade">💱</button>
+                        <button class="trade-now-btn" onclick="tradeNow('${signal.id}')" title="Real Trade">⚡ Trade</button>
+                        <button class="action-btn trade-btn" onclick="showTradeModal('${signal.id}', '${signal.token}', '${signal.symbol}', ${signal.score})" title="Paper Trade">📝</button>
                         <button class="action-btn risk-btn" onclick="calculateRiskForSignal('${signal.id}', '${signal.symbol}', ${signal.score}, '${signal.riskLevel}')" title="Calculate Risk">📊</button>
                         <button class="action-btn why-btn" onclick="showExplanation('${signal.id}')" title="Why this signal?">🧠 Why?</button>
                         <button class="action-btn" onclick="copyToClipboard('${signal.token}')" title="Copy CA">📋</button>
@@ -8984,6 +11150,8 @@
             // Load data based on tab
             if (tab === 'analytics') {
                 loadAnalyticsData();
+            } else if (tab === 'kol') {
+                loadKOLData();
             } else {
                 loadLeaderboardData();
             }
@@ -9259,6 +11427,276 @@
                 const badgeClass = badgeClasses[badge.type] || 'bronze';
                 return `<span class="lb-badge ${badgeClass}" title="${badge.description}">${badge.icon} ${badge.label}</span>`;
             }).join('');
+        }
+        
+        // ===== KOL TRACKER FUNCTIONS =====
+        
+        let currentKOLCategory = 'top';
+        let kolData = null;
+        
+        async function loadKOLData() {
+            try {
+                // Load KOL dashboard data
+                const res = await fetch(`${API_BASE}/api/kol/dashboard`);
+                const data = await res.json();
+                
+                // Update overview stats
+                updateKOLOverviewStats(data.overview);
+                
+                // Load leaderboard
+                const lbRes = await fetch(`${API_BASE}/api/kol/leaderboard?limit=20`);
+                kolData = await lbRes.json();
+                
+                // Render current category
+                renderKOLLeaderboard(currentKOLCategory);
+                
+            } catch (e) {
+                console.error('Failed to load KOL data:', e);
+                document.getElementById('kol-leaderboard').innerHTML = 
+                    '<div class="empty-state">Failed to load KOL data. Try refreshing.</div>';
+            }
+        }
+        
+        function updateKOLOverviewStats(overview) {
+            if (!overview) return;
+            
+            document.getElementById('kol-total-count').textContent = overview.totalKOLs || 0;
+            document.getElementById('kol-total-calls').textContent = overview.totalCalls || 0;
+            document.getElementById('kol-overall-winrate').textContent = 
+                (overview.overallWinRate || 0).toFixed(1) + '%';
+            document.getElementById('kol-pump-dump-count').textContent = 
+                overview.pumpAndDumpCount || 0;
+        }
+        
+        function switchKOLCategory(category) {
+            currentKOLCategory = category;
+            
+            // Update category buttons
+            document.querySelectorAll('.kol-category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+            
+            // Render leaderboard for selected category
+            renderKOLLeaderboard(category);
+        }
+        
+        function renderKOLLeaderboard(category) {
+            const container = document.getElementById('kol-leaderboard');
+            
+            if (!kolData) {
+                container.innerHTML = '<div class="empty-state">Loading KOL data...</div>';
+                return;
+            }
+            
+            let kols = [];
+            let emptyMessage = 'No data';
+            
+            switch (category) {
+                case 'top':
+                    kols = kolData.topReliable || [];
+                    emptyMessage = 'No reliable KOLs tracked yet';
+                    break;
+                case 'unreliable':
+                    kols = kolData.unreliable || [];
+                    emptyMessage = 'No unreliable KOLs identified (yet)';
+                    break;
+                case 'rising':
+                    kols = kolData.risingStars || [];
+                    emptyMessage = 'No rising stars yet';
+                    break;
+                case 'active':
+                    kols = kolData.mostActive || [];
+                    emptyMessage = 'No active KOLs tracked';
+                    break;
+                case 'pumpndump':
+                    kols = kolData.pumpAndDump || [];
+                    emptyMessage = 'No pump & dump KOLs detected';
+                    break;
+            }
+            
+            if (!kols || kols.length === 0) {
+                container.innerHTML = `<div class="empty-state">${emptyMessage}</div>`;
+                return;
+            }
+            
+            container.innerHTML = kols.map((kol, idx) => renderKOLEntry(kol, idx + 1, category)).join('');
+        }
+        
+        function renderKOLEntry(kol, rank, category) {
+            const reliabilityClass = kol.reliabilityScore >= 70 ? 'high' 
+                : kol.reliabilityScore >= 40 ? 'medium' : 'low';
+            
+            const entryClass = category === 'top' && rank <= 3 ? 'top-performer'
+                : category === 'unreliable' ? 'unreliable'
+                : category === 'pumpndump' ? 'pump-dump' : '';
+            
+            const medal = rank === 1 && category === 'top' ? '🥇' 
+                : rank === 2 && category === 'top' ? '🥈'
+                : rank === 3 && category === 'top' ? '🥉' : '';
+            
+            const trendIcon = kol.reliabilityTrend === 'IMPROVING' ? '📈'
+                : kol.reliabilityTrend === 'DECLINING' ? '📉' : '➡️';
+            
+            const trendClass = kol.reliabilityTrend?.toLowerCase() || 'stable';
+            
+            const winRateClass = kol.stats.winRate >= 55 ? 'good' 
+                : kol.stats.winRate >= 45 ? 'neutral' : 'bad';
+            
+            const roiClass = kol.stats.avgRoi >= 0 ? 'good' : 'bad';
+            
+            // Render badges
+            const badges = (kol.badges || []).map(badge => {
+                let badgeClass = '';
+                if (badge.includes('👑') || badge.includes('🎯')) badgeClass = 'gold';
+                else if (badge.includes('⚠️') || badge.includes('📉')) badgeClass = 'warning';
+                else if (badge.includes('🗑️') || badge.includes('❄️')) badgeClass = 'danger';
+                else if (badge.includes('🔥') || badge.includes('🚀')) badgeClass = 'success';
+                return `<span class="kol-badge ${badgeClass}">${badge}</span>`;
+            }).join('');
+            
+            return `
+                <div class="kol-entry ${entryClass}" onclick="showKOLDetail('${kol.handle}')">
+                    <div class="kol-rank">
+                        ${medal ? `<span class="kol-rank-medal">${medal}</span>` : `<span class="kol-rank-number">#${rank}</span>`}
+                    </div>
+                    <div class="kol-info">
+                        <div class="kol-primary">
+                            <span class="kol-handle">@${kol.handle}</span>
+                            <span class="kol-tier tier-${kol.tier}">${kol.tier}</span>
+                            <span class="kol-label">${kol.label}</span>
+                        </div>
+                        <div class="kol-badges">${badges}</div>
+                    </div>
+                    <div class="kol-stats">
+                        <div class="kol-stat-row">
+                            <span class="kol-stat-name">Win Rate</span>
+                            <span class="kol-stat-val ${winRateClass}">${kol.stats.winRate.toFixed(1)}%</span>
+                        </div>
+                        <div class="kol-stat-row">
+                            <span class="kol-stat-name">Avg ROI</span>
+                            <span class="kol-stat-val ${roiClass}">${kol.stats.avgRoi >= 0 ? '+' : ''}${kol.stats.avgRoi.toFixed(1)}%</span>
+                        </div>
+                        <div class="kol-stat-row">
+                            <span class="kol-stat-name">Calls</span>
+                            <span class="kol-stat-val">${kol.stats.totalCalls}</span>
+                        </div>
+                    </div>
+                    <div class="kol-reliability">
+                        <div class="kol-reliability-score ${reliabilityClass}">${kol.reliabilityScore}</div>
+                        <div class="kol-reliability-label">Reliability</div>
+                        <div class="kol-trend ${trendClass}">${trendIcon} ${kol.reliabilityTrend}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function showKOLDetail(handle) {
+            const panel = document.getElementById('kol-detail-panel');
+            
+            try {
+                // Fetch KOL stats and history
+                const [statsRes, historyRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/kol/${handle}/stats`),
+                    fetch(`${API_BASE}/api/kol/${handle}/history?limit=20`)
+                ]);
+                
+                const statsData = await statsRes.json();
+                const historyData = await historyRes.json();
+                
+                if (!statsData.kol) {
+                    alert('Failed to load KOL details');
+                    return;
+                }
+                
+                const kol = statsData.kol;
+                const history = historyData.calls || [];
+                
+                const reliabilityClass = kol.reliabilityScore >= 70 ? 'high'
+                    : kol.reliabilityScore >= 40 ? 'medium' : 'low';
+                
+                panel.innerHTML = `
+                    <div class="kol-detail-header">
+                        <div class="kol-detail-title">
+                            <span class="kol-tier tier-${kol.tier}">${kol.tier}</span>
+                            <span class="kol-detail-name">@${kol.handle}</span>
+                            <span style="color: #888;">(${kol.label})</span>
+                        </div>
+                        <button class="kol-detail-close" onclick="closeKOLDetail()">✕</button>
+                    </div>
+                    
+                    <div class="kol-overview-stats" style="margin-bottom: 20px;">
+                        <div class="kol-stat-card">
+                            <div class="kol-stat-value ${reliabilityClass}">${kol.reliabilityScore}</div>
+                            <div class="kol-stat-label">Reliability Score</div>
+                        </div>
+                        <div class="kol-stat-card">
+                            <div class="kol-stat-value" style="color: #22c55e;">${kol.stats.winRate.toFixed(1)}%</div>
+                            <div class="kol-stat-label">Win Rate</div>
+                        </div>
+                        <div class="kol-stat-card">
+                            <div class="kol-stat-value">${kol.stats.avgRoi >= 0 ? '+' : ''}${kol.stats.avgRoi.toFixed(1)}%</div>
+                            <div class="kol-stat-label">Avg ROI</div>
+                        </div>
+                        <div class="kol-stat-card">
+                            <div class="kol-stat-value">${kol.stats.totalCalls}</div>
+                            <div class="kol-stat-label">Total Calls</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kol-badges" style="margin-bottom: 20px;">
+                        ${(kol.badges || []).map(b => `<span class="kol-badge">${b}</span>`).join('')}
+                    </div>
+                    
+                    ${kol.riskIndicators.isPumpAndDump ? `
+                        <div style="background: rgba(249,115,22,0.2); border: 1px solid #f97316; padding: 10px; border-radius: 8px; margin-bottom: 20px; color: #f97316;">
+                            ⚠️ <strong>Warning:</strong> This KOL has been flagged for pump & dump patterns (Score: ${kol.riskIndicators.pumpAndDumpScore})
+                        </div>
+                    ` : ''}
+                    
+                    <h4 style="color: #a855f7; margin-bottom: 10px;">📜 Recent Calls</h4>
+                    <div class="kol-history-list">
+                        ${history.length === 0 ? '<div class="empty-state">No call history</div>' : 
+                            history.map(call => `
+                                <div class="kol-history-item">
+                                    <div>
+                                        <span class="kol-history-token">$${call.symbol}</span>
+                                    </div>
+                                    <div class="kol-history-date">${new Date(call.timestamp).toLocaleDateString()}</div>
+                                    <div class="kol-history-roi ${call.roi.current >= 0 ? 'positive' : 'negative'}">
+                                        ${call.roi.current >= 0 ? '+' : ''}${call.roi.current.toFixed(1)}%
+                                    </div>
+                                    <div class="kol-history-status ${call.status}">${call.status}</div>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                    
+                    ${kol.bestCall ? `
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(34,197,94,0.1); border-radius: 8px;">
+                            <strong style="color: #22c55e;">🏆 Best Call:</strong> 
+                            $${kol.bestCall.symbol} (+${kol.bestCall.roi.toFixed(1)}%)
+                        </div>
+                    ` : ''}
+                    
+                    ${kol.worstCall ? `
+                        <div style="margin-top: 10px; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 8px;">
+                            <strong style="color: #ef4444;">💀 Worst Call:</strong> 
+                            $${kol.worstCall.symbol} (${kol.worstCall.roi.toFixed(1)}%)
+                        </div>
+                    ` : ''}
+                `;
+                
+                panel.style.display = 'block';
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (e) {
+                console.error('Failed to load KOL detail:', e);
+                alert('Failed to load KOL details');
+            }
+        }
+        
+        function closeKOLDetail() {
+            document.getElementById('kol-detail-panel').style.display = 'none';
         }
         
         // ===== ANALYTICS FUNCTIONS =====

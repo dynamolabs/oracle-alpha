@@ -551,6 +551,126 @@ function generateRiskFactors(signal: AggregatedSignal): RiskFactor[] {
     });
   }
   
+  // Wash trading detection
+  if (signal.safety?.washScore !== undefined) {
+    const washScore = signal.safety.washScore;
+    let status: 'SAFE' | 'CAUTION' | 'RISKY' | 'OK' = 'SAFE';
+    
+    if (washScore >= 70) status = 'RISKY';
+    else if (washScore >= 50) status = 'CAUTION';
+    else if (washScore >= 30) status = 'OK';
+    else status = 'SAFE';
+    
+    const riskLabel = signal.safety.washRiskLevel || 
+      (washScore >= 80 ? 'EXTREME' : washScore >= 60 ? 'HIGH' : washScore >= 40 ? 'MEDIUM' : 'LOW');
+    
+    factors.push({
+      factor: '🚿 Wash Score',
+      value: `${washScore} (${riskLabel})`,
+      status,
+      icon: status === 'SAFE' ? '✅' : status === 'OK' ? '👌' : status === 'CAUTION' ? '⚠️' : '🚨'
+    });
+    
+    // Real volume percentage
+    if (signal.safety.washVolumePercent !== undefined && washScore >= 30) {
+      const realPercent = 100 - signal.safety.washVolumePercent;
+      factors.push({
+        factor: 'Real Volume',
+        value: `~${realPercent}%`,
+        status: realPercent >= 80 ? 'SAFE' : realPercent >= 50 ? 'OK' : realPercent >= 30 ? 'CAUTION' : 'RISKY',
+        icon: realPercent >= 80 ? '✅' : realPercent >= 50 ? '👌' : realPercent >= 30 ? '⚠️' : '🚨'
+      });
+    }
+    
+    // Self-trading detected
+    if (signal.safety.selfTradeCount !== undefined && signal.safety.selfTradeCount > 0) {
+      factors.push({
+        factor: 'Self-Trades',
+        value: `${signal.safety.selfTradeCount} cycle${signal.safety.selfTradeCount > 1 ? 's' : ''}`,
+        status: signal.safety.selfTradeCount >= 10 ? 'RISKY' : signal.safety.selfTradeCount >= 5 ? 'CAUTION' : 'OK',
+        icon: signal.safety.selfTradeCount >= 10 ? '🚨' : signal.safety.selfTradeCount >= 5 ? '⚠️' : '👀'
+      });
+    }
+    
+    // Circular patterns
+    if (signal.safety.circularPatternCount !== undefined && signal.safety.circularPatternCount > 0) {
+      factors.push({
+        factor: 'Circular Trades',
+        value: `${signal.safety.circularPatternCount} pattern${signal.safety.circularPatternCount > 1 ? 's' : ''}`,
+        status: signal.safety.circularPatternCount >= 5 ? 'RISKY' : signal.safety.circularPatternCount >= 2 ? 'CAUTION' : 'OK',
+        icon: signal.safety.circularPatternCount >= 5 ? '🚨' : signal.safety.circularPatternCount >= 2 ? '⚠️' : '🔁'
+      });
+    }
+  }
+  
+  // Sniper/Front-runner detection
+  if (signal.safety?.sniperActivity) {
+    const sniper = signal.safety.sniperActivity;
+    
+    // Sniper score
+    let sniperStatus: 'SAFE' | 'CAUTION' | 'RISKY' | 'OK' = 'SAFE';
+    if (sniper.sniperScore >= 60) sniperStatus = 'RISKY';
+    else if (sniper.sniperScore >= 40) sniperStatus = 'CAUTION';
+    else if (sniper.sniperScore >= 20) sniperStatus = 'OK';
+    
+    factors.push({
+      factor: '🎯 Sniper Score',
+      value: `${sniper.sniperScore} (${sniper.sniperRisk})`,
+      status: sniperStatus,
+      icon: sniperStatus === 'SAFE' ? '✅' : sniperStatus === 'OK' ? '👌' : sniperStatus === 'CAUTION' ? '⚠️' : '🚨'
+    });
+    
+    // Total snipers
+    if (sniper.totalSnipers > 0) {
+      factors.push({
+        factor: 'Total Snipers',
+        value: `${sniper.totalSnipers} wallet${sniper.totalSnipers > 1 ? 's' : ''}`,
+        status: sniper.totalSnipers >= 10 ? 'RISKY' : sniper.totalSnipers >= 5 ? 'CAUTION' : 'OK',
+        icon: sniper.totalSnipers >= 10 ? '🚨' : sniper.totalSnipers >= 5 ? '⚠️' : '🎯'
+      });
+    }
+    
+    // Block 0 buyers (same block as launch = highly suspicious)
+    if (sniper.block0Buyers > 0) {
+      factors.push({
+        factor: 'Block 0 Buyers',
+        value: `${sniper.block0Buyers} sniper${sniper.block0Buyers > 1 ? 's' : ''}`,
+        status: sniper.block0Buyers >= 5 ? 'RISKY' : sniper.block0Buyers >= 2 ? 'CAUTION' : 'OK',
+        icon: sniper.block0Buyers >= 5 ? '🚨' : '⚡'
+      });
+    }
+    
+    // Known MEV bots
+    if (sniper.knownMEVBots > 0) {
+      factors.push({
+        factor: 'MEV Bots',
+        value: `${sniper.knownMEVBots} detected`,
+        status: 'RISKY',
+        icon: '🤖'
+      });
+    }
+    
+    // Sniper supply percentage
+    if (sniper.sniperSupplyPercent >= 10) {
+      factors.push({
+        factor: 'Sniper Holdings',
+        value: `${sniper.sniperSupplyPercent.toFixed(1)}%`,
+        status: sniper.sniperSupplyPercent >= 40 ? 'RISKY' : sniper.sniperSupplyPercent >= 20 ? 'CAUTION' : 'OK',
+        icon: sniper.sniperSupplyPercent >= 40 ? '🚨' : sniper.sniperSupplyPercent >= 20 ? '⚠️' : '📊'
+      });
+    }
+    
+    // Dump probability
+    if (sniper.dumpProbability >= 30) {
+      factors.push({
+        factor: 'Dump Risk',
+        value: `${sniper.dumpProbability.toFixed(0)}%`,
+        status: sniper.dumpProbability >= 70 ? 'RISKY' : sniper.dumpProbability >= 50 ? 'CAUTION' : 'OK',
+        icon: sniper.dumpProbability >= 70 ? '🚨' : sniper.dumpProbability >= 50 ? '⚠️' : '📉'
+      });
+    }
+  }
+  
   return factors;
 }
 
@@ -637,6 +757,31 @@ function generateConclusion(
     conclusion += ` 🚨 HIGH BUNDLE SCORE (${signal.safety.bundleScore}) - potential coordinated buying detected!`;
   } else if (signal.safety?.bundleScore !== undefined && signal.safety.bundleScore >= 40) {
     conclusion += ` ⚠️ Moderate bundle activity detected (score: ${signal.safety.bundleScore}).`;
+  }
+  
+  // Wash trading warning
+  if (signal.safety?.washScore !== undefined && signal.safety.washScore >= 70) {
+    const realPct = signal.safety.washVolumePercent !== undefined ? (100 - signal.safety.washVolumePercent) : null;
+    const realVolStr = realPct !== null ? ` Only ~${realPct}% of volume is real.` : '';
+    conclusion += ` 🚿🚨 EXTREME WASH TRADING (${signal.safety.washScore}) - most volume is fake!${realVolStr}`;
+  } else if (signal.safety?.washScore !== undefined && signal.safety.washScore >= 50) {
+    conclusion += ` 🚿⚠️ High wash trading indicators (score: ${signal.safety.washScore}) - verify volume authenticity!`;
+  } else if (signal.safety?.washScore !== undefined && signal.safety.washScore >= 30) {
+    conclusion += ` 🚿 Some wash trading patterns detected (score: ${signal.safety.washScore}).`;
+  }
+  
+  // Sniper activity warning
+  if (signal.safety?.sniperActivity) {
+    const sniper = signal.safety.sniperActivity;
+    if (sniper.sniperRisk === 'CRITICAL') {
+      conclusion += ` 🎯🚨 CRITICAL SNIPER ACTIVITY (${sniper.sniperScore}) - ${sniper.totalSnipers} snipers control ${sniper.sniperSupplyPercent.toFixed(1)}% of supply! ${sniper.dumpProbability.toFixed(0)}% dump probability!`;
+    } else if (sniper.sniperRisk === 'HIGH') {
+      conclusion += ` 🎯⚠️ HIGH SNIPER ACTIVITY - ${sniper.totalSnipers} snipers detected with ${sniper.dumpProbability.toFixed(0)}% dump risk. Consider waiting for snipers to exit.`;
+    } else if (sniper.sniperRisk === 'MEDIUM' && sniper.knownMEVBots > 0) {
+      conclusion += ` 🎯 MEV bots detected (${sniper.knownMEVBots}) - automated front-running possible.`;
+    } else if (sniper.block0Buyers >= 3) {
+      conclusion += ` 🎯 ${sniper.block0Buyers} wallets bought in block 0 - possible coordinated launch sniping.`;
+    }
   }
   
   // Confluence

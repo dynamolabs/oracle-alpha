@@ -137,6 +137,47 @@ import {
   HoneypotResult
 } from '../detection/honeypot';
 import {
+  analyzeWashTrading,
+  getQuickWashScore,
+  getCachedWashAnalysis,
+  clearWashCache,
+  formatWashAnalysis,
+  getWashWarning,
+  getWashEmoji,
+  WashTradingAnalysis
+} from '../detection/wash-trading';
+import {
+  analyzeSnipers,
+  getWalletSniperScore,
+  getQuickSniperAnalysis,
+  clearSniperCache,
+  formatSniperAnalysis,
+  getSniperWarning,
+  toSafetyData as sniperToSafetyData,
+  SniperAnalysis,
+  WalletSniperProfile
+} from '../detection/sniper-detector';
+import {
+  initConnection,
+  connectWallet,
+  disconnectWallet,
+  getWalletStatus,
+  getWalletBalances,
+  getTransactions,
+  getConnectedWallets,
+  isValidPublicKey,
+  getSwapQuote,
+  buildSwapTransaction,
+  confirmTransaction,
+  performSafetyChecks,
+  getQuickQuote,
+  PRIORITY_FEE_PRESETS,
+  SLIPPAGE_PRESETS,
+  WalletState,
+  SwapParams,
+  SwapQuote,
+} from '../wallet';
+import {
   calculateRisk,
   formatRiskCalculation,
   quickPositionSize,
@@ -206,6 +247,41 @@ import {
   generateDemoLeaderboard,
   Timeframe
 } from '../analytics/leaderboard';
+import {
+  getUserProgress,
+  getAllAchievements,
+  checkAchievements,
+  getAchievementsSummary,
+  getDailyChallenges,
+  getWeeklyChallenges,
+  getUserLevel,
+  getShareableAchievement,
+  markAchievementNotified,
+  getUnnotifiedAchievements,
+  recordTrade as recordAchievementTrade,
+  recordSignalView,
+  recordShare,
+  generateDemoUser,
+  achievements as ACHIEVEMENTS,
+  levels as LEVELS
+} from '../gamification';
+import {
+  recordKOLCall,
+  recordKOLCallFromSignal,
+  updateKOLCallPrice,
+  updateAllKOLCallPrices,
+  getKOLStats,
+  getKOLHistory,
+  getAllKOLHandles,
+  getKOLLeaderboard,
+  getKOLReliabilityScore,
+  getKOLSignalWeight,
+  shouldIgnoreKOL,
+  generateDemoKOLData,
+  KOLCall,
+  KOLStats,
+  KOLLeaderboard
+} from '../analytics/kol-reliability';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -1064,6 +1140,414 @@ app.get('/api/leaderboard/dashboard', (req, res) => {
 app.post('/api/leaderboard/demo', (req, res) => {
   generateDemoLeaderboard();
   res.json({ success: true, message: 'Demo leaderboard data generated' });
+});
+
+// === ACHIEVEMENT & GAMIFICATION API ===
+
+// Get all achievements with progress for a user
+app.get('/api/achievements', (req, res) => {
+  const userId = (req.query.userId as string) || 'anonymous';
+  
+  try {
+    const achievements = getAllAchievements(userId);
+    const summary = getAchievementsSummary(userId);
+    
+    res.json({
+      total: achievements.length,
+      unlocked: summary.totalUnlocked,
+      achievements,
+      byCategory: summary.byCategory,
+      byTier: summary.byTier,
+      xpFromAchievements: summary.xpFromAchievements,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Error:', error);
+    res.status(500).json({ error: 'Failed to get achievements' });
+  }
+});
+
+// Get user's achievement progress and stats
+app.get('/api/achievements/user/:userId', (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const progress = getUserProgress(userId);
+    const level = getUserLevel(userId);
+    const summary = getAchievementsSummary(userId);
+    const dailyChallenges = getDailyChallenges(userId);
+    const weeklyChallenges = getWeeklyChallenges(userId);
+    
+    res.json({
+      userId,
+      level: {
+        current: level.level,
+        title: level.title,
+        badge: level.badge,
+        xp: level.xp,
+        xpToNextLevel: level.xpToNextLevel,
+        xpProgress: level.xpProgress,
+        nextLevelTitle: level.nextLevelTitle,
+        perks: level.perks
+      },
+      achievements: {
+        total: summary.totalAvailable,
+        unlocked: summary.totalUnlocked,
+        recent: summary.recentUnlocks.slice(0, 5),
+        byCategory: summary.byCategory,
+        byTier: summary.byTier
+      },
+      stats: {
+        totalTrades: progress.stats.totalTrades,
+        wins: progress.stats.wins,
+        losses: progress.stats.losses,
+        winRate: progress.stats.totalTrades > 0 
+          ? Math.round((progress.stats.wins / progress.stats.totalTrades) * 1000) / 10 
+          : 0,
+        currentStreak: progress.stats.currentWinStreak,
+        maxStreak: progress.stats.maxWinStreak,
+        totalRoi: Math.round(progress.stats.totalRoi * 100) / 100,
+        bestTradeRoi: Math.round(progress.stats.bestSingleTradeRoi * 100) / 100,
+        uniqueTokens: progress.stats.uniqueTokensTraded.size,
+        signalsViewed: progress.stats.signalsViewed,
+        sharesCount: progress.stats.sharesCount,
+        dailyLoginStreak: progress.stats.dailyLoginStreak
+      },
+      challenges: {
+        daily: dailyChallenges,
+        weekly: weeklyChallenges,
+        dailyCompleted: dailyChallenges.filter(c => c.completed).length,
+        weeklyCompleted: weeklyChallenges.filter(c => c.completed).length
+      },
+      createdAt: progress.createdAt,
+      lastActive: progress.lastActive,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Error getting user progress:', error);
+    res.status(500).json({ error: 'Failed to get user progress' });
+  }
+});
+
+// Get today's daily challenges
+app.get('/api/challenges/daily', (req, res) => {
+  const userId = (req.query.userId as string) || 'anonymous';
+  
+  try {
+    const challenges = getDailyChallenges(userId);
+    const completed = challenges.filter(c => c.completed).length;
+    
+    res.json({
+      userId,
+      date: new Date().toISOString().split('T')[0],
+      total: challenges.length,
+      completed,
+      remaining: challenges.length - completed,
+      challenges,
+      expiresAt: challenges[0]?.expiresAt || 0,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[CHALLENGES] Error:', error);
+    res.status(500).json({ error: 'Failed to get daily challenges' });
+  }
+});
+
+// Get weekly challenges
+app.get('/api/challenges/weekly', (req, res) => {
+  const userId = (req.query.userId as string) || 'anonymous';
+  
+  try {
+    const challenges = getWeeklyChallenges(userId);
+    const completed = challenges.filter(c => c.completed).length;
+    
+    res.json({
+      userId,
+      total: challenges.length,
+      completed,
+      remaining: challenges.length - completed,
+      challenges,
+      expiresAt: challenges[0]?.expiresAt || 0,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[CHALLENGES] Error:', error);
+    res.status(500).json({ error: 'Failed to get weekly challenges' });
+  }
+});
+
+// Check and award achievements (called after user actions)
+app.post('/api/achievements/check', (req, res) => {
+  const { userId } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+  
+  try {
+    const unlocks = checkAchievements(userId);
+    const level = getUserLevel(userId);
+    
+    res.json({
+      userId,
+      newUnlocks: unlocks.length,
+      unlocks: unlocks.map(u => ({
+        achievement: {
+          id: u.achievement.id,
+          name: u.achievement.name,
+          description: u.achievement.description,
+          icon: u.achievement.icon,
+          tier: u.achievement.tier,
+          category: u.achievement.category,
+          xpReward: u.achievement.xpReward
+        },
+        timestamp: u.timestamp,
+        levelUp: u.levelUp
+      })),
+      currentLevel: level,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Check error:', error);
+    res.status(500).json({ error: 'Failed to check achievements' });
+  }
+});
+
+// Record a trade event (for achievement tracking)
+app.post('/api/achievements/trade', (req, res) => {
+  const { userId, token, symbol, entryPrice, exitPrice, roi, holdDurationMs, isWin, isWhaleSignal, isHighConviction } = req.body;
+  
+  if (!userId || !token) {
+    return res.status(400).json({ error: 'userId and token are required' });
+  }
+  
+  try {
+    const unlocks = recordAchievementTrade({
+      userId,
+      token,
+      symbol: symbol || 'UNKNOWN',
+      entryPrice: entryPrice || 0,
+      exitPrice,
+      roi,
+      holdDurationMs,
+      isWin,
+      isWhaleSignal,
+      isHighConviction,
+      timestamp: Date.now()
+    });
+    
+    const level = getUserLevel(userId);
+    
+    res.json({
+      success: true,
+      newUnlocks: unlocks.length,
+      unlocks: unlocks.map(u => ({
+        achievement: {
+          id: u.achievement.id,
+          name: u.achievement.name,
+          icon: u.achievement.icon,
+          xpReward: u.achievement.xpReward
+        },
+        levelUp: u.levelUp
+      })),
+      currentLevel: level,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Trade record error:', error);
+    res.status(500).json({ error: 'Failed to record trade' });
+  }
+});
+
+// Record signal view
+app.post('/api/achievements/view', (req, res) => {
+  const { userId, signalId, viewRank } = req.body;
+  
+  if (!userId || !signalId) {
+    return res.status(400).json({ error: 'userId and signalId are required' });
+  }
+  
+  try {
+    const unlocks = recordSignalView({ userId, signalId, viewRank });
+    
+    res.json({
+      success: true,
+      newUnlocks: unlocks.length,
+      unlocks: unlocks.map(u => ({
+        id: u.achievement.id,
+        name: u.achievement.name,
+        icon: u.achievement.icon
+      })),
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] View record error:', error);
+    res.status(500).json({ error: 'Failed to record view' });
+  }
+});
+
+// Record signal share
+app.post('/api/achievements/share', (req, res) => {
+  const { userId, signalId, views } = req.body;
+  
+  if (!userId || !signalId) {
+    return res.status(400).json({ error: 'userId and signalId are required' });
+  }
+  
+  try {
+    const unlocks = recordShare({ userId, signalId, views });
+    
+    res.json({
+      success: true,
+      newUnlocks: unlocks.length,
+      unlocks: unlocks.map(u => ({
+        id: u.achievement.id,
+        name: u.achievement.name,
+        icon: u.achievement.icon
+      })),
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Share record error:', error);
+    res.status(500).json({ error: 'Failed to record share' });
+  }
+});
+
+// Get shareable achievement card
+app.get('/api/achievements/:achievementId/share', (req, res) => {
+  const { achievementId } = req.params;
+  const userId = (req.query.userId as string) || 'anonymous';
+  
+  try {
+    const shareData = getShareableAchievement(userId, achievementId);
+    
+    if (!shareData) {
+      return res.status(404).json({ error: 'Achievement not found or not unlocked' });
+    }
+    
+    res.json(shareData);
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Share error:', error);
+    res.status(500).json({ error: 'Failed to get shareable achievement' });
+  }
+});
+
+// Get unnotified achievements (for notification toast)
+app.get('/api/achievements/unnotified', (req, res) => {
+  const userId = (req.query.userId as string) || 'anonymous';
+  
+  try {
+    const unnotified = getUnnotifiedAchievements(userId);
+    
+    res.json({
+      count: unnotified.length,
+      achievements: unnotified.map(u => ({
+        id: u.achievement.id,
+        name: u.achievement.name,
+        description: u.achievement.description,
+        icon: u.achievement.icon,
+        tier: u.achievement.tier,
+        xpReward: u.achievement.xpReward,
+        unlockedAt: u.timestamp
+      })),
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Unnotified error:', error);
+    res.status(500).json({ error: 'Failed to get unnotified achievements' });
+  }
+});
+
+// Mark achievement as notified
+app.post('/api/achievements/:achievementId/notified', (req, res) => {
+  const { achievementId } = req.params;
+  const { userId } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+  
+  try {
+    markAchievementNotified(userId, achievementId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Mark notified error:', error);
+    res.status(500).json({ error: 'Failed to mark as notified' });
+  }
+});
+
+// Get all available achievements (for achievement list page)
+app.get('/api/achievements/all', (req, res) => {
+  try {
+    res.json({
+      total: ACHIEVEMENTS.length,
+      achievements: ACHIEVEMENTS.filter(a => !a.secret).map(a => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        category: a.category,
+        tier: a.tier,
+        icon: a.icon,
+        xpReward: a.xpReward
+      })),
+      categories: ['TRADING', 'DISCOVERY', 'SOCIAL', 'SKILL', 'SPECIAL'],
+      tiers: ['BRONZE', 'SILVER', 'GOLD', 'DIAMOND', 'LEGENDARY'],
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] All error:', error);
+    res.status(500).json({ error: 'Failed to get achievements' });
+  }
+});
+
+// Get level system info
+app.get('/api/levels', (req, res) => {
+  try {
+    res.json({
+      levels: LEVELS.map(l => ({
+        level: l.level,
+        title: l.title,
+        badge: l.badge,
+        minXp: l.minXp,
+        maxXp: l.maxXp === Infinity ? null : l.maxXp,
+        perks: l.perks
+      })),
+      maxLevel: LEVELS.length,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[LEVELS] Error:', error);
+    res.status(500).json({ error: 'Failed to get levels' });
+  }
+});
+
+// Generate demo user with progress (for testing)
+app.post('/api/achievements/demo', (req, res) => {
+  const userId = (req.body.userId as string) || 'demo-user';
+  
+  try {
+    const progress = generateDemoUser(userId);
+    const level = getUserLevel(userId);
+    const summary = getAchievementsSummary(userId);
+    
+    res.json({
+      success: true,
+      message: 'Demo user generated with achievements',
+      userId,
+      level: level.level,
+      title: level.title,
+      xp: level.xp,
+      achievements: summary.totalUnlocked,
+      stats: {
+        trades: progress.stats.totalTrades,
+        wins: progress.stats.wins,
+        losses: progress.stats.losses
+      }
+    });
+  } catch (error) {
+    console.error('[ACHIEVEMENTS] Demo error:', error);
+    res.status(500).json({ error: 'Failed to generate demo user' });
+  }
 });
 
 // Generate shareable summary text
@@ -2381,6 +2865,282 @@ app.get('/api/export/performance', (req, res) => {
   res.send(report);
 });
 
+// === KOL RELIABILITY API ===
+// Track and analyze KOL/Influencer performance
+
+// Get KOL leaderboard - top reliable KOLs
+app.get('/api/kol/leaderboard', (req, res) => {
+  const limit = parseInt(req.query.limit as string) || 20;
+  const leaderboard = getKOLLeaderboard(limit);
+  
+  res.json({
+    timestamp: Date.now(),
+    limits: { perCategory: limit },
+    topReliable: leaderboard.topReliable.map(formatKOLStats),
+    unreliable: leaderboard.unreliable.map(formatKOLStats),
+    risingStars: leaderboard.risingStars.map(formatKOLStats),
+    mostActive: leaderboard.mostActive.map(formatKOLStats),
+    pumpAndDump: leaderboard.pumpAndDump.map(formatKOLStats),
+    summary: {
+      totalKOLs: getAllKOLHandles().length,
+      topPerformer: leaderboard.topReliable[0]?.handle || null,
+      avgReliabilityScore: leaderboard.topReliable.length > 0 
+        ? Math.round(leaderboard.topReliable.reduce((sum, k) => sum + k.reliabilityScore, 0) / leaderboard.topReliable.length)
+        : 0
+    }
+  });
+});
+
+// Get stats for a specific KOL
+app.get('/api/kol/:handle/stats', (req, res) => {
+  const { handle } = req.params;
+  const stats = getKOLStats(handle);
+  
+  if (!stats) {
+    return res.status(404).json({ 
+      error: 'KOL not found', 
+      handle,
+      message: 'No data for this KOL. They may not have any tracked calls yet.'
+    });
+  }
+  
+  res.json({
+    timestamp: Date.now(),
+    kol: formatKOLStats(stats)
+  });
+});
+
+// Get call history for a specific KOL
+app.get('/api/kol/:handle/history', (req, res) => {
+  const { handle } = req.params;
+  const limit = parseInt(req.query.limit as string) || 50;
+  
+  const history = getKOLHistory(handle, limit);
+  
+  if (history.length === 0) {
+    return res.status(404).json({ 
+      error: 'No history found', 
+      handle,
+      message: 'No call history for this KOL.'
+    });
+  }
+  
+  res.json({
+    timestamp: Date.now(),
+    handle: handle.toLowerCase(),
+    count: history.length,
+    calls: history.map(formatKOLCall)
+  });
+});
+
+// Get unreliable/pump & dump KOLs
+app.get('/api/kol/unreliable', (req, res) => {
+  const limit = parseInt(req.query.limit as string) || 20;
+  const leaderboard = getKOLLeaderboard(limit);
+  
+  // Combine unreliable and pump & dump, sort by worst first
+  const allBad = [
+    ...leaderboard.unreliable,
+    ...leaderboard.pumpAndDump.filter(p => 
+      !leaderboard.unreliable.find(u => u.handle === p.handle)
+    )
+  ].sort((a, b) => a.reliabilityScore - b.reliabilityScore);
+  
+  res.json({
+    timestamp: Date.now(),
+    count: allBad.length,
+    warning: 'These KOLs have shown patterns of unreliable calls or pump & dump behavior',
+    kols: allBad.map(k => ({
+      ...formatKOLStats(k),
+      warningReason: k.isPumpAndDump 
+        ? 'Pump & Dump pattern detected' 
+        : 'Low win rate and reliability'
+    }))
+  });
+});
+
+// Get reliability score for a KOL (for signal weighting)
+app.get('/api/kol/:handle/reliability', (req, res) => {
+  const { handle } = req.params;
+  const score = getKOLReliabilityScore(handle);
+  const weight = getKOLSignalWeight(handle);
+  const shouldIgnore = shouldIgnoreKOL(handle);
+  const stats = getKOLStats(handle);
+  
+  res.json({
+    handle: handle.toLowerCase(),
+    reliabilityScore: Math.round(score),
+    signalWeightMultiplier: Math.round(weight * 100) / 100,
+    shouldIgnore,
+    recommendation: shouldIgnore 
+      ? 'IGNORE - This KOL has a poor track record'
+      : score >= 70 
+        ? 'TRUST - High reliability, boost signal weight'
+        : score >= 50 
+          ? 'NEUTRAL - Moderate reliability'
+          : 'CAUTION - Low reliability, reduce signal weight',
+    dataPoints: stats?.totalCalls || 0,
+    timestamp: Date.now()
+  });
+});
+
+// Dashboard summary for KOLs
+app.get('/api/kol/dashboard', (req, res) => {
+  const leaderboard = getKOLLeaderboard(10);
+  const allHandles = getAllKOLHandles();
+  
+  // Calculate overall stats
+  let totalCalls = 0;
+  let totalWins = 0;
+  let totalLosses = 0;
+  
+  for (const handle of allHandles) {
+    const stats = getKOLStats(handle);
+    if (stats) {
+      totalCalls += stats.totalCalls;
+      totalWins += stats.wins;
+      totalLosses += stats.losses;
+    }
+  }
+  
+  const overallWinRate = (totalWins + totalLosses) > 0 
+    ? (totalWins / (totalWins + totalLosses)) * 100 
+    : 0;
+  
+  res.json({
+    timestamp: Date.now(),
+    overview: {
+      totalKOLs: allHandles.length,
+      totalCalls,
+      totalWins,
+      totalLosses,
+      overallWinRate: Math.round(overallWinRate * 10) / 10,
+      pumpAndDumpCount: leaderboard.pumpAndDump.length
+    },
+    topPerformers: leaderboard.topReliable.slice(0, 5).map(k => ({
+      handle: k.handle,
+      label: k.label,
+      tier: k.tier,
+      reliabilityScore: k.reliabilityScore,
+      winRate: Math.round(k.winRate * 10) / 10,
+      badges: k.badges
+    })),
+    worstPerformers: leaderboard.unreliable.slice(0, 5).map(k => ({
+      handle: k.handle,
+      label: k.label,
+      reliabilityScore: k.reliabilityScore,
+      winRate: Math.round(k.winRate * 10) / 10,
+      isPumpAndDump: k.isPumpAndDump
+    })),
+    risingStars: leaderboard.risingStars.slice(0, 3).map(k => ({
+      handle: k.handle,
+      label: k.label,
+      reliabilityScore: k.reliabilityScore,
+      totalCalls: k.totalCalls,
+      winRate: Math.round(k.winRate * 10) / 10
+    }))
+  });
+});
+
+// Generate demo KOL data (for testing)
+app.post('/api/kol/demo', (req, res) => {
+  generateDemoKOLData();
+  const leaderboard = getKOLLeaderboard(5);
+  
+  res.json({
+    success: true,
+    message: 'Demo KOL data generated',
+    sampleKOLs: leaderboard.topReliable.slice(0, 3).map(k => k.handle),
+    totalKOLs: getAllKOLHandles().length
+  });
+});
+
+// Update KOL call prices (cron job endpoint)
+app.post('/api/kol/update-prices', async (req, res) => {
+  try {
+    await updateAllKOLCallPrices();
+    res.json({ 
+      success: true, 
+      message: 'KOL call prices updated',
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to update prices',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Helper function to format KOL stats for API response
+function formatKOLStats(stats: KOLStats) {
+  return {
+    handle: stats.handle,
+    label: stats.label,
+    tier: stats.tier,
+    reliabilityScore: Math.round(stats.reliabilityScore),
+    reliabilityTrend: stats.reliabilityTrend,
+    stats: {
+      totalCalls: stats.totalCalls,
+      wins: stats.wins,
+      losses: stats.losses,
+      pending: stats.pending,
+      winRate: Math.round(stats.winRate * 10) / 10,
+      avgRoi: Math.round(stats.avgRoi * 100) / 100,
+      avgAthRoi: Math.round(stats.avgAthRoi * 100) / 100,
+      totalRoi: Math.round(stats.totalRoi * 100) / 100
+    },
+    riskIndicators: {
+      pumpAndDumpScore: Math.round(stats.pumpAndDumpScore),
+      isPumpAndDump: stats.isPumpAndDump,
+      avgHoldTimeMinutes: Math.round(stats.avgHoldTime)
+    },
+    bestCall: stats.bestCall ? {
+      symbol: stats.bestCall.symbol,
+      roi: Math.round(stats.bestCall.roi * 100) / 100,
+      timestamp: stats.bestCall.timestamp
+    } : null,
+    worstCall: stats.worstCall ? {
+      symbol: stats.worstCall.symbol,
+      roi: Math.round(stats.worstCall.roi * 100) / 100,
+      timestamp: stats.worstCall.timestamp
+    } : null,
+    badges: stats.badges,
+    firstSeen: stats.firstSeen,
+    lastSeen: stats.lastSeen
+  };
+}
+
+// Helper function to format KOL call for API response
+function formatKOLCall(call: KOLCall) {
+  return {
+    id: call.id,
+    token: call.token,
+    symbol: call.symbol,
+    timestamp: call.timestamp,
+    status: call.status,
+    prices: {
+      atMention: call.priceAtMention,
+      current: call.currentPrice,
+      ath: call.athPrice,
+      price24h: call.price24h,
+      price7d: call.price7d
+    },
+    roi: {
+      current: Math.round(call.roiCurrent * 100) / 100,
+      ath: Math.round(call.roiAth * 100) / 100,
+      roi24h: Math.round(call.roi24h * 100) / 100,
+      roi7d: Math.round(call.roi7d * 100) / 100
+    },
+    profitableEntry: call.profitableEntry,
+    mcapAtMention: call.mcapAtMention,
+    athTimestamp: call.athTimestamp,
+    tweetId: call.tweetId,
+    tweetText: call.tweetText?.slice(0, 200),
+    signalId: call.signalId
+  };
+}
+
 // === AGENT COMPOSABILITY API ===
 // Endpoints optimized for agent consumption (Colosseum skill.json compatible)
 
@@ -2999,6 +3759,326 @@ app.get('/api/trade/optimal/:signalId', (req, res) => {
   });
 });
 
+// === WALLET CONNECTION & REAL TRADING API ===
+
+// Initialize wallet connection on startup
+initConnection();
+
+// Connect wallet
+app.post('/api/wallet/connect', (req, res) => {
+  const { walletType, publicKey, signature } = req.body;
+  
+  if (!publicKey) {
+    return res.status(400).json({ error: 'publicKey is required' });
+  }
+  
+  if (!isValidPublicKey(publicKey)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const result = connectWallet({
+    walletType: walletType || 'unknown',
+    publicKey,
+    signature,
+  });
+  
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(400).json(result);
+  }
+});
+
+// Disconnect wallet
+app.post('/api/wallet/disconnect', (req, res) => {
+  const { publicKey } = req.body;
+  
+  if (!publicKey) {
+    return res.status(400).json({ error: 'publicKey is required' });
+  }
+  
+  const disconnected = disconnectWallet(publicKey);
+  res.json({ success: disconnected, message: disconnected ? 'Wallet disconnected' : 'Wallet not found' });
+});
+
+// Get wallet connection status
+app.get('/api/wallet/status/:publicKey', (req, res) => {
+  const { publicKey } = req.params;
+  
+  if (!isValidPublicKey(publicKey)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const status = getWalletStatus(publicKey);
+  res.json(status);
+});
+
+// Get wallet balances
+app.get('/api/wallet/balance/:publicKey', async (req, res) => {
+  const { publicKey } = req.params;
+  
+  if (!isValidPublicKey(publicKey)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  try {
+    const balances = await getWalletBalances(publicKey);
+    res.json(balances);
+  } catch (error) {
+    console.error('[WALLET] Balance fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch balances' });
+  }
+});
+
+// Get wallet transaction history
+app.get('/api/wallet/transactions/:publicKey', (req, res) => {
+  const { publicKey } = req.params;
+  const limit = parseInt(req.query.limit as string) || 20;
+  
+  if (!isValidPublicKey(publicKey)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  const transactions = getTransactions(publicKey, limit);
+  res.json({ count: transactions.length, transactions });
+});
+
+// Get swap quote
+app.post('/api/wallet/quote', async (req, res) => {
+  const { inputMint, outputMint, amount, slippageBps } = req.body;
+  
+  if (!inputMint || !outputMint || !amount) {
+    return res.status(400).json({ error: 'inputMint, outputMint, and amount are required' });
+  }
+  
+  if (amount <= 0) {
+    return res.status(400).json({ error: 'amount must be positive' });
+  }
+  
+  try {
+    const quote = await getSwapQuote({
+      inputMint,
+      outputMint,
+      amount: parseFloat(amount),
+      slippageBps: slippageBps || 100,
+    });
+    
+    if (!quote) {
+      return res.status(400).json({ error: 'Failed to get quote - check token addresses and liquidity' });
+    }
+    
+    res.json(quote);
+  } catch (error) {
+    console.error('[WALLET] Quote error:', error);
+    res.status(500).json({ error: 'Failed to get quote' });
+  }
+});
+
+// Quick quote for UI
+app.get('/api/wallet/quickquote', async (req, res) => {
+  const { inputMint, outputMint, amount, slippageBps } = req.query;
+  
+  if (!inputMint || !outputMint || !amount) {
+    return res.status(400).json({ error: 'inputMint, outputMint, and amount are required' });
+  }
+  
+  try {
+    const result = await getQuickQuote(
+      inputMint as string,
+      outputMint as string,
+      parseFloat(amount as string),
+      parseInt(slippageBps as string) || 100
+    );
+    
+    if (!result) {
+      return res.status(400).json({ error: 'Failed to get quote' });
+    }
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get quote' });
+  }
+});
+
+// Build swap transaction
+app.post('/api/wallet/swap/build', async (req, res) => {
+  const { quoteId, publicKey, priorityFee } = req.body;
+  
+  if (!quoteId || !publicKey) {
+    return res.status(400).json({ error: 'quoteId and publicKey are required' });
+  }
+  
+  if (!isValidPublicKey(publicKey)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  // Check wallet is connected
+  const status = getWalletStatus(publicKey);
+  if (!status.connected) {
+    return res.status(401).json({ error: 'Wallet not connected' });
+  }
+  
+  try {
+    const transaction = await buildSwapTransaction(quoteId, publicKey, priorityFee);
+    
+    if (!transaction) {
+      return res.status(400).json({ error: 'Failed to build transaction - quote may have expired' });
+    }
+    
+    // Check simulation result
+    if (transaction.simulation && !transaction.simulation.success) {
+      return res.status(400).json({
+        error: 'Transaction simulation failed',
+        simulation: transaction.simulation,
+      });
+    }
+    
+    res.json(transaction);
+  } catch (error) {
+    console.error('[WALLET] Build transaction error:', error);
+    res.status(500).json({ error: 'Failed to build transaction' });
+  }
+});
+
+// Confirm swap transaction (after client signs and submits)
+app.post('/api/wallet/swap/confirm', async (req, res) => {
+  const { signature, blockhash, lastValidBlockHeight, publicKey, quote } = req.body;
+  
+  if (!signature || !blockhash || !lastValidBlockHeight || !publicKey || !quote) {
+    return res.status(400).json({ error: 'All fields are required: signature, blockhash, lastValidBlockHeight, publicKey, quote' });
+  }
+  
+  try {
+    const result = await confirmTransaction(
+      signature,
+      blockhash,
+      lastValidBlockHeight,
+      publicKey,
+      quote
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('[WALLET] Confirm error:', error);
+    res.status(500).json({ error: 'Failed to confirm transaction' });
+  }
+});
+
+// Safety check before trading
+app.post('/api/wallet/safety-check', async (req, res) => {
+  const { tokenMint, inputAmount, slippageBps } = req.body;
+  
+  if (!tokenMint) {
+    return res.status(400).json({ error: 'tokenMint is required' });
+  }
+  
+  try {
+    const safetyCheck = await performSafetyChecks(
+      tokenMint,
+      inputAmount || 0.1,
+      slippageBps || 100
+    );
+    
+    res.json(safetyCheck);
+  } catch (error) {
+    console.error('[WALLET] Safety check error:', error);
+    res.status(500).json({ error: 'Failed to perform safety checks' });
+  }
+});
+
+// Get trading presets
+app.get('/api/wallet/presets', (req, res) => {
+  res.json({
+    slippage: {
+      low: { bps: SLIPPAGE_PRESETS.low, label: '0.5%', description: 'Tight slippage for stable pairs' },
+      normal: { bps: SLIPPAGE_PRESETS.normal, label: '1%', description: 'Standard slippage' },
+      high: { bps: SLIPPAGE_PRESETS.high, label: '3%', description: 'For volatile tokens' },
+      turbo: { bps: SLIPPAGE_PRESETS.turbo, label: '5%', description: 'Maximum tolerance' },
+    },
+    priorityFee: {
+      low: { microLamports: PRIORITY_FEE_PRESETS.low, label: 'Economy', description: '~0.000001 SOL' },
+      medium: { microLamports: PRIORITY_FEE_PRESETS.medium, label: 'Standard', description: '~0.00001 SOL' },
+      high: { microLamports: PRIORITY_FEE_PRESETS.high, label: 'Fast', description: '~0.0001 SOL' },
+      turbo: { microLamports: PRIORITY_FEE_PRESETS.turbo, label: 'Turbo', description: '~0.0005 SOL' },
+    },
+  });
+});
+
+// Get connected wallets (admin/debug)
+app.get('/api/wallet/connected', (req, res) => {
+  const wallets = getConnectedWallets();
+  res.json({ count: wallets.length, wallets });
+});
+
+// Execute swap from signal (convenience endpoint)
+app.post('/api/wallet/swap/signal', async (req, res) => {
+  const { signalId, publicKey, amount, slippageBps, priorityFee } = req.body;
+  
+  if (!signalId || !publicKey || !amount) {
+    return res.status(400).json({ error: 'signalId, publicKey, and amount are required' });
+  }
+  
+  // Find signal
+  const signal = signalStore.find(s => s.id === signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  // Check wallet connected
+  const status = getWalletStatus(publicKey);
+  if (!status.connected) {
+    return res.status(401).json({ error: 'Wallet not connected' });
+  }
+  
+  try {
+    // 1. Safety check
+    const safety = await performSafetyChecks(signal.token, amount, slippageBps || 100);
+    if (!safety.canProceed) {
+      return res.status(400).json({
+        error: 'Safety check failed',
+        safetyCheck: safety,
+      });
+    }
+    
+    // 2. Get quote (SOL -> Token)
+    const quote = await getSwapQuote({
+      inputMint: SOL_MINT,
+      outputMint: signal.token,
+      amount,
+      slippageBps: slippageBps || 100,
+      priorityFee,
+    });
+    
+    if (!quote) {
+      return res.status(400).json({ error: 'Failed to get quote' });
+    }
+    
+    // 3. Build transaction
+    const transaction = await buildSwapTransaction(quote.quoteId, publicKey, priorityFee);
+    
+    if (!transaction) {
+      return res.status(400).json({ error: 'Failed to build transaction' });
+    }
+    
+    // Return quote and transaction for client signing
+    res.json({
+      signal: {
+        id: signal.id,
+        symbol: signal.symbol,
+        token: signal.token,
+        score: signal.score,
+        riskLevel: signal.riskLevel,
+      },
+      quote,
+      transaction,
+      safetyCheck: safety,
+    });
+  } catch (error) {
+    console.error('[WALLET] Signal swap error:', error);
+    res.status(500).json({ error: 'Failed to prepare swap' });
+  }
+});
+
 // === RISK CALCULATOR API ===
 
 // Calculate risk and position sizing
@@ -3578,6 +4658,633 @@ app.get('/api/signals/:id/honeypot', async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: 'Failed to check honeypot status'
+    });
+  }
+});
+
+// === WASH TRADING DETECTION API ===
+
+// Full wash trading analysis for a token
+app.get('/api/detection/wash/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  // Validate token format
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    const analysis = await analyzeWashTrading(token);
+    
+    res.json({
+      success: true,
+      token,
+      symbol: analysis.symbol,
+      
+      // Core metrics
+      washScore: analysis.washScore,
+      riskLevel: analysis.riskLevel,
+      
+      // Volume analysis
+      volume: {
+        reported: analysis.reportedVolume24h,
+        estimatedReal: analysis.estimatedRealVolume,
+        washPercent: analysis.washVolumePercent,
+        realPercent: analysis.realVolumePercent
+      },
+      
+      // Detection results
+      detection: {
+        selfTrades: analysis.selfTradeCount,
+        selfTradeVolume: analysis.selfTradeVolume,
+        circularPatterns: analysis.circularPatternCount,
+        circularVolume: analysis.circularVolume,
+        uniqueTraders: analysis.uniqueTraders,
+        suspiciousWallets: analysis.suspiciousWalletCount
+      },
+      
+      // Interval analysis
+      intervalAnalysis: analysis.intervalAnalysis ? {
+        avgIntervalSec: Math.round(analysis.intervalAnalysis.averageIntervalMs / 1000),
+        regularityScore: analysis.intervalAnalysis.regularityScore,
+        transactionCount: analysis.intervalAnalysis.transactionCount
+      } : null,
+      
+      // Volume anomaly
+      volumeAnomaly: analysis.volumeAnomaly ? {
+        volumeToPriceRatio: Math.round(analysis.volumeAnomaly.volumeToPriceRatio),
+        priceChange: analysis.volumeAnomaly.priceChange,
+        holders: analysis.volumeAnomaly.holderCount,
+        anomalyScore: analysis.volumeAnomaly.anomalyScore
+      } : null,
+      
+      // Warnings
+      warnings: analysis.warnings,
+      warningCount: analysis.warnings.length,
+      
+      // Status
+      status: analysis.washScore >= 70 
+        ? '⚠️ FAKE VOLUME DETECTED' 
+        : analysis.washScore >= 40 
+        ? '⚡ SUSPICIOUS ACTIVITY' 
+        : '✅ VOLUME APPEARS ORGANIC',
+      
+      // Metadata
+      analyzedAt: analysis.analyzedAt,
+      transactionsAnalyzed: analysis.transactionsAnalyzed,
+      cached: analysis.cached
+    });
+  } catch (error) {
+    console.error('[WASH API] Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to analyze wash trading',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get estimated real volume for a token
+app.get('/api/detection/real-volume/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  // Validate token format
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    const analysis = await analyzeWashTrading(token);
+    
+    const volumeK = (v: number) => v >= 1000000 
+      ? `$${(v / 1000000).toFixed(2)}M` 
+      : `$${(v / 1000).toFixed(1)}K`;
+    
+    res.json({
+      success: true,
+      token,
+      symbol: analysis.symbol,
+      reportedVolume: analysis.reportedVolume24h,
+      estimatedRealVolume: analysis.estimatedRealVolume,
+      washVolumePercent: analysis.washVolumePercent,
+      realVolumePercent: analysis.realVolumePercent,
+      washScore: analysis.washScore,
+      riskLevel: analysis.riskLevel,
+      summary: `Reported: ${volumeK(analysis.reportedVolume24h)} | Real: ~${volumeK(analysis.estimatedRealVolume)} (${analysis.realVolumePercent}%)`,
+      cached: analysis.cached
+    });
+  } catch (error) {
+    console.error('[WASH API] Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to estimate real volume'
+    });
+  }
+});
+
+// Get wash trading analysis as formatted text
+app.get('/api/detection/wash/:token/text', async (req, res) => {
+  const { token } = req.params;
+  
+  try {
+    const analysis = await analyzeWashTrading(token);
+    res.type('text/plain').send(formatWashAnalysis(analysis));
+  } catch (error) {
+    res.status(500).send('Failed to analyze wash trading');
+  }
+});
+
+// Quick wash score check (cached only)
+app.get('/api/detection/wash/:token/quick', (req, res) => {
+  const { token } = req.params;
+  
+  const cached = getCachedWashAnalysis(token);
+  
+  if (!cached) {
+    return res.json({
+      success: false,
+      washScore: null,
+      message: 'No cached data available. Call /api/detection/wash/:token first.'
+    });
+  }
+  
+  res.json({
+    success: true,
+    token,
+    symbol: cached.symbol,
+    washScore: cached.washScore,
+    riskLevel: cached.riskLevel,
+    realVolumePercent: cached.realVolumePercent,
+    selfTrades: cached.selfTradeCount,
+    circularPatterns: cached.circularPatternCount,
+    cached: true
+  });
+});
+
+// Get detailed wash analysis (includes raw data)
+app.get('/api/detection/wash/:token/full', async (req, res) => {
+  const { token } = req.params;
+  
+  try {
+    const analysis = await analyzeWashTrading(token);
+    res.json({
+      success: true,
+      analysis
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to get full wash analysis' 
+    });
+  }
+});
+
+// Get wash warning for a signal
+app.get('/api/signals/:id/wash', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  try {
+    const analysis = await analyzeWashTrading(signal.token);
+    const warning = getWashWarning(analysis);
+    
+    res.json({
+      success: true,
+      signalId: signal.id,
+      symbol: signal.symbol,
+      token: signal.token,
+      wash: {
+        washScore: analysis.washScore,
+        riskLevel: analysis.riskLevel,
+        reportedVolume: analysis.reportedVolume24h,
+        estimatedRealVolume: analysis.estimatedRealVolume,
+        realVolumePercent: analysis.realVolumePercent,
+        selfTrades: analysis.selfTradeCount,
+        circularPatterns: analysis.circularPatternCount
+      },
+      warning,
+      recommendation: analysis.washScore >= 70
+        ? '🚨 AVOID - High probability of fake volume'
+        : analysis.washScore >= 50
+        ? '⚠️ CAUTION - Suspicious volume patterns detected'
+        : analysis.washScore >= 30
+        ? '⚡ MONITOR - Some wash trading indicators'
+        : '✅ OK - Volume appears mostly organic'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to analyze wash trading'
+    });
+  }
+});
+
+// Clear wash trading cache
+app.post('/api/detection/wash/cache/clear', (req, res) => {
+  clearWashCache();
+  res.json({
+    success: true,
+    message: 'Wash trading cache cleared'
+  });
+});
+
+// === SNIPER & FRONT-RUNNER DETECTION API ===
+
+// Full sniper analysis for a token
+app.get('/api/detection/snipers/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  // Validate token format
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    const analysis = await analyzeSnipers(token);
+    
+    res.json({
+      success: true,
+      token,
+      symbol: analysis.symbol,
+      
+      // Core metrics
+      sniperScore: analysis.sniperScore,
+      sniperRisk: analysis.sniperRisk,
+      
+      // Sniper counts
+      counts: {
+        totalSnipers: analysis.totalSnipers,
+        block0Buyers: analysis.block0Buyers,
+        block1to5Buyers: analysis.block1to5Buyers,
+        knownMEVBots: analysis.knownMEVBots,
+        jitoBundled: analysis.jitoBundled
+      },
+      
+      // Supply analysis
+      supply: {
+        sniperPercent: analysis.sniperSupplyPercent,
+        block0Percent: analysis.block0SupplyPercent,
+        dumpProbability: analysis.dumpProbability
+      },
+      
+      // Sniper profile
+      avgSniperWinRate: analysis.avgSniperWinRate,
+      
+      // Block analysis
+      blocks: {
+        tokenCreation: analysis.tokenCreationBlock,
+        firstBuy: analysis.firstBuyBlock,
+        lastSniper: analysis.lastSniperBlock,
+        sniperRange: analysis.sniperBlockRange
+      },
+      
+      // Top snipers (limited for response size)
+      snipers: analysis.snipers.slice(0, 10).map(s => ({
+        address: s.address,
+        blocksFromLaunch: s.blocksFromLaunch,
+        percentageOfSupply: s.percentageOfSupply,
+        sniperScore: s.sniperScore,
+        winRate: s.winRate,
+        isKnownMEVBot: s.isKnownMEVBot,
+        isJitoBundled: s.isJitoBundled,
+        isFastExiter: s.isFastExiter
+      })),
+      
+      // MEV bots detected
+      mevBots: analysis.mevBots,
+      
+      // Red flags and warnings
+      redFlags: analysis.redFlags,
+      warnings: analysis.warnings,
+      
+      // Status message
+      status: analysis.sniperRisk === 'CRITICAL'
+        ? '🚨 CRITICAL SNIPER ACTIVITY - High dump risk'
+        : analysis.sniperRisk === 'HIGH'
+        ? '⚠️ HIGH SNIPER ACTIVITY - Snipers likely to dump'
+        : analysis.sniperRisk === 'MEDIUM'
+        ? '⚡ MODERATE SNIPER ACTIVITY - Exercise caution'
+        : '✅ LOW SNIPER ACTIVITY - Appears organic',
+      
+      // Metadata
+      analyzedAt: analysis.analyzedAt,
+      cached: analysis.cached
+    });
+  } catch (error) {
+    console.error('[SNIPER API] Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to analyze sniper activity',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get sniper analysis as formatted text
+app.get('/api/detection/snipers/:token/text', async (req, res) => {
+  const { token } = req.params;
+  
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).send('Invalid token address');
+  }
+  
+  try {
+    const analysis = await analyzeSnipers(token);
+    res.type('text/plain').send(formatSniperAnalysis(analysis));
+  } catch (error) {
+    res.status(500).send('Failed to analyze sniper activity');
+  }
+});
+
+// Quick sniper check (cached only)
+app.get('/api/detection/snipers/:token/quick', (req, res) => {
+  const { token } = req.params;
+  
+  const cached = getQuickSniperAnalysis(token);
+  
+  if (!cached) {
+    return res.json({
+      success: false,
+      sniperScore: null,
+      message: 'No cached data available. Call /api/detection/snipers/:token first.'
+    });
+  }
+  
+  res.json({
+    success: true,
+    token,
+    symbol: cached.symbol,
+    sniperScore: cached.sniperScore,
+    sniperRisk: cached.sniperRisk,
+    totalSnipers: cached.totalSnipers,
+    block0Buyers: cached.block0Buyers,
+    knownMEVBots: cached.knownMEVBots,
+    sniperSupplyPercent: cached.sniperSupplyPercent,
+    dumpProbability: cached.dumpProbability,
+    cached: true
+  });
+});
+
+// Get detailed sniper analysis (includes full sniper list)
+app.get('/api/detection/snipers/:token/full', async (req, res) => {
+  const { token } = req.params;
+  
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    const analysis = await analyzeSnipers(token);
+    res.json({
+      success: true,
+      analysis
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to get full sniper analysis' 
+    });
+  }
+});
+
+// Get wallet sniper score/profile
+app.get('/api/detection/sniper-score/:wallet', async (req, res) => {
+  const { wallet } = req.params;
+  
+  // Validate wallet format
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  try {
+    const profile = await getWalletSniperScore(wallet);
+    
+    res.json({
+      success: true,
+      wallet,
+      
+      // Core score
+      sniperScore: profile.sniperScore,
+      isLikelyBot: profile.isLikelyBot,
+      
+      // Stats
+      stats: {
+        totalTokensSniped: profile.totalTokensSniped,
+        winRate: profile.winRate,
+        avgHoldTime: profile.avgHoldTime,
+        avgBlockDelay: profile.avgBlockDelay
+      },
+      
+      // Bot info
+      bot: {
+        isMEVBot: profile.isMEVBot,
+        mevBotType: profile.mevBotType
+      },
+      
+      // Risk assessment
+      risk: profile.sniperScore >= 70 
+        ? 'HIGH - Known sniper/bot'
+        : profile.sniperScore >= 40 
+        ? 'MEDIUM - Frequent early buyer'
+        : 'LOW - Normal trading patterns',
+      
+      // Recent activity
+      recentTokens: profile.recentTokens,
+      lastSniped: profile.lastSniped,
+      
+      // Related wallets (potential bundle)
+      relatedWallets: profile.relatedWallets,
+      
+      analyzedAt: profile.analyzedAt
+    });
+  } catch (error) {
+    console.error('[SNIPER PROFILE API] Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to get wallet sniper profile'
+    });
+  }
+});
+
+// Get sniper warning for a signal
+app.get('/api/signals/:id/snipers', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  try {
+    const analysis = await analyzeSnipers(signal.token);
+    const warning = getSniperWarning(analysis);
+    
+    res.json({
+      success: true,
+      signalId: signal.id,
+      symbol: signal.symbol,
+      token: signal.token,
+      sniper: {
+        sniperScore: analysis.sniperScore,
+        sniperRisk: analysis.sniperRisk,
+        totalSnipers: analysis.totalSnipers,
+        block0Buyers: analysis.block0Buyers,
+        knownMEVBots: analysis.knownMEVBots,
+        sniperSupplyPercent: analysis.sniperSupplyPercent,
+        dumpProbability: analysis.dumpProbability,
+        avgSniperWinRate: analysis.avgSniperWinRate
+      },
+      warning,
+      recommendation: analysis.sniperRisk === 'CRITICAL'
+        ? '🚨 AVOID - High sniper concentration, dump imminent'
+        : analysis.sniperRisk === 'HIGH'
+        ? '⚠️ CAUTION - Snipers likely to sell soon'
+        : analysis.sniperRisk === 'MEDIUM'
+        ? '⚡ MONITOR - Some sniper activity detected'
+        : '✅ OK - Low sniper activity'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to analyze sniper activity'
+    });
+  }
+});
+
+// Clear sniper cache
+app.post('/api/detection/snipers/cache/clear', (req, res) => {
+  clearSniperCache();
+  res.json({
+    success: true,
+    message: 'Sniper cache cleared'
+  });
+});
+
+// Combined detection endpoint (honeypot + wash + bundle + sniper)
+app.get('/api/detection/full/:token', async (req, res) => {
+  const { token } = req.params;
+  
+  // Validate token format
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+    return res.status(400).json({ error: 'Invalid token address' });
+  }
+  
+  try {
+    // Run all detections in parallel
+    const [washAnalysis, honeypotResult, bundleAnalysis, sniperAnalysis] = await Promise.all([
+      analyzeWashTrading(token),
+      detectHoneypot(token),
+      analyzeBundles(token),
+      analyzeSnipers(token)
+    ]);
+    
+    // Calculate combined risk score (adjusted weights for 4 factors)
+    const combinedRiskScore = Math.round(
+      (washAnalysis.washScore * 0.25) +     // Wash trading: 25%
+      (honeypotResult.riskScore * 0.35) +   // Honeypot: 35%
+      (bundleAnalysis.bundleScore * 0.20) + // Bundle: 20%
+      (sniperAnalysis.sniperScore * 0.20)   // Sniper: 20%
+    );
+    
+    // Determine overall risk level
+    let overallRisk: string;
+    if (combinedRiskScore >= 70 || honeypotResult.isHoneypot) {
+      overallRisk = 'CRITICAL';
+    } else if (combinedRiskScore >= 50) {
+      overallRisk = 'HIGH';
+    } else if (combinedRiskScore >= 30) {
+      overallRisk = 'MEDIUM';
+    } else {
+      overallRisk = 'LOW';
+    }
+    
+    // Collect all warnings
+    const allWarnings: string[] = [];
+    
+    if (honeypotResult.isHoneypot) {
+      allWarnings.push('🍯 HONEYPOT DETECTED - Cannot sell');
+    }
+    if (washAnalysis.washScore >= 60) {
+      allWarnings.push(`🚿 ${washAnalysis.washVolumePercent}% fake volume detected`);
+    }
+    if (bundleAnalysis.bundleScore >= 50) {
+      allWarnings.push(`📦 Bundle detected - ${bundleAnalysis.bundledPercentage.toFixed(1)}% bundled`);
+    }
+    if (sniperAnalysis.sniperScore >= 50) {
+      allWarnings.push(`🎯 ${sniperAnalysis.totalSnipers} snipers detected - ${sniperAnalysis.sniperSupplyPercent.toFixed(1)}% supply, ${sniperAnalysis.dumpProbability.toFixed(0)}% dump risk`);
+    }
+    
+    res.json({
+      success: true,
+      token,
+      
+      // Combined score
+      combinedRiskScore,
+      overallRisk,
+      
+      // Individual scores
+      scores: {
+        wash: washAnalysis.washScore,
+        honeypot: honeypotResult.riskScore,
+        bundle: bundleAnalysis.bundleScore,
+        sniper: sniperAnalysis.sniperScore
+      },
+      
+      // Risk levels
+      riskLevels: {
+        wash: washAnalysis.riskLevel,
+        honeypot: honeypotResult.riskLevel,
+        bundle: bundleAnalysis.riskLevel,
+        sniper: sniperAnalysis.sniperRisk
+      },
+      
+      // Key metrics
+      metrics: {
+        // Wash trading
+        realVolumePercent: washAnalysis.realVolumePercent,
+        selfTrades: washAnalysis.selfTradeCount,
+        circularPatterns: washAnalysis.circularPatternCount,
+        
+        // Honeypot
+        canSell: honeypotResult.canSell,
+        sellTax: honeypotResult.sellTax,
+        hasBlacklist: honeypotResult.hasBlacklist,
+        
+        // Bundle
+        bundledWallets: bundleAnalysis.totalBundledWallets,
+        bundledPercentage: bundleAnalysis.bundledPercentage,
+        insiderCount: bundleAnalysis.insiders.length,
+        
+        // Sniper
+        totalSnipers: sniperAnalysis.totalSnipers,
+        block0Buyers: sniperAnalysis.block0Buyers,
+        knownMEVBots: sniperAnalysis.knownMEVBots,
+        sniperSupplyPercent: sniperAnalysis.sniperSupplyPercent,
+        dumpProbability: sniperAnalysis.dumpProbability,
+        avgSniperWinRate: sniperAnalysis.avgSniperWinRate
+      },
+      
+      // Warnings
+      warnings: allWarnings,
+      
+      // Recommendation
+      recommendation: combinedRiskScore >= 70 || honeypotResult.isHoneypot
+        ? '🚨 DO NOT BUY - Multiple critical risk factors'
+        : combinedRiskScore >= 50
+        ? '⚠️ HIGH RISK - Exercise extreme caution'
+        : combinedRiskScore >= 30
+        ? '⚡ CAUTION - Some risk factors detected'
+        : '✅ LOWER RISK - Proceed with normal caution',
+      
+      analyzedAt: Date.now()
+    });
+  } catch (error) {
+    console.error('[DETECTION] Full analysis error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to complete full detection analysis'
     });
   }
 });

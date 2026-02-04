@@ -14,3 +14,34 @@ export {
   type HoneypotResult,
   type HoneypotWarning
 } from './honeypot';
+
+export {
+  analyzeSnipers,
+  getWalletSniperScore,
+  getQuickSniperAnalysis,
+  clearSniperCache,
+  formatSniperAnalysis,
+  getSniperWarning,
+  toSafetyData,
+  type SniperAnalysis,
+  type SniperWallet,
+  type WalletSniperProfile,
+  type MEVBotInfo,
+  type JitoBundleInfo
+} from './sniper-detector';
+
+export {
+  analyzeWashTrading,
+  getQuickWashScore,
+  getCachedWashAnalysis,
+  clearWashCache,
+  getWashEmoji,
+  formatWashAnalysis,
+  getWashWarning,
+  type WashTradingAnalysis,
+  type WashTradingWarning,
+  type SelfTrade,
+  type CircularPattern,
+  type IntervalAnomaly,
+  type VolumeAnomalyData
+} from './wash-trading';

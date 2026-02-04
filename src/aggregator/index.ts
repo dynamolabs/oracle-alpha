@@ -13,6 +13,7 @@ import { scanDexVolumeAnomalies } from '../sources/dex-volume-anomaly';
 import { batchGetMetadata } from '../utils/token-metadata';
 import { batchAnalyzeSafety, SafetyAnalysis } from '../filters/dev-check';
 import { batchDetectHoneypot, HoneypotResult } from '../detection/honeypot';
+import { analyzeWashTrading, WashTradingAnalysis } from '../detection/wash-trading';
 import { v4 as uuidv4 } from 'uuid';
 
 // Note: dedup and confidence utils available if needed
@@ -437,16 +438,48 @@ export async function aggregate(options?: { minSources?: number }): Promise<Aggr
   // Sort by score descending
   aggregated.sort((a, b) => b.score - a.score);
 
-  // Enrich with token metadata, safety analysis, and honeypot detection
+  // Enrich with token metadata, safety analysis, honeypot detection, and wash trading
   if (aggregated.length > 0) {
     console.log(`[ORACLE] Enriching ${aggregated.length} signals with metadata...`);
     const addresses = aggregated.map(s => s.token);
     
-    // Fetch metadata, safety, and honeypot checks in parallel
-    const [metadata, safetyResults, honeypotResults] = await Promise.all([
+    // Batch wash trading analysis (with concurrency limit)
+    const batchAnalyzeWashTrading = async (tokens: string[]): Promise<Map<string, WashTradingAnalysis>> => {
+      const results = new Map<string, WashTradingAnalysis>();
+      const batchSize = 3;
+      
+      for (let i = 0; i < tokens.length; i += batchSize) {
+        const batch = tokens.slice(i, i + batchSize);
+        const batchResults = await Promise.all(
+          batch.map(token => 
+            analyzeWashTrading(token).catch(err => {
+              console.error(`[WASH] Error analyzing ${token}:`, err);
+              return null;
+            })
+          )
+        );
+        
+        batchResults.forEach((result, idx) => {
+          if (result) {
+            results.set(batch[idx], result);
+          }
+        });
+        
+        // Small delay between batches
+        if (i + batchSize < tokens.length) {
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
+      
+      return results;
+    };
+    
+    // Fetch metadata, safety, honeypot, and wash trading checks in parallel
+    const [metadata, safetyResults, honeypotResults, washResults] = await Promise.all([
       batchGetMetadata(addresses),
       batchAnalyzeSafety(addresses),
-      batchDetectHoneypot(addresses)
+      batchDetectHoneypot(addresses),
+      batchAnalyzeWashTrading(addresses)
     ]);
 
     for (const signal of aggregated) {
@@ -551,6 +584,73 @@ export async function aggregate(options?: { minSources?: number }): Promise<Aggr
         }
         if (honeypot.lpOwnership.isLocked) {
           signal.analysis.strengths.push('🔒 LP is locked');
+        }
+      }
+      
+      // Apply wash trading detection
+      const wash = washResults.get(signal.token);
+      if (wash) {
+        // Add wash trading data to safety
+        if (!signal.safety) {
+          signal.safety = {
+            safetyScore: 50,
+            riskCategory: 'CAUTION',
+            redFlags: [],
+            devHoldings: 0,
+            topHolderPercentage: 0,
+            liquidityLocked: false,
+            mintAuthorityEnabled: false,
+            freezeAuthorityEnabled: false,
+            tokenAge: 0,
+            bundledWallets: 0
+          };
+        }
+        
+        // Add wash trading metrics to safety data
+        signal.safety.washScore = wash.washScore;
+        signal.safety.washRiskLevel = wash.riskLevel;
+        signal.safety.reportedVolume24h = wash.reportedVolume24h;
+        signal.safety.estimatedRealVolume = wash.estimatedRealVolume;
+        signal.safety.washVolumePercent = wash.washVolumePercent;
+        signal.safety.selfTradeCount = wash.selfTradeCount;
+        signal.safety.circularPatternCount = wash.circularPatternCount;
+        
+        // Add wash trading-based analysis adjustments
+        if (wash.washScore >= 80) {
+          // Extreme wash trading
+          signal.analysis.weaknesses.push(`🚿 EXTREME wash trading (${wash.washScore}/100)`);
+          signal.analysis.weaknesses.push(`📊 Only ${wash.realVolumePercent}% real volume`);
+          signal.score = Math.max(0, signal.score - 30);
+        } else if (wash.washScore >= 60) {
+          // High wash trading
+          signal.analysis.weaknesses.push(`🚿 High wash trading (${wash.washScore}/100)`);
+          signal.analysis.weaknesses.push(`📊 ~${wash.realVolumePercent}% real volume`);
+          signal.score = Math.max(0, signal.score - 20);
+        } else if (wash.washScore >= 40) {
+          // Medium wash trading
+          signal.analysis.weaknesses.push(`💧 Moderate wash trading indicators (${wash.washScore}/100)`);
+          signal.score = Math.max(0, signal.score - 10);
+        }
+        
+        // Add specific warnings
+        if (wash.selfTradeCount >= 10) {
+          signal.analysis.weaknesses.push(`🔄 ${wash.selfTradeCount} self-trading cycles detected`);
+        }
+        if (wash.circularPatternCount >= 3) {
+          signal.analysis.weaknesses.push(`🔁 ${wash.circularPatternCount} circular trading patterns`);
+        }
+        
+        // Add strengths for organic volume
+        if (wash.washScore < 20 && wash.realVolumePercent >= 90) {
+          signal.analysis.strengths.push('✨ Volume appears organic');
+        }
+        if (wash.uniqueTraders > 50) {
+          signal.analysis.strengths.push(`👥 ${wash.uniqueTraders} unique traders`);
+        }
+        
+        // Adjust recommendation for severe wash trading
+        if (wash.washScore >= 70 && !signal.safety?.honeypotRisk?.isHoneypot) {
+          signal.analysis.recommendation = `⚠️ CAUTION - ${wash.washVolumePercent}% fake volume detected. Real volume is only ~$${(wash.estimatedRealVolume / 1000).toFixed(1)}K`;
         }
       }
     }

@@ -14,6 +14,31 @@ export {
   formatPerformanceReport
 } from './source-performance';
 
+// KOL Reliability Tracking
+export {
+  recordKOLCall,
+  recordKOLCallFromSignal,
+  updateKOLCallPrice,
+  updateAllKOLCallPrices,
+  getKOLStats,
+  getKOLHistory,
+  getAllKOLHandles,
+  getKOLLeaderboard,
+  getKOLReliabilityScore,
+  getKOLSignalWeight,
+  shouldIgnoreKOL,
+  generateDemoKOLData,
+  kolCalls,
+  kolIndex
+} from './kol-reliability';
+
+export type {
+  KOLCall,
+  KOLStats,
+  KOLBadge,
+  KOLLeaderboard
+} from './kol-reliability';
+
 // Charts
 export {
   getSignalsOverTime,

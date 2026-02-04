@@ -314,6 +314,34 @@ export function calculateRisk(input: RiskCalculationInput): RiskCalculationResul
     warnings.push(`${signal.safety.insiderCount} suspected insider wallets detected`);
   }
   
+  // Sniper activity warnings
+  const sniperActivity = signal?.safety?.sniperActivity;
+  if (sniperActivity) {
+    if (sniperActivity.sniperScore >= 75) {
+      warnings.push(`🎯🚨 CRITICAL SNIPER ACTIVITY - ${sniperActivity.totalSnipers} snipers, ${sniperActivity.dumpProbability.toFixed(0)}% dump risk!`);
+      // Reduce position significantly
+      finalPosition = finalPosition * 0.25;
+    } else if (sniperActivity.sniperScore >= 50) {
+      warnings.push(`🎯⚠️ HIGH SNIPER ACTIVITY - ${sniperActivity.totalSnipers} snipers detected`);
+      finalPosition = finalPosition * 0.5;
+    } else if (sniperActivity.sniperScore >= 30) {
+      warnings.push(`🎯 Moderate sniper activity (${sniperActivity.totalSnipers} snipers)`);
+      finalPosition = finalPosition * 0.75;
+    }
+    
+    if (sniperActivity.knownMEVBots >= 2) {
+      warnings.push(`🤖 ${sniperActivity.knownMEVBots} known MEV bots detected - expect front-running`);
+    }
+    
+    if (sniperActivity.block0Buyers >= 5) {
+      warnings.push(`⚡ ${sniperActivity.block0Buyers} wallets bought in block 0 - coordinated launch`);
+    }
+    
+    if (sniperActivity.sniperSupplyPercent >= 40) {
+      warnings.push(`📊 Snipers control ${sniperActivity.sniperSupplyPercent.toFixed(1)}% of supply`);
+    }
+  }
+  
   // Generate recommendations
   const recommendations: string[] = [];
   if (score >= 75) {
@@ -337,6 +365,22 @@ export function calculateRisk(input: RiskCalculationInput): RiskCalculationResul
     recommendations.push('Consider waiting for bundle wallets to exit before entering');
   }
   
+  // Sniper-related recommendations
+  if (sniperActivity) {
+    if (sniperActivity.sniperScore < 20) {
+      recommendations.push('✅ Low sniper activity - organic entry patterns');
+    }
+    if (sniperActivity.sniperScore >= 50 && sniperActivity.avgSniperWinRate >= 60) {
+      recommendations.push('🎯 Experienced snipers detected - they often exit quickly for profit');
+    }
+    if (sniperActivity.dumpProbability >= 60) {
+      recommendations.push('⏳ Consider waiting 30-60 min for snipers to dump before entering');
+    }
+    if (sniperActivity.knownMEVBots > 0) {
+      recommendations.push('🤖 MEV bots present - use higher slippage or private RPC');
+    }
+  }
+  
   // Determine confidence level
   let confidence: 'LOW' | 'MEDIUM' | 'HIGH' = 'MEDIUM';
   if (score >= 70 && riskLevel !== 'EXTREME' && kellyPercent > 0.05) {
@@ -349,6 +393,13 @@ export function calculateRisk(input: RiskCalculationInput): RiskCalculationResul
   if (bundleScore !== undefined && bundleScore >= 60) {
     confidence = 'LOW';
   } else if (bundleScore !== undefined && bundleScore >= 40 && confidence === 'HIGH') {
+    confidence = 'MEDIUM';
+  }
+  
+  // Reduce confidence if high sniper activity
+  if (sniperActivity && sniperActivity.sniperScore >= 60) {
+    confidence = 'LOW';
+  } else if (sniperActivity && sniperActivity.sniperScore >= 40 && confidence === 'HIGH') {
     confidence = 'MEDIUM';
   }
   

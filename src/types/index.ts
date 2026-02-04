@@ -71,6 +71,27 @@ export interface SafetyData {
     lpLocked: boolean;
     warnings: string[];
   };
+  
+  // Wash trading detection (optional for backwards compatibility)
+  washScore?: number;          // 0-100, higher = more wash trading
+  washRiskLevel?: 'EXTREME' | 'HIGH' | 'MEDIUM' | 'LOW' | 'MINIMAL';
+  reportedVolume24h?: number;  // What DexScreener reports
+  estimatedRealVolume?: number; // Our estimate of organic volume
+  washVolumePercent?: number;  // Percentage of volume that's fake
+  selfTradeCount?: number;     // Number of self-trading cycles detected
+  circularPatternCount?: number; // Number of circular trading patterns
+  
+  // Sniper/Front-runner detection (optional for backwards compatibility)
+  sniperActivity?: {
+    totalSnipers: number;      // Total wallets that sniped
+    block0Buyers: number;      // Buyers in same block as launch
+    knownMEVBots: number;      // Known MEV bot count
+    sniperScore: number;       // 0-100, higher = more sniper activity
+    sniperRisk: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
+    sniperSupplyPercent: number;  // % of supply held by snipers
+    dumpProbability: number;   // Estimated probability of sniper dump (0-100%)
+    avgSniperWinRate: number;  // Average historical win rate of snipers
+  };
 }
 
 // Aggregated Signal
