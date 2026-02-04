@@ -47,6 +47,12 @@ import { generateTextCard, generateHtmlCard, generateSvgCard } from './share-car
 import { exportSignals, exportPerformanceReport } from '../export/data-export';
 import { explainSignal, formatExplanation } from '../analysis/explainer';
 import {
+  generateExplanation,
+  formatExplanationText,
+  formatExplanationHtml,
+  DetailedExplanation
+} from '../ai/explainer';
+import {
   loadProof,
   listProofs,
   verifyProof,
@@ -91,6 +97,54 @@ import {
   loadLearningState
 } from '../learning';
 import { getWeightsSummary, invalidateWeightsCache } from '../aggregator/weights';
+import {
+  calculateRisk,
+  formatRiskCalculation,
+  quickPositionSize,
+  POSITION_RULES,
+  RiskCalculationInput,
+  RiskCalculationResult
+} from '../risk/calculator';
+import {
+  getAutoCopySettings,
+  updateAutoCopySettings,
+  resetAutoCopySettings,
+  followWallet,
+  unfollowWallet,
+  getFollowedWallets,
+  getFollowedWallet,
+  updateFollowedWallet,
+  toggleWalletEnabled,
+  getCopyTradeHistory,
+  getCopyTradeStats,
+  getAutoCopySummary,
+  processSignalForAutoCopy,
+  shouldCopySignal
+} from '../trading/auto-copy';
+import {
+  createRule,
+  createRuleFromTemplate,
+  getAllRules,
+  getEnabledRules,
+  getRule,
+  updateRule,
+  deleteRule,
+  toggleRule,
+  duplicateRule,
+  getTemplates,
+  getTemplate,
+  getTriggerHistory,
+  getRuleStats,
+  processSignalAgainstRules,
+  testRule,
+  validateRule,
+  exportRules,
+  importRules,
+  AlertRule,
+  RuleCondition,
+  ConditionGroup,
+  RuleAction
+} from '../alerts/rules';
 
 // Demo mode configuration
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -907,6 +961,89 @@ app.get('/api/share/:id/svg', (req, res) => {
   res.type('image/svg+xml').send(svg);
 });
 
+// Get image share card (same as SVG but with image content type for better social sharing)
+app.get('/api/share/:id/image', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  const svg = generateSvgCard(signal);
+  // Set appropriate headers for social media crawlers
+  res.set({
+    'Content-Type': 'image/svg+xml',
+    'Cache-Control': 'public, max-age=3600',
+    'X-Content-Type-Options': 'nosniff'
+  });
+  res.send(svg);
+});
+
+// Dynamic OG image for specific signal
+app.get('/api/share/:id/og', (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    // Return a fallback OG image
+    return res.redirect('/api/og?symbol=ORACLE&score=80');
+  }
+  
+  const scoreColor = signal.score >= 70 ? '#22c55e' : signal.score >= 50 ? '#eab308' : '#ef4444';
+  const riskColor = {
+    'LOW': '#22c55e',
+    'MEDIUM': '#eab308',
+    'HIGH': '#f97316',
+    'EXTREME': '#ef4444'
+  }[signal.riskLevel] || '#eab308';
+  
+  const svg = `
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="100%" style="stop-color:#1a1a3a"/>
+    </linearGradient>
+    <linearGradient id="logo" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d9ff"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid Background -->
+  <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(0,217,255,0.05)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  
+  <!-- Header -->
+  <text x="60" y="70" font-family="monospace" font-size="32" fill="url(#logo)">🔮 ORACLE Alpha Signal</text>
+  
+  <!-- Risk Badge -->
+  <rect x="1000" y="40" width="140" height="45" rx="22" fill="${riskColor}"/>
+  <text x="1070" y="72" font-family="monospace" font-size="20" fill="#000" text-anchor="middle" font-weight="bold">${signal.riskLevel}</text>
+  
+  <!-- Main Symbol -->
+  <text x="600" y="250" font-family="monospace" font-size="120" fill="#fff" text-anchor="middle" font-weight="bold">$${signal.symbol}</text>
+  <text x="600" y="310" font-family="monospace" font-size="28" fill="#888" text-anchor="middle">${signal.name.slice(0, 30)}</text>
+  
+  <!-- Score Circle -->
+  <circle cx="600" cy="420" r="70" fill="${scoreColor}"/>
+  <text x="600" y="440" font-family="monospace" font-size="52" fill="#000" text-anchor="middle" font-weight="bold">${signal.score}</text>
+  
+  <!-- Metrics -->
+  <text x="300" y="520" font-family="monospace" font-size="22" fill="#888" text-anchor="middle">MCap: $${((signal.marketData?.mcap || 0) / 1000).toFixed(1)}K</text>
+  <text x="600" y="520" font-family="monospace" font-size="22" fill="#888" text-anchor="middle">${signal.sources.length} Sources</text>
+  <text x="900" y="520" font-family="monospace" font-size="22" fill="#888" text-anchor="middle">${Math.floor((Date.now() - signal.timestamp) / 60000)}m ago</text>
+  
+  <!-- Footer -->
+  <text x="600" y="590" font-family="monospace" font-size="20" fill="#555" text-anchor="middle">Verifiable on-chain signals on Solana ⛓️</text>
+</svg>`.trim();
+
+  res.set({
+    'Content-Type': 'image/svg+xml',
+    'Cache-Control': 'public, max-age=3600'
+  });
+  res.send(svg);
+});
+
 // Generate OG image for social sharing (SVG-based)
 app.get('/api/og', (req, res) => {
   const { symbol, score, risk } = req.query;
@@ -968,6 +1105,63 @@ app.get('/api/explain/:id/text', (req, res) => {
 
   const text = formatExplanation(signal);
   res.type('text/plain').send(text);
+});
+
+// Get detailed AI-powered explanation (comprehensive analysis)
+app.get('/api/explain/:id/detailed', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+
+  try {
+    const detailed = await generateExplanation(signal);
+    res.json({
+      signal: {
+        id: signal.id,
+        symbol: signal.symbol,
+        token: signal.token,
+        score: signal.score,
+        riskLevel: signal.riskLevel
+      },
+      explanation: detailed
+    });
+  } catch (error) {
+    console.error('[API] Failed to generate detailed explanation:', error);
+    res.status(500).json({ error: 'Failed to generate explanation' });
+  }
+});
+
+// Get detailed explanation as formatted text
+app.get('/api/explain/:id/detailed/text', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+
+  try {
+    const detailed = await generateExplanation(signal);
+    const text = formatExplanationText(detailed);
+    res.type('text/plain').send(text);
+  } catch (error) {
+    res.status(500).send('Failed to generate explanation');
+  }
+});
+
+// Get detailed explanation as HTML (for dashboard modal)
+app.get('/api/explain/:id/detailed/html', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.id);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+
+  try {
+    const detailed = await generateExplanation(signal);
+    const html = formatExplanationHtml(detailed);
+    res.type('text/html').send(html);
+  } catch (error) {
+    res.status(500).send('Failed to generate explanation');
+  }
 });
 
 // === REASONING PROOFS API ===
@@ -2259,6 +2453,633 @@ app.get('/api/trade/optimal/:signalId', (req, res) => {
           : optimalSize < 200
             ? 'Moderate liquidity - normal position size OK'
             : 'Good liquidity - larger positions possible'
+  });
+});
+
+// === RISK CALCULATOR API ===
+
+// Calculate risk and position sizing
+app.post('/api/risk/calculate', (req, res) => {
+  const { portfolioSize, riskPercent, signalId, score, riskLevel, volatility } = req.body;
+  
+  // Validate inputs
+  if (!portfolioSize || portfolioSize <= 0) {
+    return res.status(400).json({ error: 'portfolioSize is required and must be positive' });
+  }
+  
+  const validRiskPercent = Math.max(1, Math.min(10, riskPercent || 5));
+  
+  // Find signal if provided
+  let signal = undefined;
+  if (signalId) {
+    signal = signalStore.find(s => s.id === signalId);
+    if (!signal) {
+      return res.status(404).json({ error: 'Signal not found' });
+    }
+  }
+  
+  // Build input
+  const input: RiskCalculationInput = {
+    portfolioSize,
+    riskPercent: validRiskPercent,
+    signal,
+    customScore: score,
+    customRiskLevel: riskLevel,
+    customVolatility: volatility
+  };
+  
+  const result = calculateRisk(input);
+  
+  res.json({
+    success: true,
+    calculation: result,
+    signal: signal ? {
+      id: signal.id,
+      symbol: signal.symbol,
+      token: signal.token,
+      score: signal.score,
+      riskLevel: signal.riskLevel
+    } : null
+  });
+});
+
+// Get risk calculation for a specific signal
+app.get('/api/risk/signal/:signalId', (req, res) => {
+  const { signalId } = req.params;
+  const portfolioSize = parseFloat(req.query.portfolioSize as string) || 1000;
+  const riskPercent = parseFloat(req.query.riskPercent as string) || 5;
+  
+  const signal = signalStore.find(s => s.id === signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const result = calculateRisk({
+    portfolioSize,
+    riskPercent,
+    signal
+  });
+  
+  res.json({
+    signal: {
+      id: signal.id,
+      symbol: signal.symbol,
+      token: signal.token,
+      score: signal.score,
+      riskLevel: signal.riskLevel,
+      price: signal.marketData?.price,
+      mcap: signal.marketData?.mcap
+    },
+    calculation: result
+  });
+});
+
+// Get position sizing rules
+app.get('/api/risk/rules', (req, res) => {
+  res.json({
+    rules: POSITION_RULES,
+    description: {
+      LOW: 'Low risk signals allow up to 10% of portfolio per trade',
+      MEDIUM: 'Medium risk signals allow up to 8% of portfolio per trade',
+      HIGH: 'High risk signals allow up to 5% of portfolio per trade',
+      EXTREME: 'Extreme risk signals allow up to 2% of portfolio per trade'
+    },
+    methodology: {
+      kelly: 'Kelly Criterion for optimal position sizing based on edge',
+      riskAdjusted: 'Position size adjusted by signal score and volatility',
+      stopLoss: 'Stop loss levels based on volatility and risk tolerance',
+      takeProfit: 'Take profit targets at 2x, 3x, 5x, 10x with probability estimates'
+    }
+  });
+});
+
+// Quick position size calculation
+app.get('/api/risk/quick', (req, res) => {
+  const portfolioSize = parseFloat(req.query.portfolioSize as string) || 1000;
+  const score = parseInt(req.query.score as string) || 60;
+  const riskLevel = (req.query.riskLevel as string || 'MEDIUM').toUpperCase();
+  
+  if (!['LOW', 'MEDIUM', 'HIGH', 'EXTREME'].includes(riskLevel)) {
+    return res.status(400).json({ error: 'Invalid riskLevel. Use: LOW, MEDIUM, HIGH, or EXTREME' });
+  }
+  
+  const position = quickPositionSize(
+    portfolioSize,
+    score,
+    riskLevel as 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME'
+  );
+  
+  const maxPercent = POSITION_RULES[riskLevel as keyof typeof POSITION_RULES].maxPercent;
+  
+  res.json({
+    portfolioSize,
+    score,
+    riskLevel,
+    recommendedPosition: Math.round(position * 100) / 100,
+    recommendedPercent: Math.round((position / portfolioSize) * 100 * 10) / 10,
+    maxAllowed: portfolioSize * (maxPercent / 100),
+    maxPercent
+  });
+});
+
+// Get risk calculation as formatted text
+app.get('/api/risk/signal/:signalId/text', (req, res) => {
+  const { signalId } = req.params;
+  const portfolioSize = parseFloat(req.query.portfolioSize as string) || 1000;
+  const riskPercent = parseFloat(req.query.riskPercent as string) || 5;
+  
+  const signal = signalStore.find(s => s.id === signalId);
+  if (!signal) {
+    return res.status(404).send('Signal not found');
+  }
+  
+  const result = calculateRisk({
+    portfolioSize,
+    riskPercent,
+    signal
+  });
+  
+  res.type('text/plain').send(formatRiskCalculation(result));
+});
+
+// Batch risk calculation for multiple signals
+app.post('/api/risk/batch', (req, res) => {
+  const { portfolioSize, riskPercent, signalIds } = req.body;
+  
+  if (!portfolioSize || portfolioSize <= 0) {
+    return res.status(400).json({ error: 'portfolioSize is required and must be positive' });
+  }
+  
+  if (!signalIds || !Array.isArray(signalIds) || signalIds.length === 0) {
+    return res.status(400).json({ error: 'signalIds array is required' });
+  }
+  
+  const validRiskPercent = Math.max(1, Math.min(10, riskPercent || 5));
+  const calculations = [];
+  
+  for (const signalId of signalIds.slice(0, 20)) { // Limit to 20
+    const signal = signalStore.find(s => s.id === signalId);
+    if (!signal) continue;
+    
+    const result = calculateRisk({
+      portfolioSize,
+      riskPercent: validRiskPercent,
+      signal
+    });
+    
+    calculations.push({
+      signalId,
+      symbol: signal.symbol,
+      token: signal.token,
+      score: signal.score,
+      riskLevel: signal.riskLevel,
+      recommendedPosition: result.recommendedPosition,
+      recommendedPercent: result.recommendedPositionPercent,
+      stopLoss: result.recommendedStopLoss,
+      takeProfit: result.takeProfit[0], // 2x target
+      confidence: result.confidence
+    });
+  }
+  
+  // Sort by recommended position (highest first)
+  calculations.sort((a, b) => b.recommendedPosition - a.recommendedPosition);
+  
+  res.json({
+    portfolioSize,
+    riskPercent: validRiskPercent,
+    count: calculations.length,
+    calculations,
+    summary: {
+      totalRecommended: calculations.reduce((sum, c) => sum + c.recommendedPosition, 0),
+      avgConfidence: calculations.length > 0 
+        ? calculations.filter(c => c.confidence === 'HIGH').length / calculations.length * 100
+        : 0
+    }
+  });
+});
+
+// === AUTO-COPY TRADING API ===
+
+// Get auto-copy settings
+app.get('/api/copy/settings', (req, res) => {
+  res.json(getAutoCopySettings());
+});
+
+// Update auto-copy settings
+app.post('/api/copy/settings', (req, res) => {
+  const updates = req.body;
+  const settings = updateAutoCopySettings(updates);
+  res.json({
+    success: true,
+    settings
+  });
+});
+
+// Reset auto-copy settings to defaults
+app.post('/api/copy/settings/reset', (req, res) => {
+  const settings = resetAutoCopySettings();
+  res.json({
+    success: true,
+    message: 'Settings reset to defaults',
+    settings
+  });
+});
+
+// Get all followed wallets
+app.get('/api/copy/wallets', (req, res) => {
+  const wallets = getFollowedWallets();
+  res.json({
+    count: wallets.length,
+    wallets
+  });
+});
+
+// Get a specific followed wallet
+app.get('/api/copy/wallets/:id', (req, res) => {
+  const wallet = getFollowedWallet(req.params.id);
+  if (!wallet) {
+    return res.status(404).json({ error: 'Wallet not found' });
+  }
+  res.json(wallet);
+});
+
+// Follow a new wallet
+app.post('/api/copy/follow', (req, res) => {
+  const { address, label, winRate, source, notes, enabled } = req.body;
+  
+  if (!address) {
+    return res.status(400).json({ error: 'address is required' });
+  }
+  
+  if (!label) {
+    return res.status(400).json({ error: 'label is required' });
+  }
+  
+  // Validate wallet address format (basic check)
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
+    return res.status(400).json({ error: 'Invalid wallet address format' });
+  }
+  
+  const wallet = followWallet(address, label, {
+    winRate: winRate ? parseFloat(winRate) : undefined,
+    source,
+    notes,
+    enabled: enabled !== false
+  });
+  
+  res.json({
+    success: true,
+    message: `Now following ${label}`,
+    wallet
+  });
+});
+
+// Unfollow a wallet
+app.delete('/api/copy/wallets/:id', (req, res) => {
+  const removed = unfollowWallet(req.params.id);
+  if (!removed) {
+    return res.status(404).json({ error: 'Wallet not found' });
+  }
+  res.json({
+    success: true,
+    message: 'Wallet unfollowed'
+  });
+});
+
+// Update a followed wallet
+app.patch('/api/copy/wallets/:id', (req, res) => {
+  const updates = req.body;
+  const wallet = updateFollowedWallet(req.params.id, updates);
+  if (!wallet) {
+    return res.status(404).json({ error: 'Wallet not found' });
+  }
+  res.json({
+    success: true,
+    wallet
+  });
+});
+
+// Toggle wallet enabled status
+app.post('/api/copy/wallets/:id/toggle', (req, res) => {
+  const enabled = toggleWalletEnabled(req.params.id);
+  res.json({
+    success: true,
+    enabled
+  });
+});
+
+// Get copy trade history
+app.get('/api/copy/history', (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+  const history = getCopyTradeHistory(limit);
+  res.json({
+    count: history.length,
+    trades: history
+  });
+});
+
+// Get copy trade stats
+app.get('/api/copy/stats', (req, res) => {
+  res.json(getCopyTradeStats());
+});
+
+// Get full auto-copy summary (for dashboard)
+app.get('/api/copy/summary', (req, res) => {
+  res.json(getAutoCopySummary());
+});
+
+// Check if a signal would be copied
+app.post('/api/copy/check', (req, res) => {
+  const { signalId, walletAddress } = req.body;
+  
+  if (!signalId) {
+    return res.status(400).json({ error: 'signalId is required' });
+  }
+  
+  const signal = signalStore.find(s => s.id === signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const result = shouldCopySignal(signal, walletAddress);
+  res.json({
+    signal: {
+      id: signal.id,
+      symbol: signal.symbol,
+      score: signal.score,
+      riskLevel: signal.riskLevel
+    },
+    ...result
+  });
+});
+
+// Manually trigger copy trade for a signal
+app.post('/api/copy/execute/:signalId', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const execution = await processSignalForAutoCopy(signal);
+  
+  if (!execution) {
+    return res.status(400).json({ error: 'No eligible wallet for copy trade' });
+  }
+  
+  res.json({
+    success: execution.status === 'EXECUTED',
+    execution
+  });
+});
+
+// === ALERT RULES API ===
+
+// Get all rules
+app.get('/api/alerts/rules', (req, res) => {
+  const enabledOnly = req.query.enabled === 'true';
+  const rules = enabledOnly ? getEnabledRules() : getAllRules();
+  res.json({
+    count: rules.length,
+    rules
+  });
+});
+
+// Get a specific rule
+app.get('/api/alerts/rules/:id', (req, res) => {
+  const rule = getRule(req.params.id);
+  if (!rule) {
+    return res.status(404).json({ error: 'Rule not found' });
+  }
+  res.json(rule);
+});
+
+// Create a new rule
+app.post('/api/alerts/rules', (req, res) => {
+  const { name, conditionGroups, actions, description, groupOperator, cooldownMinutes, maxTriggersPerDay, tags, enabled } = req.body;
+  
+  // Validate required fields
+  if (!name) {
+    return res.status(400).json({ error: 'name is required' });
+  }
+  
+  if (!conditionGroups || !Array.isArray(conditionGroups) || conditionGroups.length === 0) {
+    return res.status(400).json({ error: 'conditionGroups array is required' });
+  }
+  
+  if (!actions || !Array.isArray(actions) || actions.length === 0) {
+    return res.status(400).json({ error: 'actions array is required' });
+  }
+  
+  // Validate rule
+  const validation = validateRule({ name, conditionGroups, actions });
+  if (!validation.valid) {
+    return res.status(400).json({ error: 'Invalid rule', errors: validation.errors });
+  }
+  
+  const rule = createRule(name, conditionGroups, actions, {
+    description,
+    groupOperator: groupOperator || 'AND',
+    cooldownMinutes: cooldownMinutes || 5,
+    maxTriggersPerDay: maxTriggersPerDay || 50,
+    tags,
+    enabled: enabled !== false
+  });
+  
+  res.json({
+    success: true,
+    rule
+  });
+});
+
+// Create rule from template
+app.post('/api/alerts/rules/template', (req, res) => {
+  const { templateId, name, actions, description, cooldownMinutes, maxTriggersPerDay, tags } = req.body;
+  
+  if (!templateId) {
+    return res.status(400).json({ error: 'templateId is required' });
+  }
+  
+  if (!name) {
+    return res.status(400).json({ error: 'name is required' });
+  }
+  
+  if (!actions || !Array.isArray(actions) || actions.length === 0) {
+    return res.status(400).json({ error: 'actions array is required' });
+  }
+  
+  const rule = createRuleFromTemplate(templateId, name, actions, {
+    description,
+    cooldownMinutes,
+    maxTriggersPerDay,
+    tags
+  });
+  
+  if (!rule) {
+    return res.status(404).json({ error: 'Template not found' });
+  }
+  
+  res.json({
+    success: true,
+    rule
+  });
+});
+
+// Update a rule
+app.patch('/api/alerts/rules/:id', (req, res) => {
+  const updates = req.body;
+  const rule = updateRule(req.params.id, updates);
+  if (!rule) {
+    return res.status(404).json({ error: 'Rule not found' });
+  }
+  res.json({
+    success: true,
+    rule
+  });
+});
+
+// Delete a rule
+app.delete('/api/alerts/rules/:id', (req, res) => {
+  const deleted = deleteRule(req.params.id);
+  if (!deleted) {
+    return res.status(404).json({ error: 'Rule not found' });
+  }
+  res.json({
+    success: true,
+    message: 'Rule deleted'
+  });
+});
+
+// Toggle rule enabled status
+app.post('/api/alerts/rules/:id/toggle', (req, res) => {
+  const enabled = toggleRule(req.params.id);
+  res.json({
+    success: true,
+    enabled
+  });
+});
+
+// Duplicate a rule
+app.post('/api/alerts/rules/:id/duplicate', (req, res) => {
+  const { newName } = req.body;
+  const rule = duplicateRule(req.params.id, newName);
+  if (!rule) {
+    return res.status(404).json({ error: 'Rule not found' });
+  }
+  res.json({
+    success: true,
+    rule
+  });
+});
+
+// Test a rule against a signal
+app.post('/api/alerts/rules/:id/test', (req, res) => {
+  const { signalId } = req.body;
+  
+  const rule = getRule(req.params.id);
+  if (!rule) {
+    return res.status(404).json({ error: 'Rule not found' });
+  }
+  
+  if (!signalId) {
+    return res.status(400).json({ error: 'signalId is required' });
+  }
+  
+  const signal = signalStore.find(s => s.id === signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const result = testRule(rule, signal);
+  res.json({
+    rule: {
+      id: rule.id,
+      name: rule.name
+    },
+    signal: {
+      id: signal.id,
+      symbol: signal.symbol,
+      score: signal.score,
+      riskLevel: signal.riskLevel
+    },
+    ...result
+  });
+});
+
+// Get available templates
+app.get('/api/alerts/templates', (req, res) => {
+  res.json({
+    count: getTemplates().length,
+    templates: getTemplates()
+  });
+});
+
+// Get specific template
+app.get('/api/alerts/templates/:id', (req, res) => {
+  const template = getTemplate(req.params.id);
+  if (!template) {
+    return res.status(404).json({ error: 'Template not found' });
+  }
+  res.json(template);
+});
+
+// Get trigger history
+app.get('/api/alerts/history', (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+  const history = getTriggerHistory(limit);
+  res.json({
+    count: history.length,
+    history
+  });
+});
+
+// Get rule stats
+app.get('/api/alerts/stats', (req, res) => {
+  res.json(getRuleStats());
+});
+
+// Export rules as JSON
+app.get('/api/alerts/export', (req, res) => {
+  const json = exportRules();
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename=oracle-alert-rules.json');
+  res.send(json);
+});
+
+// Import rules from JSON
+app.post('/api/alerts/import', (req, res) => {
+  const { rules: rulesJson } = req.body;
+  
+  if (!rulesJson) {
+    return res.status(400).json({ error: 'rules JSON is required' });
+  }
+  
+  const json = typeof rulesJson === 'string' ? rulesJson : JSON.stringify(rulesJson);
+  const result = importRules(json);
+  
+  res.json({
+    success: result.imported > 0,
+    imported: result.imported,
+    errors: result.errors
+  });
+});
+
+// Manually process a signal against all rules
+app.post('/api/alerts/process/:signalId', async (req, res) => {
+  const signal = signalStore.find(s => s.id === req.params.signalId);
+  if (!signal) {
+    return res.status(404).json({ error: 'Signal not found' });
+  }
+  
+  const events = await processSignalAgainstRules(signal);
+  
+  res.json({
+    signal: {
+      id: signal.id,
+      symbol: signal.symbol,
+      score: signal.score
+    },
+    triggeredRules: events.length,
+    events
   });
 });
 

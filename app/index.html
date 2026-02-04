@@ -8,6 +8,20 @@
     <meta property="og:title" content="ORACLE Alpha - Verifiable Trading Signals">
     <meta property="og:description" content="AI-powered signal aggregator with on-chain verification">
     <meta property="og:type" content="website">
+    <meta property="og:image" content="/api/og?symbol=ORACLE&score=85&risk=LOW">
+    <meta property="og:url" content="https://oracle-alpha.io">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ORACLE Alpha - Verifiable Trading Signals">
+    <meta name="twitter:description" content="AI-powered signal aggregator with on-chain verification on Solana">
+    <meta name="twitter:image" content="/api/og?symbol=ORACLE&score=85&risk=LOW">
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ORACLE Alpha">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#00d9ff">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icon-192.svg">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -601,6 +615,232 @@
         .confidence-HIGH { background: #22c55e; color: #000; }
         .confidence-MEDIUM { background: #eab308; color: #000; }
         .confidence-LOW { background: #ef4444; color: #fff; }
+        
+        /* ========================================
+           DETAILED EXPLANATION MODAL STYLES
+           ======================================== */
+        
+        .exp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .exp-token-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .exp-symbol {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .exp-confidence {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            width: fit-content;
+        }
+        
+        .exp-confidence-high { background: rgba(34,197,94,0.2); color: #22c55e; border: 1px solid #22c55e; }
+        .exp-confidence-medium { background: rgba(234,179,8,0.2); color: #eab308; border: 1px solid #eab308; }
+        .exp-confidence-low { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid #ef4444; }
+        
+        .exp-score-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .exp-score-high { background: linear-gradient(135deg, #22c55e, #16a34a); color: #000; }
+        .exp-score-medium { background: linear-gradient(135deg, #eab308, #ca8a04); color: #000; }
+        .exp-score-low { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+        
+        .exp-summary {
+            background: rgba(168,85,247,0.1);
+            border: 1px solid rgba(168,85,247,0.3);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #ccc;
+            font-size: 0.95em;
+        }
+        
+        .exp-section {
+            margin-bottom: 20px;
+        }
+        
+        .exp-section-title {
+            color: #a855f7;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 1em;
+        }
+        
+        .exp-sources {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .exp-source {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .exp-source-icon {
+            font-size: 1.5em;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .exp-source-content {
+            flex: 1;
+        }
+        
+        .exp-source-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.9em;
+        }
+        
+        .exp-source-detail {
+            color: #888;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+        
+        .exp-source-impact {
+            font-size: 0.75em;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .exp-market {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 12px;
+        }
+        
+        .exp-market-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9em;
+        }
+        
+        .exp-market-row:last-child {
+            border-bottom: none;
+        }
+        
+        .exp-market-row span:first-child {
+            color: #888;
+        }
+        
+        .exp-market-row span:last-child {
+            color: #fff;
+        }
+        
+        .exp-market-net {
+            margin-top: 5px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .exp-risks {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+        
+        .exp-risk {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+        
+        .exp-risk-factor {
+            color: #888;
+            flex: 1;
+        }
+        
+        .exp-risk-value {
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .exp-risk-status {
+            font-size: 1.1em;
+        }
+        
+        .exp-conclusion {
+            background: linear-gradient(135deg, rgba(0,217,255,0.1), rgba(168,85,247,0.1));
+            border: 1px solid rgba(0,217,255,0.3);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        .exp-conclusion p {
+            color: #ccc;
+            line-height: 1.6;
+            margin: 0;
+            font-size: 0.95em;
+        }
+        
+        /* Wider explanation modal */
+        #explanation-modal .modal {
+            max-width: 550px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        @media (max-width: 600px) {
+            #explanation-modal .modal {
+                max-width: 95%;
+                margin: 10px;
+            }
+            
+            .exp-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .exp-score-circle {
+                align-self: flex-end;
+            }
+            
+            .exp-risks {
+                grid-template-columns: 1fr;
+            }
+        }
         
         /* ========================================
            COMPREHENSIVE MOBILE RESPONSIVE STYLES
@@ -1632,6 +1872,295 @@
             gap: 20px;
         }
         
+        /* Risk Calculator Widget */
+        .risk-calculator-widget {
+            background: linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(0,217,255,0.1) 100%);
+            border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .risk-calc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .risk-calc-header h3 {
+            font-size: 1em;
+            font-weight: 600;
+            color: #a855f7;
+            margin: 0;
+        }
+        
+        .risk-calc-toggle {
+            cursor: pointer;
+            color: #888;
+            transition: transform 0.3s;
+        }
+        
+        .risk-calc-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .risk-calc-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .risk-calc-content.collapsed {
+            display: none;
+        }
+        
+        .risk-calc-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .risk-calc-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .risk-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .risk-input-group label {
+            color: #888;
+            font-size: 0.85em;
+        }
+        
+        .risk-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .risk-currency {
+            position: absolute;
+            left: 12px;
+            color: #00d9ff;
+            font-weight: 600;
+        }
+        
+        .risk-input-wrapper input[type="number"] {
+            width: 100%;
+            padding: 10px 10px 10px 28px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1em;
+        }
+        
+        .risk-input-wrapper input:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+        
+        .quick-portfolio-btns {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .quick-portfolio-btns button {
+            flex: 1;
+            padding: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: #888;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-portfolio-btns button:hover {
+            border-color: #00d9ff;
+            color: #00d9ff;
+        }
+        
+        .risk-input-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        
+        .risk-input-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .risk-percent-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75em;
+            color: #666;
+        }
+        
+        .risk-calc-rules h4 {
+            color: #888;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+        
+        .risk-rules-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .risk-rules-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .risk-rule {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            gap: 5px;
+        }
+        
+        .risk-rule-badge {
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .risk-rule-max {
+            font-size: 0.9em;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .risk-rule.low { border: 1px solid rgba(34,197,94,0.3); }
+        .risk-rule.medium { border: 1px solid rgba(234,179,8,0.3); }
+        .risk-rule.high { border: 1px solid rgba(249,115,22,0.3); }
+        .risk-rule.extreme { border: 1px solid rgba(239,68,68,0.3); }
+        
+        .risk-calc-results {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .risk-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .risk-result-symbol {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .risk-result-score {
+            background: rgba(168,85,247,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: #a855f7;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .risk-result-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .risk-result-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .risk-result-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .risk-result-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #00d9ff;
+        }
+        
+        .risk-result-label {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 3px;
+        }
+        
+        .risk-result-confidence {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .confidence-badge.high {
+            background: rgba(34,197,94,0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34,197,94,0.3);
+        }
+        
+        .confidence-badge.medium {
+            background: rgba(234,179,8,0.2);
+            color: #eab308;
+            border: 1px solid rgba(234,179,8,0.3);
+        }
+        
+        .confidence-badge.low {
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+        
+        .risk-calc-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.85em;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        
         .market-condition-header {
             display: flex;
             align-items: center;
@@ -1914,6 +2443,93 @@
             </div>
         </div>
         
+        <!-- Risk Calculator Widget -->
+        <div class="risk-calculator-widget" id="risk-calculator">
+            <div class="risk-calc-header">
+                <h3>📊 Risk Calculator</h3>
+                <span class="risk-calc-toggle" onclick="toggleRiskCalc()" title="Collapse">▼</span>
+            </div>
+            <div class="risk-calc-content" id="risk-calc-content">
+                <div class="risk-calc-inputs">
+                    <div class="risk-input-group">
+                        <label>Portfolio Size (USD)</label>
+                        <div class="risk-input-wrapper">
+                            <span class="risk-currency">$</span>
+                            <input type="number" id="risk-portfolio-size" value="1000" min="100" max="1000000" step="100" onchange="updateRiskCalc()">
+                        </div>
+                        <div class="quick-portfolio-btns">
+                            <button onclick="setPortfolioSize(500)">$500</button>
+                            <button onclick="setPortfolioSize(1000)">$1K</button>
+                            <button onclick="setPortfolioSize(5000)">$5K</button>
+                            <button onclick="setPortfolioSize(10000)">$10K</button>
+                        </div>
+                    </div>
+                    <div class="risk-input-group">
+                        <label>Risk Tolerance: <span id="risk-percent-display">5%</span></label>
+                        <input type="range" id="risk-percent" min="1" max="10" value="5" onchange="updateRiskPercent()">
+                        <div class="risk-percent-labels">
+                            <span>Conservative</span>
+                            <span>Aggressive</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-calc-rules">
+                    <h4>Position Limits by Risk Level</h4>
+                    <div class="risk-rules-grid">
+                        <div class="risk-rule low">
+                            <span class="risk-rule-badge">🟢 LOW</span>
+                            <span class="risk-rule-max">Max 10%</span>
+                        </div>
+                        <div class="risk-rule medium">
+                            <span class="risk-rule-badge">🟡 MEDIUM</span>
+                            <span class="risk-rule-max">Max 8%</span>
+                        </div>
+                        <div class="risk-rule high">
+                            <span class="risk-rule-badge">🟠 HIGH</span>
+                            <span class="risk-rule-max">Max 5%</span>
+                        </div>
+                        <div class="risk-rule extreme">
+                            <span class="risk-rule-badge">🔴 EXTREME</span>
+                            <span class="risk-rule-max">Max 2%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="risk-calc-results" id="risk-calc-results" style="display: none;">
+                    <div class="risk-result-header">
+                        <span class="risk-result-symbol" id="risk-result-symbol">$TOKEN</span>
+                        <span class="risk-result-score" id="risk-result-score">Score: 75</span>
+                    </div>
+                    <div class="risk-result-grid">
+                        <div class="risk-result-item">
+                            <span class="risk-result-value" id="risk-recommended-position">$50.00</span>
+                            <span class="risk-result-label">Recommended</span>
+                        </div>
+                        <div class="risk-result-item">
+                            <span class="risk-result-value" id="risk-max-position">$100.00</span>
+                            <span class="risk-result-label">Maximum</span>
+                        </div>
+                        <div class="risk-result-item">
+                            <span class="risk-result-value" id="risk-stop-loss">-10%</span>
+                            <span class="risk-result-label">Stop Loss</span>
+                        </div>
+                        <div class="risk-result-item">
+                            <span class="risk-result-value" id="risk-take-profit">+100%</span>
+                            <span class="risk-result-label">TP (2x)</span>
+                        </div>
+                    </div>
+                    <div class="risk-result-confidence" id="risk-result-confidence">
+                        <span class="confidence-badge high">HIGH CONFIDENCE</span>
+                    </div>
+                </div>
+                
+                <div class="risk-calc-hint">
+                    💡 Click "Calculate Risk" on any signal card to get personalized position sizing
+                </div>
+            </div>
+        </div>
+        
         <!-- Platform Stats (Social Proof) -->
         <div class="signals-section" id="platform-stats-section">
             <div class="section-header">
@@ -2144,8 +2760,9 @@
                         <button class="filter-btn" onclick="setFilter('high')">🔥 High</button>
                         <button class="filter-btn" onclick="setFilter('smart')">👑 Smart Wallet</button>
                     </div>
-                    <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()">🔇 Sound</button>
-                    <button class="sound-toggle" onclick="showShortcuts()" title="Keyboard Shortcuts">⌨️</button>
+                    <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="Toggle Sound (T)">🔇 Sound</button>
+                    <button class="sound-toggle" onclick="showExportModal()" title="Export Signals (E)">📥 Export</button>
+                    <button class="sound-toggle" onclick="showShortcuts()" title="Keyboard Shortcuts (?)">⌨️</button>
                     <span class="live-badge" id="live-status">● CONNECTING</span>
                 </div>
             </div>
@@ -2533,6 +3150,561 @@
                 }
                 .sim-trades-container::-webkit-scrollbar-thumb:hover {
                     background: #555;
+                }
+            </style>
+        </div>
+        
+        <!-- Auto-Copy Trading Section -->
+        <div class="signals-section" id="auto-copy-section">
+            <div class="section-header">
+                <h2 class="section-title">🔄 Auto-Copy Trading</h2>
+                <div class="header-controls">
+                    <span class="live-badge" style="background: linear-gradient(135deg, #22c55e, #00d9ff);" id="copy-status-badge">OFF</span>
+                    <button class="filter-btn" onclick="toggleAutoCopy()" id="copy-toggle-btn">Enable</button>
+                </div>
+            </div>
+            
+            <div class="copy-intro">
+                <p style="color: #888; margin-bottom: 15px;">
+                    🤖 <strong style="color: #00d9ff;">Follow smart wallets</strong> - 
+                    Auto-execute paper trades when your tracked wallets buy. Configure risk limits and position sizing.
+                </p>
+            </div>
+            
+            <!-- Copy Settings -->
+            <div class="copy-settings-panel">
+                <h4 style="color: #a855f7; margin-bottom: 15px;">⚙️ Settings</h4>
+                <div class="copy-settings-grid">
+                    <div class="copy-setting-item">
+                        <label>Min Score</label>
+                        <input type="number" id="copy-min-score" value="70" min="0" max="100">
+                    </div>
+                    <div class="copy-setting-item">
+                        <label>Max Risk</label>
+                        <select id="copy-max-risk">
+                            <option value="LOW">LOW</option>
+                            <option value="MEDIUM" selected>MEDIUM</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="EXTREME">EXTREME</option>
+                        </select>
+                    </div>
+                    <div class="copy-setting-item">
+                        <label>Position Size %</label>
+                        <input type="number" id="copy-position-size" value="5" min="1" max="50">
+                    </div>
+                    <div class="copy-setting-item">
+                        <label>Max Position ($)</label>
+                        <input type="number" id="copy-max-position" value="100" min="10">
+                    </div>
+                    <div class="copy-setting-item">
+                        <label>Daily Trade Limit</label>
+                        <input type="number" id="copy-daily-limit" value="10" min="1" max="50">
+                    </div>
+                    <div class="copy-setting-item">
+                        <label>Cooldown (min)</label>
+                        <input type="number" id="copy-cooldown" value="30" min="5">
+                    </div>
+                </div>
+                <button class="copy-save-btn" onclick="saveCopySettings()">💾 Save Settings</button>
+            </div>
+            
+            <!-- Followed Wallets -->
+            <div class="copy-wallets-panel">
+                <h4 style="color: #a855f7; margin-bottom: 15px;">👛 Followed Wallets</h4>
+                <div class="copy-add-wallet">
+                    <input type="text" id="new-wallet-address" placeholder="Wallet address...">
+                    <input type="text" id="new-wallet-label" placeholder="Label...">
+                    <button onclick="addFollowedWallet()">➕ Follow</button>
+                </div>
+                <div class="copy-wallets-list" id="copy-wallets-list">
+                    <!-- Wallets will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Copy Stats -->
+            <div class="copy-stats-panel">
+                <h4 style="color: #a855f7; margin-bottom: 15px;">📊 Copy Stats</h4>
+                <div class="copy-stats-grid" id="copy-stats-grid">
+                    <div class="copy-stat">
+                        <span class="copy-stat-value" id="copy-total-trades">0</span>
+                        <span class="copy-stat-label">Total Trades</span>
+                    </div>
+                    <div class="copy-stat">
+                        <span class="copy-stat-value" id="copy-executed">0</span>
+                        <span class="copy-stat-label">Executed</span>
+                    </div>
+                    <div class="copy-stat">
+                        <span class="copy-stat-value" id="copy-skipped">0</span>
+                        <span class="copy-stat-label">Skipped</span>
+                    </div>
+                    <div class="copy-stat">
+                        <span class="copy-stat-value" id="copy-today">0</span>
+                        <span class="copy-stat-label">Today</span>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .copy-settings-panel, .copy-wallets-panel, .copy-stats-panel {
+                    background: rgba(0,0,0,0.3);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-bottom: 15px;
+                }
+                .copy-settings-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 15px;
+                    margin-bottom: 15px;
+                }
+                .copy-setting-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+                .copy-setting-item label {
+                    color: #888;
+                    font-size: 0.85em;
+                }
+                .copy-setting-item input, .copy-setting-item select {
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #444;
+                    color: #fff;
+                    padding: 10px;
+                    border-radius: 8px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .copy-save-btn {
+                    background: linear-gradient(90deg, #00d9ff, #a855f7);
+                    color: #000;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                }
+                .copy-save-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,217,255,0.3); }
+                
+                .copy-add-wallet {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 15px;
+                    flex-wrap: wrap;
+                }
+                .copy-add-wallet input {
+                    flex: 1;
+                    min-width: 150px;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #444;
+                    color: #fff;
+                    padding: 10px;
+                    border-radius: 8px;
+                }
+                .copy-add-wallet button {
+                    background: #22c55e;
+                    color: #000;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+                .copy-wallets-list {
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+                .copy-wallet-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 12px;
+                    background: rgba(255,255,255,0.03);
+                    border-radius: 8px;
+                    margin-bottom: 8px;
+                    border-left: 3px solid #22c55e;
+                }
+                .copy-wallet-item.disabled { border-left-color: #666; opacity: 0.6; }
+                .copy-wallet-info { flex: 1; }
+                .copy-wallet-label { font-weight: 600; color: #fff; }
+                .copy-wallet-address { font-size: 0.75em; color: #666; font-family: 'JetBrains Mono', monospace; }
+                .copy-wallet-actions { display: flex; gap: 8px; }
+                .copy-wallet-btn {
+                    background: rgba(255,255,255,0.1);
+                    border: none;
+                    color: #888;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                }
+                .copy-wallet-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+                .copy-wallet-btn.danger:hover { background: rgba(239,68,68,0.3); color: #ef4444; }
+                
+                .copy-stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 15px;
+                }
+                .copy-stat {
+                    text-align: center;
+                    padding: 15px;
+                    background: rgba(255,255,255,0.03);
+                    border-radius: 10px;
+                }
+                .copy-stat-value {
+                    display: block;
+                    font-size: 1.5em;
+                    font-weight: 700;
+                    font-family: 'JetBrains Mono', monospace;
+                    color: #00d9ff;
+                }
+                .copy-stat-label {
+                    color: #666;
+                    font-size: 0.8em;
+                    margin-top: 5px;
+                    display: block;
+                }
+                @media (max-width: 768px) {
+                    .copy-stats-grid { grid-template-columns: repeat(2, 1fr); }
+                }
+            </style>
+        </div>
+        
+        <!-- Alert Rules Builder Section -->
+        <div class="signals-section" id="alert-rules-section">
+            <div class="section-header">
+                <h2 class="section-title">🔔 Alert Rules Builder</h2>
+                <div class="header-controls">
+                    <span class="live-badge" style="background: linear-gradient(135deg, #f97316, #eab308);">CUSTOM</span>
+                </div>
+            </div>
+            
+            <div class="rules-intro">
+                <p style="color: #888; margin-bottom: 15px;">
+                    ⚡ <strong style="color: #f97316;">Create custom triggers</strong> - 
+                    Define IF-THEN rules with score, risk, and source conditions. Execute actions: notify, auto-trade, webhook.
+                </p>
+            </div>
+            
+            <!-- Quick Templates -->
+            <div class="rules-templates-panel">
+                <h4 style="color: #a855f7; margin-bottom: 15px;">📋 Quick Templates</h4>
+                <div class="templates-grid" id="templates-grid">
+                    <!-- Templates will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Create Rule Form -->
+            <div class="rules-create-panel">
+                <h4 style="color: #a855f7; margin-bottom: 15px;">➕ Create New Rule</h4>
+                <div class="rule-form">
+                    <div class="rule-form-row">
+                        <div class="rule-form-item">
+                            <label>Rule Name</label>
+                            <input type="text" id="rule-name" placeholder="My Custom Rule">
+                        </div>
+                        <div class="rule-form-item">
+                            <label>Description</label>
+                            <input type="text" id="rule-description" placeholder="Optional description...">
+                        </div>
+                    </div>
+                    
+                    <div class="rule-conditions-section">
+                        <h5 style="color: #888; margin-bottom: 10px;">📝 Conditions (IF)</h5>
+                        <div id="rule-conditions-list">
+                            <div class="rule-condition" data-index="0">
+                                <select class="condition-field">
+                                    <option value="score">Score</option>
+                                    <option value="riskLevel">Risk Level</option>
+                                    <option value="sources_count">Sources Count</option>
+                                    <option value="mcap">Market Cap</option>
+                                    <option value="volume5m">Volume 5m</option>
+                                    <option value="safetyScore">Safety Score</option>
+                                    <option value="convictionLevel">Conviction</option>
+                                </select>
+                                <select class="condition-operator">
+                                    <option value="greater_than">></option>
+                                    <option value="less_than"><</option>
+                                    <option value="greater_or_equal">≥</option>
+                                    <option value="less_or_equal">≤</option>
+                                    <option value="equals">=</option>
+                                    <option value="in">in</option>
+                                </select>
+                                <input type="text" class="condition-value" placeholder="Value">
+                            </div>
+                        </div>
+                        <button class="add-condition-btn" onclick="addRuleCondition()">+ Add Condition</button>
+                    </div>
+                    
+                    <div class="rule-actions-section">
+                        <h5 style="color: #888; margin-bottom: 10px;">⚡ Actions (THEN)</h5>
+                        <div class="rule-actions-checkboxes">
+                            <label><input type="checkbox" id="action-notify" checked> 📢 Notify (Log)</label>
+                            <label><input type="checkbox" id="action-autotrade"> 🤖 Auto-Trade</label>
+                            <label><input type="checkbox" id="action-telegram"> 📱 Telegram</label>
+                            <label><input type="checkbox" id="action-discord"> 💬 Discord</label>
+                            <label><input type="checkbox" id="action-webhook"> 🔗 Webhook</label>
+                        </div>
+                        <div class="webhook-config" id="webhook-config" style="display: none;">
+                            <input type="text" id="webhook-url" placeholder="Webhook URL (https://...)">
+                        </div>
+                        <div class="discord-config" id="discord-config" style="display: none;">
+                            <input type="text" id="discord-webhook-url" placeholder="Discord Webhook URL">
+                        </div>
+                    </div>
+                    
+                    <div class="rule-form-row">
+                        <div class="rule-form-item">
+                            <label>Cooldown (minutes)</label>
+                            <input type="number" id="rule-cooldown" value="5" min="1">
+                        </div>
+                        <div class="rule-form-item">
+                            <label>Max Triggers/Day</label>
+                            <input type="number" id="rule-max-triggers" value="50" min="1">
+                        </div>
+                    </div>
+                    
+                    <button class="create-rule-btn" onclick="createAlertRule()">✨ Create Rule</button>
+                </div>
+            </div>
+            
+            <!-- Active Rules List -->
+            <div class="rules-list-panel">
+                <h4 style="color: #a855f7; margin-bottom: 15px;">📋 Active Rules</h4>
+                <div class="rules-list" id="rules-list">
+                    <!-- Rules will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Rules Stats -->
+            <div class="rules-stats-panel">
+                <h4 style="color: #a855f7; margin-bottom: 15px;">📊 Rule Stats</h4>
+                <div class="rules-stats-grid" id="rules-stats-grid">
+                    <div class="rules-stat">
+                        <span class="rules-stat-value" id="rules-total">0</span>
+                        <span class="rules-stat-label">Total Rules</span>
+                    </div>
+                    <div class="rules-stat">
+                        <span class="rules-stat-value" id="rules-enabled">0</span>
+                        <span class="rules-stat-label">Enabled</span>
+                    </div>
+                    <div class="rules-stat">
+                        <span class="rules-stat-value" id="rules-triggers-total">0</span>
+                        <span class="rules-stat-label">Total Triggers</span>
+                    </div>
+                    <div class="rules-stat">
+                        <span class="rules-stat-value" id="rules-triggers-today">0</span>
+                        <span class="rules-stat-label">Today</span>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .rules-templates-panel, .rules-create-panel, .rules-list-panel, .rules-stats-panel {
+                    background: rgba(0,0,0,0.3);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-bottom: 15px;
+                }
+                .templates-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 12px;
+                }
+                .template-card {
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid #444;
+                    border-radius: 10px;
+                    padding: 15px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .template-card:hover {
+                    border-color: #f97316;
+                    transform: translateY(-2px);
+                }
+                .template-name { font-weight: 600; color: #fff; margin-bottom: 5px; }
+                .template-desc { font-size: 0.85em; color: #888; }
+                .template-category {
+                    display: inline-block;
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    font-size: 0.7em;
+                    background: rgba(249,115,22,0.2);
+                    color: #f97316;
+                    margin-top: 8px;
+                }
+                
+                .rule-form { }
+                .rule-form-row {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                    margin-bottom: 15px;
+                }
+                .rule-form-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+                .rule-form-item label { color: #888; font-size: 0.85em; }
+                .rule-form-item input, .rule-form-item select {
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #444;
+                    color: #fff;
+                    padding: 10px;
+                    border-radius: 8px;
+                }
+                
+                .rule-conditions-section, .rule-actions-section {
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 10px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                }
+                .rule-condition {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 10px;
+                    flex-wrap: wrap;
+                }
+                .rule-condition select, .rule-condition input {
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #444;
+                    color: #fff;
+                    padding: 8px;
+                    border-radius: 6px;
+                }
+                .condition-field { min-width: 150px; }
+                .condition-operator { width: 60px; }
+                .condition-value { min-width: 100px; flex: 1; }
+                
+                .add-condition-btn {
+                    background: rgba(255,255,255,0.1);
+                    border: 1px dashed #444;
+                    color: #888;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                }
+                .add-condition-btn:hover { border-color: #00d9ff; color: #00d9ff; }
+                
+                .rule-actions-checkboxes {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 15px;
+                    margin-bottom: 10px;
+                }
+                .rule-actions-checkboxes label {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    color: #888;
+                    cursor: pointer;
+                }
+                .rule-actions-checkboxes input[type="checkbox"] {
+                    width: 18px;
+                    height: 18px;
+                    accent-color: #f97316;
+                }
+                
+                .webhook-config, .discord-config {
+                    margin-top: 10px;
+                }
+                .webhook-config input, .discord-config input {
+                    width: 100%;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid #444;
+                    color: #fff;
+                    padding: 10px;
+                    border-radius: 8px;
+                }
+                
+                .create-rule-btn {
+                    background: linear-gradient(90deg, #f97316, #eab308);
+                    color: #000;
+                    border: none;
+                    padding: 14px 28px;
+                    border-radius: 10px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    width: 100%;
+                    font-size: 1em;
+                }
+                .create-rule-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(249,115,22,0.3); }
+                
+                .rules-list {
+                    max-height: 400px;
+                    overflow-y: auto;
+                }
+                .rule-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 15px;
+                    background: rgba(255,255,255,0.03);
+                    border-radius: 10px;
+                    margin-bottom: 10px;
+                    border-left: 3px solid #22c55e;
+                }
+                .rule-item.disabled { border-left-color: #666; opacity: 0.6; }
+                .rule-info { flex: 1; }
+                .rule-name { font-weight: 600; color: #fff; }
+                .rule-desc { font-size: 0.8em; color: #888; margin-top: 3px; }
+                .rule-meta {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 8px;
+                }
+                .rule-meta span {
+                    font-size: 0.75em;
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    background: rgba(255,255,255,0.1);
+                    color: #888;
+                }
+                .rule-actions { display: flex; gap: 8px; }
+                .rule-btn {
+                    background: rgba(255,255,255,0.1);
+                    border: none;
+                    color: #888;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                }
+                .rule-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+                .rule-btn.danger:hover { background: rgba(239,68,68,0.3); color: #ef4444; }
+                
+                .rules-stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 15px;
+                }
+                .rules-stat {
+                    text-align: center;
+                    padding: 15px;
+                    background: rgba(255,255,255,0.03);
+                    border-radius: 10px;
+                }
+                .rules-stat-value {
+                    display: block;
+                    font-size: 1.5em;
+                    font-weight: 700;
+                    font-family: 'JetBrains Mono', monospace;
+                    color: #f97316;
+                }
+                .rules-stat-label {
+                    color: #666;
+                    font-size: 0.8em;
+                    margin-top: 5px;
+                    display: block;
+                }
+                @media (max-width: 768px) {
+                    .rules-stats-grid { grid-template-columns: repeat(2, 1fr); }
                 }
             </style>
         </div>
@@ -3076,13 +4248,18 @@
                     <button class="modal-close" onclick="hideShortcuts()">×</button>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="shortcut-item"><kbd>S</kbd> Toggle sound</div>
-                    <div class="shortcut-item"><kbd>R</kbd> Refresh data</div>
+                    <div class="shortcut-item"><kbd>P</kbd> Open Portfolio</div>
+                    <div class="shortcut-item"><kbd>R</kbd> Refresh signals</div>
+                    <div class="shortcut-item"><kbd>T</kbd> Toggle sound</div>
+                    <div class="shortcut-item"><kbd>E</kbd> Export signals</div>
                     <div class="shortcut-item"><kbd>1</kbd> All signals</div>
                     <div class="shortcut-item"><kbd>2</kbd> High score only</div>
-                    <div class="shortcut-item"><kbd>3</kbd> Smart wallet only</div>
+                    <div class="shortcut-item"><kbd>3</kbd> Smart wallet</div>
+                    <div class="shortcut-item"><kbd>4</kbd> Low risk only</div>
+                    <div class="shortcut-item"><kbd>5</kbd> Recent (30min)</div>
                     <div class="shortcut-item"><kbd>?</kbd> Show shortcuts</div>
-                    <div class="shortcut-item"><kbd>Esc</kbd> Close modal</div>
+                    <div class="shortcut-item"><kbd>Esc</kbd> Close modals</div>
+                    <div class="shortcut-item"><kbd>↑↓</kbd> Navigate signals</div>
                 </div>
                 <style>
                     .shortcut-item { 
@@ -3106,6 +4283,253 @@
                 </style>
             </div>
         </div>
+        
+        <!-- PWA Install Banner -->
+        <div class="pwa-install-banner" id="pwa-install-banner" style="display: none;">
+            <div class="pwa-install-content">
+                <span class="pwa-install-icon">📱</span>
+                <div class="pwa-install-text">
+                    <strong>Install ORACLE Alpha</strong>
+                    <span>Get real-time signals on your device</span>
+                </div>
+            </div>
+            <div class="pwa-install-actions">
+                <button class="pwa-install-btn" onclick="installPWA()">Install</button>
+                <button class="pwa-dismiss-btn" onclick="dismissPWABanner()">×</button>
+            </div>
+        </div>
+        
+        <!-- Export Modal -->
+        <div class="modal-overlay" id="export-modal" onclick="closeExportModal(event)">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3 class="modal-title">📥 Export Signals</h3>
+                    <button class="modal-close" onclick="closeExportModal()">×</button>
+                </div>
+                <div class="export-options">
+                    <p style="color: #888; margin-bottom: 20px;">Download your signals data in your preferred format.</p>
+                    <div class="export-buttons">
+                        <button class="export-btn" onclick="exportSignals('json')">
+                            <span class="export-icon">📄</span>
+                            <span class="export-label">Export JSON</span>
+                            <span class="export-desc">Machine-readable format</span>
+                        </button>
+                        <button class="export-btn" onclick="exportSignals('csv')">
+                            <span class="export-icon">📊</span>
+                            <span class="export-label">Export CSV</span>
+                            <span class="export-desc">Spreadsheet compatible</span>
+                        </button>
+                        <button class="export-btn" onclick="exportSignals('markdown')">
+                            <span class="export-icon">📝</span>
+                            <span class="export-label">Export Markdown</span>
+                            <span class="export-desc">Human-readable report</span>
+                        </button>
+                    </div>
+                    <div class="export-filters">
+                        <label>
+                            <input type="checkbox" id="export-performance" checked>
+                            Include performance data
+                        </label>
+                        <label>
+                            <span>Min Score:</span>
+                            <input type="number" id="export-min-score" value="0" min="0" max="100" style="width: 60px;">
+                        </label>
+                        <label>
+                            <span>Max Signals:</span>
+                            <input type="number" id="export-limit" value="100" min="1" max="1000" style="width: 70px;">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            /* PWA Install Banner */
+            .pwa-install-banner {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                right: 20px;
+                max-width: 500px;
+                margin: 0 auto;
+                background: linear-gradient(135deg, #1a1a3a, #0a0a1a);
+                border: 1px solid #00d9ff;
+                border-radius: 16px;
+                padding: 15px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 15px;
+                z-index: 1001;
+                box-shadow: 0 10px 40px rgba(0, 217, 255, 0.3);
+                animation: slideUp 0.5s ease;
+            }
+            
+            @keyframes slideUp {
+                from { transform: translateY(100px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            
+            .pwa-install-content {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            
+            .pwa-install-icon {
+                font-size: 2em;
+            }
+            
+            .pwa-install-text {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .pwa-install-text strong {
+                color: #fff;
+                font-size: 1em;
+            }
+            
+            .pwa-install-text span {
+                color: #888;
+                font-size: 0.85em;
+            }
+            
+            .pwa-install-actions {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+            
+            .pwa-install-btn {
+                background: linear-gradient(90deg, #00d9ff, #a855f7);
+                color: #000;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            .pwa-install-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 15px rgba(0, 217, 255, 0.4);
+            }
+            
+            .pwa-dismiss-btn {
+                background: none;
+                border: none;
+                color: #666;
+                font-size: 1.5em;
+                cursor: pointer;
+                padding: 5px;
+                line-height: 1;
+            }
+            
+            .pwa-dismiss-btn:hover {
+                color: #fff;
+            }
+            
+            /* Export Modal */
+            .export-options {
+                padding: 10px 0;
+            }
+            
+            .export-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+            
+            .export-btn {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 15px 20px;
+                background: rgba(0, 0, 0, 0.3);
+                border: 1px solid #333;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-align: left;
+            }
+            
+            .export-btn:hover {
+                border-color: #00d9ff;
+                background: rgba(0, 217, 255, 0.1);
+            }
+            
+            .export-icon {
+                font-size: 2em;
+            }
+            
+            .export-label {
+                color: #fff;
+                font-weight: 600;
+                display: block;
+            }
+            
+            .export-desc {
+                color: #666;
+                font-size: 0.85em;
+                display: block;
+            }
+            
+            .export-filters {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+                padding-top: 15px;
+                border-top: 1px solid #333;
+            }
+            
+            .export-filters label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #888;
+                font-size: 0.9em;
+            }
+            
+            .export-filters input[type="checkbox"] {
+                accent-color: #00d9ff;
+            }
+            
+            .export-filters input[type="number"] {
+                background: rgba(0,0,0,0.3);
+                border: 1px solid #444;
+                border-radius: 6px;
+                color: #fff;
+                padding: 5px 10px;
+            }
+            
+            /* Share Button on Signals */
+            .share-btn {
+                background: rgba(168, 85, 247, 0.2);
+                border-color: #a855f7;
+                color: #a855f7;
+            }
+            
+            .share-btn:hover {
+                background: #a855f7;
+                color: #fff;
+            }
+            
+            @media (max-width: 500px) {
+                .pwa-install-banner {
+                    flex-direction: column;
+                    text-align: center;
+                    left: 10px;
+                    right: 10px;
+                }
+                
+                .pwa-install-content {
+                    flex-direction: column;
+                }
+            }
+        </style>
         
         <footer>
             <p>Built by ShifuSensei 🐼 for Colosseum Agent Hackathon 2026</p>
@@ -3212,6 +4636,32 @@
                     </div>
                 </div>
                 
+                <!-- Risk Metrics Section -->
+                <div class="trade-risk-metrics" id="trade-risk-metrics">
+                    <h4>📊 Risk Metrics</h4>
+                    <div class="trade-risk-grid">
+                        <div class="trade-risk-item">
+                            <span class="trade-risk-label">Recommended</span>
+                            <span class="trade-risk-value" id="trade-risk-recommended">$50</span>
+                        </div>
+                        <div class="trade-risk-item">
+                            <span class="trade-risk-label">Stop Loss</span>
+                            <span class="trade-risk-value trade-risk-negative" id="trade-risk-sl">-10%</span>
+                        </div>
+                        <div class="trade-risk-item">
+                            <span class="trade-risk-label">Take Profit</span>
+                            <span class="trade-risk-value trade-risk-positive" id="trade-risk-tp">+100%</span>
+                        </div>
+                        <div class="trade-risk-item">
+                            <span class="trade-risk-label">R:R Ratio</span>
+                            <span class="trade-risk-value" id="trade-risk-rr">10:1</span>
+                        </div>
+                    </div>
+                    <button class="use-recommended-btn" onclick="useRecommendedAmount()">
+                        ✨ Use Recommended Amount
+                    </button>
+                </div>
+                
                 <button class="trade-execute-btn" id="trade-execute-btn" onclick="executeTrade()">
                     🚀 Execute Paper Trade
                 </button>
@@ -3280,6 +4730,19 @@
         }
         .action-btn.trade-btn:hover {
             box-shadow: 0 0 15px rgba(0,217,255,0.5);
+        }
+        
+        /* Why Button Styles */
+        .action-btn.why-btn {
+            background: linear-gradient(90deg, #a855f7, #ec4899);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.75em;
+            padding: 6px 10px;
+        }
+        .action-btn.why-btn:hover {
+            box-shadow: 0 0 15px rgba(168,85,247,0.5);
+            transform: scale(1.05);
         }
         
         /* Trade Modal Styles */
@@ -3506,6 +4969,86 @@
             text-align: center;
             color: #666;
             font-size: 0.8em;
+        }
+        
+        /* Trade Risk Metrics */
+        .trade-risk-metrics {
+            background: rgba(168,85,247,0.1);
+            border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .trade-risk-metrics h4 {
+            color: #a855f7;
+            font-size: 0.9em;
+            margin: 0 0 12px 0;
+        }
+        
+        .trade-risk-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        @media (max-width: 500px) {
+            .trade-risk-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .trade-risk-item {
+            text-align: center;
+        }
+        
+        .trade-risk-label {
+            display: block;
+            color: #666;
+            font-size: 0.75em;
+            margin-bottom: 3px;
+        }
+        
+        .trade-risk-value {
+            display: block;
+            font-size: 1em;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: #00d9ff;
+        }
+        
+        .trade-risk-positive { color: #22c55e; }
+        .trade-risk-negative { color: #ef4444; }
+        
+        .use-recommended-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(90deg, rgba(168,85,247,0.2), rgba(0,217,255,0.2));
+            border: 1px solid rgba(168,85,247,0.4);
+            border-radius: 8px;
+            color: #a855f7;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .use-recommended-btn:hover {
+            background: linear-gradient(90deg, rgba(168,85,247,0.3), rgba(0,217,255,0.3));
+            border-color: #a855f7;
+            color: #fff;
+        }
+        
+        /* Risk Button Style */
+        .action-btn.risk-btn {
+            background: rgba(168,85,247,0.2);
+            border-color: #a855f7;
+            color: #a855f7;
+        }
+        
+        .action-btn.risk-btn:hover {
+            background: #a855f7;
+            color: #fff;
         }
         
         /* Portfolio Modal Styles */
@@ -3785,10 +5328,11 @@
             const content = document.getElementById('explanation-content');
             
             modal.classList.add('active');
-            content.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Loading analysis...</div>';
+            content.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><div class="spinner"></div><br>Analyzing signal...</div>';
             
             try {
-                const res = await fetch(`${API_BASE}/api/explain/${signalId}`);
+                // Try the new detailed endpoint first
+                const res = await fetch(`${API_BASE}/api/explain/${signalId}/detailed`);
                 const data = await res.json();
                 
                 if (data.error) {
@@ -3797,44 +5341,77 @@
                 }
                 
                 const exp = data.explanation;
+                const impactColors = { STRONG: '#22c55e', MODERATE: '#eab308', WEAK: '#888' };
+                const statusColors = { SAFE: '#22c55e', OK: '#00d9ff', CAUTION: '#f97316', RISKY: '#ef4444' };
+                
                 content.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <span style="font-size: 1.5em; font-weight: bold;">$${data.signal.symbol}</span>
-                        <span class="confidence-badge confidence-${exp.confidence}">${exp.confidence} Confidence</span>
+                    <div class="exp-header">
+                        <div class="exp-token-info">
+                            <span class="exp-symbol">🎯 $${exp.symbol}</span>
+                            <span class="exp-confidence exp-confidence-${exp.confidenceLevel.toLowerCase()}">${exp.confidenceLevel}</span>
+                        </div>
+                        <div class="exp-score-circle exp-score-${exp.score >= 70 ? 'high' : exp.score >= 50 ? 'medium' : 'low'}">${exp.score}</div>
                     </div>
                     
-                    <div class="explanation-summary">${exp.summary}</div>
+                    <div class="exp-summary">${exp.summary}</div>
                     
-                    <div class="explanation-section">
-                        <h4>✅ Bullish Factors</h4>
-                        <ul>
-                            ${exp.bullishFactors.map(f => `<li>${f}</li>`).join('')}
-                        </ul>
+                    <div class="exp-section">
+                        <div class="exp-section-title">📊 Sources (${exp.totalConfirmations} confirmation${exp.totalConfirmations !== 1 ? 's' : ''})</div>
+                        <div class="exp-sources">
+                            ${exp.sources.map(s => `
+                                <div class="exp-source">
+                                    <span class="exp-source-icon">${s.icon}</span>
+                                    <div class="exp-source-content">
+                                        <div class="exp-source-name">${s.description}</div>
+                                        <div class="exp-source-detail">${s.detail}</div>
+                                    </div>
+                                    <span class="exp-source-impact" style="color: ${impactColors[s.impact] || '#888'}">${s.impact}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                     
-                    ${exp.bearishFactors.length > 0 ? `
-                    <div class="explanation-section">
-                        <h4>⚠️ Risk Factors</h4>
-                        <ul>
-                            ${exp.bearishFactors.map(f => `<li>${f}</li>`).join('')}
-                        </ul>
+                    <div class="exp-section">
+                        <div class="exp-section-title">🌡️ Market Context</div>
+                        <div class="exp-market">
+                            <div class="exp-market-row">
+                                <span>Overall</span>
+                                <span>${exp.marketContext.overall}</span>
+                            </div>
+                            <div class="exp-market-row">
+                                <span>Volatility</span>
+                                <span>${exp.marketContext.volatility}${exp.marketContext.volatilityImpact !== 0 ? ` (${exp.marketContext.volatilityImpact > 0 ? '+' : ''}${exp.marketContext.volatilityImpact} pts)` : ''}</span>
+                            </div>
+                            <div class="exp-market-row exp-market-net">
+                                <span>Net Impact</span>
+                                <span style="color: ${exp.marketContext.netImpact >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 700;">${exp.marketContext.netImpact > 0 ? '+' : ''}${exp.marketContext.netImpact} pts</span>
+                            </div>
+                            ${exp.marketContext.btcContext ? `<div class="exp-market-row"><span>Bitcoin</span><span>${exp.marketContext.btcContext}</span></div>` : ''}
+                            ${exp.marketContext.solContext ? `<div class="exp-market-row"><span>Solana</span><span>${exp.marketContext.solContext}</span></div>` : ''}
+                        </div>
                     </div>
-                    ` : ''}
                     
-                    <div class="explanation-section">
-                        <h4>🛡️ Risk Warnings</h4>
-                        <ul>
-                            ${exp.riskWarnings.map(f => `<li style="color: #f97316;">${f}</li>`).join('')}
-                        </ul>
+                    <div class="exp-section">
+                        <div class="exp-section-title">⚠️ Risk Factors</div>
+                        <div class="exp-risks">
+                            ${exp.riskFactors.map(r => `
+                                <div class="exp-risk">
+                                    <span class="exp-risk-factor">${r.factor}</span>
+                                    <span class="exp-risk-value">${r.value}</span>
+                                    <span class="exp-risk-status" style="color: ${statusColors[r.status] || '#888'}">${r.icon}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                     
-                    <div class="explanation-action">
-                        <strong>💡 Actionable Insight:</strong><br>
-                        ${exp.actionableInsight}
+                    <div class="exp-conclusion">
+                        <div class="exp-section-title">💡 Conclusion</div>
+                        <p>${exp.conclusion}</p>
                     </div>
                 `;
             } catch (e) {
-                content.innerHTML = `<div style="color: #ef4444;">Failed to load analysis</div>`;
+                console.error('Failed to load detailed explanation:', e);
+                content.innerHTML = `<div style="color: #ef4444;">Failed to load analysis. Please try again.</div>`;
             }
         }
         
@@ -3868,8 +5445,60 @@
             document.getElementById('quote-error').style.display = 'none';
             document.getElementById('trade-execute-btn').disabled = true;
             
+            // Load risk metrics
+            loadTradeRiskMetrics(signalId, score);
+            
             // Get initial quote
             getQuote();
+        }
+        
+        async function loadTradeRiskMetrics(signalId, score) {
+            const portfolioSize = parseFloat(document.getElementById('risk-portfolio-size')?.value) || 1000;
+            const riskPercent = parseFloat(document.getElementById('risk-percent')?.value) || 5;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/risk/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        portfolioSize,
+                        riskPercent,
+                        signalId
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success && data.calculation) {
+                    const calc = data.calculation;
+                    document.getElementById('trade-risk-recommended').textContent = '$' + calc.recommendedPosition.toFixed(0);
+                    document.getElementById('trade-risk-sl').textContent = '-' + calc.recommendedStopLoss.percent.toFixed(0) + '%';
+                    document.getElementById('trade-risk-tp').textContent = '+' + (calc.takeProfit[0]?.percent || 100) + '%';
+                    document.getElementById('trade-risk-rr').textContent = calc.rewardRisk.toFixed(1) + ':1';
+                    
+                    // Store for "Use Recommended" button
+                    currentTradeSignal.recommendedAmount = calc.recommendedPosition;
+                }
+            } catch (e) {
+                // Fallback to simple calculation
+                const scoreMultiplier = 0.5 + (score / 100) * 0.5;
+                const recommended = Math.round(portfolioSize * (riskPercent / 100) * scoreMultiplier);
+                
+                document.getElementById('trade-risk-recommended').textContent = '$' + recommended;
+                document.getElementById('trade-risk-sl').textContent = '-10%';
+                document.getElementById('trade-risk-tp').textContent = '+100%';
+                document.getElementById('trade-risk-rr').textContent = '10:1';
+                
+                currentTradeSignal.recommendedAmount = recommended;
+            }
+        }
+        
+        function useRecommendedAmount() {
+            if (currentTradeSignal && currentTradeSignal.recommendedAmount) {
+                document.getElementById('trade-amount').value = Math.round(currentTradeSignal.recommendedAmount);
+                getQuote();
+                showToast('✨ Using recommended position size');
+            }
         }
         
         function closeTradeModal(event) {
@@ -3978,6 +5607,152 @@
                 btn.disabled = false;
                 btn.textContent = '🚀 Execute Paper Trade';
             }
+        }
+        
+        // ===== RISK CALCULATOR FUNCTIONS =====
+        let riskCalcCollapsed = false;
+        
+        function toggleRiskCalc() {
+            riskCalcCollapsed = !riskCalcCollapsed;
+            const content = document.getElementById('risk-calc-content');
+            const toggle = document.querySelector('.risk-calc-toggle');
+            
+            if (riskCalcCollapsed) {
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+            } else {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+            }
+        }
+        
+        function setPortfolioSize(size) {
+            document.getElementById('risk-portfolio-size').value = size;
+            updateRiskCalc();
+        }
+        
+        function updateRiskPercent() {
+            const percent = document.getElementById('risk-percent').value;
+            document.getElementById('risk-percent-display').textContent = percent + '%';
+            updateRiskCalc();
+        }
+        
+        function updateRiskCalc() {
+            // If there's a current signal displayed, recalculate
+            const resultsEl = document.getElementById('risk-calc-results');
+            if (resultsEl.style.display !== 'none') {
+                const symbol = document.getElementById('risk-result-symbol').textContent.replace('$', '');
+                const scoreText = document.getElementById('risk-result-score').textContent;
+                const score = parseInt(scoreText.match(/\d+/)?.[0] || '60');
+                // Recalculate with current signal
+                calculateRiskDisplay(symbol, score);
+            }
+        }
+        
+        async function calculateRiskForSignal(signalId, symbol, score, riskLevel) {
+            const portfolioSize = parseFloat(document.getElementById('risk-portfolio-size').value) || 1000;
+            const riskPercent = parseFloat(document.getElementById('risk-percent').value) || 5;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/risk/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        portfolioSize,
+                        riskPercent,
+                        signalId,
+                        score,
+                        riskLevel
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success && data.calculation) {
+                    displayRiskResults(symbol, data.calculation);
+                    showToast(`📊 Risk calculated for $${symbol}`);
+                    
+                    // Scroll to risk calculator if not visible
+                    document.getElementById('risk-calculator').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    throw new Error(data.error || 'Failed to calculate risk');
+                }
+            } catch (e) {
+                console.error('Risk calculation error:', e);
+                // Fallback to local calculation
+                calculateRiskDisplay(symbol, score, riskLevel);
+            }
+        }
+        
+        function calculateRiskDisplay(symbol, score, riskLevel = 'MEDIUM') {
+            const portfolioSize = parseFloat(document.getElementById('risk-portfolio-size').value) || 1000;
+            const riskPercent = parseFloat(document.getElementById('risk-percent').value) || 5;
+            
+            // Position sizing rules
+            const maxPercents = { LOW: 10, MEDIUM: 8, HIGH: 5, EXTREME: 2 };
+            const maxPercent = maxPercents[riskLevel] || 8;
+            
+            // Score multiplier (higher score = more confident sizing)
+            const scoreMultiplier = 0.5 + (score / 100) * 0.5;
+            
+            // Calculate positions
+            const basePosition = portfolioSize * (riskPercent / 100);
+            const recommendedPosition = Math.min(basePosition * scoreMultiplier, portfolioSize * (maxPercent / 100));
+            const maxPosition = portfolioSize * (maxPercent / 100);
+            
+            // Stop loss and take profit
+            const stopLossPercent = riskLevel === 'EXTREME' ? 15 : riskLevel === 'HIGH' ? 12 : riskLevel === 'MEDIUM' ? 10 : 8;
+            
+            const result = {
+                recommendedPosition: recommendedPosition,
+                recommendedPositionPercent: (recommendedPosition / portfolioSize) * 100,
+                maxPosition: maxPosition,
+                maxPositionPercent: maxPercent,
+                recommendedStopLoss: { percent: stopLossPercent },
+                takeProfit: [{ percent: 100 }], // 2x
+                confidence: score >= 70 && riskLevel !== 'EXTREME' ? 'HIGH' : score >= 50 ? 'MEDIUM' : 'LOW',
+                signalScore: score,
+                riskLevel: riskLevel
+            };
+            
+            displayRiskResults(symbol, result);
+        }
+        
+        function displayRiskResults(symbol, result) {
+            document.getElementById('risk-result-symbol').textContent = '$' + symbol;
+            document.getElementById('risk-result-score').textContent = 'Score: ' + result.signalScore;
+            
+            document.getElementById('risk-recommended-position').textContent = '$' + result.recommendedPosition.toFixed(2);
+            document.getElementById('risk-max-position').textContent = '$' + result.maxPosition.toFixed(2);
+            document.getElementById('risk-stop-loss').textContent = '-' + result.recommendedStopLoss.percent.toFixed(1) + '%';
+            document.getElementById('risk-take-profit').textContent = '+' + (result.takeProfit[0]?.percent || 100) + '%';
+            
+            const confidenceEl = document.getElementById('risk-result-confidence');
+            const confClass = result.confidence.toLowerCase();
+            const confLabels = { HIGH: '🟢 HIGH CONFIDENCE', MEDIUM: '🟡 MEDIUM CONFIDENCE', LOW: '🔴 LOW CONFIDENCE' };
+            confidenceEl.innerHTML = `<span class="confidence-badge ${confClass}">${confLabels[result.confidence]}</span>`;
+            
+            document.getElementById('risk-calc-results').style.display = 'block';
+        }
+        
+        // Auto-fill trade modal with recommended position
+        function showTradeModalWithRisk(signalId, tokenMint, symbol, score) {
+            const portfolioSize = parseFloat(document.getElementById('risk-portfolio-size').value) || 1000;
+            const riskPercent = parseFloat(document.getElementById('risk-percent').value) || 5;
+            
+            // Quick position calculation
+            const scoreMultiplier = 0.5 + (score / 100) * 0.5;
+            const basePosition = portfolioSize * (riskPercent / 100);
+            const recommendedPosition = Math.min(basePosition * scoreMultiplier, portfolioSize * 0.1);
+            
+            // Show trade modal
+            showTradeModal(signalId, tokenMint, symbol, score);
+            
+            // Auto-fill with recommended amount
+            document.getElementById('trade-amount').value = Math.round(recommendedPosition);
+            
+            // Trigger quote update
+            getQuote();
         }
         
         // Portfolio Functions
@@ -4259,7 +6034,8 @@
                 <div class="signal-card ${idx === 0 ? 'new' : ''}">
                     <div class="signal-actions">
                         <button class="action-btn trade-btn" onclick="showTradeModal('${signal.id}', '${signal.token}', '${signal.symbol}', ${signal.score})" title="Trade">💱</button>
-                        <button class="action-btn" onclick="showExplanation('${signal.id}')" title="Explain">🧠</button>
+                        <button class="action-btn risk-btn" onclick="calculateRiskForSignal('${signal.id}', '${signal.symbol}', ${signal.score}, '${signal.riskLevel}')" title="Calculate Risk">📊</button>
+                        <button class="action-btn why-btn" onclick="showExplanation('${signal.id}')" title="Why this signal?">🧠 Why?</button>
                         <button class="action-btn" onclick="copyToClipboard('${signal.token}')" title="Copy CA">📋</button>
                         <a class="action-btn" href="https://dexscreener.com/solana/${signal.token}" target="_blank" title="DexScreener">📊</a>
                     </div>
@@ -5370,15 +7146,816 @@
             }, 3000);
         }
         
-        // Keyboard shortcut for tour
+        // ===== ENHANCED KEYBOARD SHORTCUTS =====
         document.addEventListener('keydown', (e) => {
-            if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
-                if (tourActive) {
+            // Don't trigger shortcuts when typing in inputs
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            const key = e.key.toLowerCase();
+            
+            switch(key) {
+                case '?':
+                    // Toggle shortcuts modal or tour
+                    if (tourActive) {
+                        endTour();
+                    } else {
+                        showShortcuts();
+                    }
+                    break;
+                case 'p':
+                    // Open portfolio
+                    showPortfolioModal();
+                    break;
+                case 'r':
+                    // Refresh signals
+                    fetchStats();
+                    fetchLeaderboard();
+                    showToast('🔄 Refreshing data...');
+                    break;
+                case 't':
+                case 's':
+                    // Toggle sound
+                    toggleSound();
+                    break;
+                case 'e':
+                    // Export modal
+                    showExportModal();
+                    break;
+                case '1':
+                    setFilter('all');
+                    showToast('📋 Filter: All signals');
+                    break;
+                case '2':
+                    setFilter('high');
+                    showToast('🔥 Filter: High score only');
+                    break;
+                case '3':
+                    setFilter('smart');
+                    showToast('👑 Filter: Smart wallet only');
+                    break;
+                case '4':
+                    setFilter('low-risk');
+                    showToast('🟢 Filter: Low risk only');
+                    break;
+                case '5':
+                    setFilter('recent');
+                    showToast('⏰ Filter: Recent (30min)');
+                    break;
+                case 'escape':
+                    // Close all modals
+                    closeExplanationModal();
+                    closeTradeModal();
+                    closePortfolioModal();
+                    closeExportModal();
+                    hideShortcuts();
                     endTour();
-                } else {
-                    startTour();
-                }
+                    break;
             }
+        });
+        
+        function showShortcuts() {
+            document.getElementById('shortcuts-modal').classList.add('active');
+        }
+        
+        function hideShortcuts() {
+            document.getElementById('shortcuts-modal').classList.remove('active');
+        }
+        
+        // ===== SOUND NOTIFICATIONS WITH RISK LEVELS =====
+        const soundContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playNotificationSound(riskLevel = 'MEDIUM', score = 70) {
+            if (!soundEnabled) return;
+            
+            try {
+                const oscillator = soundContext.createOscillator();
+                const gainNode = soundContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(soundContext.destination);
+                
+                // Different frequencies for different risk levels
+                const frequencies = {
+                    'LOW': [880, 1100], // Higher pitch - good signal
+                    'MEDIUM': [660, 770], // Medium pitch
+                    'HIGH': [440, 330], // Lower pitch - caution
+                    'EXTREME': [220, 165] // Very low - warning
+                };
+                
+                const freqs = frequencies[riskLevel] || frequencies['MEDIUM'];
+                
+                // Play a two-tone notification
+                oscillator.frequency.setValueAtTime(freqs[0], soundContext.currentTime);
+                oscillator.frequency.setValueAtTime(freqs[1], soundContext.currentTime + 0.1);
+                
+                // Adjust volume based on score (louder for high scores)
+                const volume = Math.min(0.3, 0.1 + (score / 500));
+                gainNode.gain.setValueAtTime(volume, soundContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, soundContext.currentTime + 0.3);
+                
+                oscillator.start(soundContext.currentTime);
+                oscillator.stop(soundContext.currentTime + 0.3);
+                
+            } catch (e) {
+                console.log('Sound playback failed:', e);
+            }
+        }
+        
+        // Override the original playNotification function
+        function playNotification(signal) {
+            if (!soundEnabled) return;
+            if (signal) {
+                playNotificationSound(signal.riskLevel, signal.score);
+            } else {
+                playNotificationSound('MEDIUM', 70);
+            }
+        }
+        
+        // ===== EXPORT FUNCTIONALITY =====
+        function showExportModal() {
+            document.getElementById('export-modal').classList.add('active');
+        }
+        
+        function closeExportModal(event) {
+            if (!event || event.target.id === 'export-modal') {
+                document.getElementById('export-modal').classList.remove('active');
+            }
+        }
+        
+        async function exportSignals(format) {
+            const minScore = document.getElementById('export-min-score').value || 0;
+            const limit = document.getElementById('export-limit').value || 100;
+            const includePerf = document.getElementById('export-performance').checked;
+            
+            const url = `${API_BASE}/api/export/signals?format=${format}&minScore=${minScore}&limit=${limit}&performance=${includePerf}`;
+            
+            try {
+                showToast(`📥 Downloading ${format.toUpperCase()}...`);
+                
+                const response = await fetch(url);
+                const blob = await response.blob();
+                
+                // Create download link
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                
+                const extensions = { json: 'json', csv: 'csv', markdown: 'md' };
+                a.download = `oracle-signals-${new Date().toISOString().split('T')[0]}.${extensions[format] || format}`;
+                
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                showToast(`✅ ${format.toUpperCase()} exported successfully!`);
+                closeExportModal();
+                
+            } catch (e) {
+                console.error('Export failed:', e);
+                showToast(`❌ Export failed: ${e.message}`);
+            }
+        }
+        
+        // ===== SHARE FUNCTIONALITY =====
+        async function shareSignal(signalId, symbol, score) {
+            const shareUrl = `${window.location.origin}/index.html?signal=${signalId}`;
+            const shareText = `🔮 ORACLE Alpha Signal: $${symbol} (Score: ${score}) - Verifiable on-chain trading signals`;
+            
+            // Check for native share API
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `ORACLE Signal: $${symbol}`,
+                        text: shareText,
+                        url: shareUrl
+                    });
+                    showToast('✅ Shared successfully!');
+                } catch (e) {
+                    if (e.name !== 'AbortError') {
+                        // Fallback to copy
+                        copyToClipboard(`${shareText}\n${shareUrl}`);
+                    }
+                }
+            } else {
+                // Fallback: copy to clipboard
+                copyToClipboard(`${shareText}\n${shareUrl}`);
+            }
+        }
+        
+        function openTwitterShare(symbol, score, signalId) {
+            const text = encodeURIComponent(`🔮 Just spotted $${symbol} on ORACLE Alpha (Score: ${score}/100)\n\nVerifiable on-chain signals on Solana 🟣\n\n`);
+            const url = encodeURIComponent(`${window.location.origin}?signal=${signalId}`);
+            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=600,height=400');
+        }
+        
+        // ===== PWA INSTALL PROMPT =====
+        let deferredPrompt = null;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install banner after a delay
+            setTimeout(() => {
+                if (deferredPrompt && !localStorage.getItem('pwa-dismissed')) {
+                    document.getElementById('pwa-install-banner').style.display = 'flex';
+                }
+            }, 5000);
+        });
+        
+        async function installPWA() {
+            if (!deferredPrompt) {
+                showToast('📱 App already installed or not supported');
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                showToast('✅ ORACLE Alpha installed!');
+            }
+            
+            deferredPrompt = null;
+            document.getElementById('pwa-install-banner').style.display = 'none';
+        }
+        
+        function dismissPWABanner() {
+            document.getElementById('pwa-install-banner').style.display = 'none';
+            localStorage.setItem('pwa-dismissed', 'true');
+        }
+        
+        window.addEventListener('appinstalled', () => {
+            showToast('✅ ORACLE Alpha installed successfully!');
+            document.getElementById('pwa-install-banner').style.display = 'none';
+        });
+        
+        // ===== SERVICE WORKER REGISTRATION =====
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('[PWA] Service worker registered:', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showToast('🔄 New version available! Refresh to update.');
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.log('[PWA] Service worker registration failed:', e);
+                }
+            });
+        }
+        
+        // ===== ENHANCED SIGNAL CARD WITH SHARE BUTTON =====
+        // Modify renderSignals to include share button - hook into existing render
+        const originalRenderSignals = window.renderSignals;
+        if (typeof originalRenderSignals === 'function') {
+            window.renderSignals = function() {
+                originalRenderSignals.apply(this, arguments);
+                // Add share buttons after render
+                addShareButtons();
+            };
+        }
+        
+        function addShareButtons() {
+            document.querySelectorAll('.signal-card').forEach(card => {
+                if (card.querySelector('.share-btn')) return; // Already has share button
+                
+                const actions = card.querySelector('.signal-actions');
+                if (actions) {
+                    const signalId = card.dataset.id;
+                    const symbol = card.querySelector('.token-symbol')?.textContent || 'TOKEN';
+                    const score = card.querySelector('.score-circle')?.textContent || '0';
+                    
+                    const shareBtn = document.createElement('button');
+                    shareBtn.className = 'action-btn share-btn';
+                    shareBtn.title = 'Share Signal';
+                    shareBtn.innerHTML = '📤';
+                    shareBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        shareSignal(signalId, symbol.replace('$', ''), score);
+                    };
+                    
+                    actions.appendChild(shareBtn);
+                }
+            });
+        }
+        
+        // Run addShareButtons periodically to catch dynamically added cards
+        setInterval(addShareButtons, 2000);
+        
+        // ===== ONLINE/OFFLINE STATUS =====
+        window.addEventListener('online', () => {
+            showToast('✅ Back online!');
+            connectWebSocket();
+        });
+        
+        window.addEventListener('offline', () => {
+            showToast('📡 You are offline. Some features may be unavailable.');
+        });
+        
+        // Log PWA status
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('[PWA] Running in standalone mode');
+        }
+        
+        // ===== AUTO-COPY TRADING =====
+        let autoCopyEnabled = false;
+        
+        async function loadAutoCopyData() {
+            try {
+                // Load settings
+                const settingsRes = await fetch(`${API_BASE}/api/copy/settings`);
+                const settings = await settingsRes.json();
+                
+                autoCopyEnabled = settings.enabled;
+                updateCopyStatusBadge();
+                
+                // Populate form
+                document.getElementById('copy-min-score').value = settings.minScore || 70;
+                document.getElementById('copy-max-risk').value = settings.maxRisk || 'MEDIUM';
+                document.getElementById('copy-position-size').value = settings.positionSizePercent || 5;
+                document.getElementById('copy-max-position').value = settings.maxPositionUSD || 100;
+                document.getElementById('copy-daily-limit').value = settings.maxDailyTrades || 10;
+                document.getElementById('copy-cooldown').value = settings.cooldownMinutes || 30;
+                
+                // Load wallets
+                const walletsRes = await fetch(`${API_BASE}/api/copy/wallets`);
+                const walletsData = await walletsRes.json();
+                renderFollowedWallets(walletsData.wallets || []);
+                
+                // Load stats
+                const statsRes = await fetch(`${API_BASE}/api/copy/stats`);
+                const stats = await statsRes.json();
+                updateCopyStats(stats);
+                
+            } catch (e) {
+                console.error('Failed to load auto-copy data:', e);
+            }
+        }
+        
+        function updateCopyStatusBadge() {
+            const badge = document.getElementById('copy-status-badge');
+            const btn = document.getElementById('copy-toggle-btn');
+            
+            if (autoCopyEnabled) {
+                badge.textContent = 'ON';
+                badge.style.background = 'linear-gradient(135deg, #22c55e, #00d9ff)';
+                btn.textContent = 'Disable';
+            } else {
+                badge.textContent = 'OFF';
+                badge.style.background = '#666';
+                btn.textContent = 'Enable';
+            }
+        }
+        
+        async function toggleAutoCopy() {
+            try {
+                const res = await fetch(`${API_BASE}/api/copy/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: !autoCopyEnabled })
+                });
+                const data = await res.json();
+                autoCopyEnabled = data.settings.enabled;
+                updateCopyStatusBadge();
+                showToast(autoCopyEnabled ? '✅ Auto-copy enabled!' : '❌ Auto-copy disabled');
+            } catch (e) {
+                showToast('❌ Failed to toggle auto-copy');
+            }
+        }
+        
+        async function saveCopySettings() {
+            try {
+                const settings = {
+                    minScore: parseInt(document.getElementById('copy-min-score').value),
+                    maxRisk: document.getElementById('copy-max-risk').value,
+                    positionSizePercent: parseInt(document.getElementById('copy-position-size').value),
+                    maxPositionUSD: parseInt(document.getElementById('copy-max-position').value),
+                    maxDailyTrades: parseInt(document.getElementById('copy-daily-limit').value),
+                    cooldownMinutes: parseInt(document.getElementById('copy-cooldown').value)
+                };
+                
+                const res = await fetch(`${API_BASE}/api/copy/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (res.ok) {
+                    showToast('✅ Settings saved!');
+                } else {
+                    showToast('❌ Failed to save settings');
+                }
+            } catch (e) {
+                showToast('❌ Error saving settings');
+            }
+        }
+        
+        function renderFollowedWallets(wallets) {
+            const container = document.getElementById('copy-wallets-list');
+            
+            if (wallets.length === 0) {
+                container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">No wallets followed yet. Add one above!</div>';
+                return;
+            }
+            
+            container.innerHTML = wallets.map(w => `
+                <div class="copy-wallet-item ${w.enabled ? '' : 'disabled'}" data-id="${w.id}">
+                    <div class="copy-wallet-info">
+                        <div class="copy-wallet-label">${w.label}</div>
+                        <div class="copy-wallet-address">${w.address.slice(0, 8)}...${w.address.slice(-6)}</div>
+                    </div>
+                    <div class="copy-wallet-actions">
+                        <button class="copy-wallet-btn" onclick="toggleWallet('${w.id}')">${w.enabled ? '⏸️' : '▶️'}</button>
+                        <button class="copy-wallet-btn danger" onclick="removeWallet('${w.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function addFollowedWallet() {
+            const address = document.getElementById('new-wallet-address').value.trim();
+            const label = document.getElementById('new-wallet-label').value.trim();
+            
+            if (!address || !label) {
+                showToast('❌ Please enter wallet address and label');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/copy/follow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, label })
+                });
+                
+                if (res.ok) {
+                    showToast(`✅ Now following ${label}`);
+                    document.getElementById('new-wallet-address').value = '';
+                    document.getElementById('new-wallet-label').value = '';
+                    loadAutoCopyData();
+                } else {
+                    const data = await res.json();
+                    showToast(`❌ ${data.error || 'Failed to add wallet'}`);
+                }
+            } catch (e) {
+                showToast('❌ Error adding wallet');
+            }
+        }
+        
+        async function toggleWallet(walletId) {
+            try {
+                await fetch(`${API_BASE}/api/copy/wallets/${walletId}/toggle`, { method: 'POST' });
+                loadAutoCopyData();
+            } catch (e) {
+                showToast('❌ Failed to toggle wallet');
+            }
+        }
+        
+        async function removeWallet(walletId) {
+            if (!confirm('Remove this wallet from your follow list?')) return;
+            
+            try {
+                await fetch(`${API_BASE}/api/copy/wallets/${walletId}`, { method: 'DELETE' });
+                showToast('✅ Wallet removed');
+                loadAutoCopyData();
+            } catch (e) {
+                showToast('❌ Failed to remove wallet');
+            }
+        }
+        
+        function updateCopyStats(stats) {
+            document.getElementById('copy-total-trades').textContent = stats.totalTrades || 0;
+            document.getElementById('copy-executed').textContent = stats.executed || 0;
+            document.getElementById('copy-skipped').textContent = stats.skipped || 0;
+            document.getElementById('copy-today').textContent = stats.todayTrades || 0;
+        }
+        
+        // ===== ALERT RULES =====
+        let alertRules = [];
+        let alertTemplates = [];
+        
+        async function loadAlertRulesData() {
+            try {
+                // Load templates
+                const templatesRes = await fetch(`${API_BASE}/api/alerts/templates`);
+                const templatesData = await templatesRes.json();
+                alertTemplates = templatesData.templates || [];
+                renderTemplates();
+                
+                // Load rules
+                const rulesRes = await fetch(`${API_BASE}/api/alerts/rules`);
+                const rulesData = await rulesRes.json();
+                alertRules = rulesData.rules || [];
+                renderRules();
+                
+                // Load stats
+                const statsRes = await fetch(`${API_BASE}/api/alerts/stats`);
+                const stats = await statsRes.json();
+                updateRuleStats(stats);
+                
+            } catch (e) {
+                console.error('Failed to load alert rules data:', e);
+            }
+        }
+        
+        function renderTemplates() {
+            const container = document.getElementById('templates-grid');
+            
+            container.innerHTML = alertTemplates.map(t => `
+                <div class="template-card" onclick="useTemplate('${t.id}')">
+                    <div class="template-name">${t.name}</div>
+                    <div class="template-desc">${t.description}</div>
+                    <span class="template-category">${t.category}</span>
+                </div>
+            `).join('');
+        }
+        
+        function useTemplate(templateId) {
+            const template = alertTemplates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            document.getElementById('rule-name').value = template.name;
+            document.getElementById('rule-description').value = template.description;
+            
+            // Clear existing conditions and add from template
+            const container = document.getElementById('rule-conditions-list');
+            container.innerHTML = '';
+            
+            if (template.conditionGroups && template.conditionGroups[0]) {
+                template.conditionGroups[0].conditions.forEach((cond, idx) => {
+                    addRuleConditionWithValues(cond.field, cond.operator, cond.value);
+                });
+            }
+            
+            // Check suggested actions
+            document.getElementById('action-notify').checked = template.suggestedActions?.includes('notify') || false;
+            document.getElementById('action-autotrade').checked = template.suggestedActions?.includes('auto_trade') || false;
+            document.getElementById('action-telegram').checked = template.suggestedActions?.includes('telegram') || false;
+            document.getElementById('action-discord').checked = template.suggestedActions?.includes('discord') || false;
+            document.getElementById('action-webhook').checked = template.suggestedActions?.includes('webhook') || false;
+            
+            showToast(`📋 Template loaded: ${template.name}`);
+        }
+        
+        let conditionIndex = 1;
+        
+        function addRuleCondition() {
+            const container = document.getElementById('rule-conditions-list');
+            const conditionHtml = `
+                <div class="rule-condition" data-index="${conditionIndex}">
+                    <select class="condition-field">
+                        <option value="score">Score</option>
+                        <option value="riskLevel">Risk Level</option>
+                        <option value="sources_count">Sources Count</option>
+                        <option value="mcap">Market Cap</option>
+                        <option value="volume5m">Volume 5m</option>
+                        <option value="safetyScore">Safety Score</option>
+                        <option value="convictionLevel">Conviction</option>
+                    </select>
+                    <select class="condition-operator">
+                        <option value="greater_than">></option>
+                        <option value="less_than"><</option>
+                        <option value="greater_or_equal">≥</option>
+                        <option value="less_or_equal">≤</option>
+                        <option value="equals">=</option>
+                        <option value="in">in</option>
+                    </select>
+                    <input type="text" class="condition-value" placeholder="Value">
+                    <button onclick="this.parentElement.remove()" style="background: rgba(239,68,68,0.3); border: none; color: #ef4444; padding: 8px 12px; border-radius: 6px; cursor: pointer;">✕</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', conditionHtml);
+            conditionIndex++;
+        }
+        
+        function addRuleConditionWithValues(field, operator, value) {
+            const container = document.getElementById('rule-conditions-list');
+            const valueStr = Array.isArray(value) ? value.join(', ') : String(value);
+            const conditionHtml = `
+                <div class="rule-condition" data-index="${conditionIndex}">
+                    <select class="condition-field">
+                        <option value="score" ${field === 'score' ? 'selected' : ''}>Score</option>
+                        <option value="riskLevel" ${field === 'riskLevel' ? 'selected' : ''}>Risk Level</option>
+                        <option value="sources_count" ${field === 'sources_count' ? 'selected' : ''}>Sources Count</option>
+                        <option value="mcap" ${field === 'mcap' ? 'selected' : ''}>Market Cap</option>
+                        <option value="volume5m" ${field === 'volume5m' ? 'selected' : ''}>Volume 5m</option>
+                        <option value="safetyScore" ${field === 'safetyScore' ? 'selected' : ''}>Safety Score</option>
+                        <option value="convictionLevel" ${field === 'convictionLevel' ? 'selected' : ''}>Conviction</option>
+                        <option value="source" ${field === 'source' ? 'selected' : ''}>Source</option>
+                    </select>
+                    <select class="condition-operator">
+                        <option value="greater_than" ${operator === 'greater_than' ? 'selected' : ''}>></option>
+                        <option value="less_than" ${operator === 'less_than' ? 'selected' : ''}><</option>
+                        <option value="greater_or_equal" ${operator === 'greater_or_equal' ? 'selected' : ''}>≥</option>
+                        <option value="less_or_equal" ${operator === 'less_or_equal' ? 'selected' : ''}>≤</option>
+                        <option value="equals" ${operator === 'equals' ? 'selected' : ''}>=</option>
+                        <option value="in" ${operator === 'in' ? 'selected' : ''}>in</option>
+                        <option value="contains" ${operator === 'contains' ? 'selected' : ''}>contains</option>
+                    </select>
+                    <input type="text" class="condition-value" placeholder="Value" value="${valueStr}">
+                    <button onclick="this.parentElement.remove()" style="background: rgba(239,68,68,0.3); border: none; color: #ef4444; padding: 8px 12px; border-radius: 6px; cursor: pointer;">✕</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', conditionHtml);
+            conditionIndex++;
+        }
+        
+        // Show/hide webhook config based on checkbox
+        document.getElementById('action-webhook')?.addEventListener('change', function() {
+            document.getElementById('webhook-config').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        document.getElementById('action-discord')?.addEventListener('change', function() {
+            document.getElementById('discord-config').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        async function createAlertRule() {
+            const name = document.getElementById('rule-name').value.trim();
+            const description = document.getElementById('rule-description').value.trim();
+            
+            if (!name) {
+                showToast('❌ Please enter a rule name');
+                return;
+            }
+            
+            // Gather conditions
+            const conditionElements = document.querySelectorAll('#rule-conditions-list .rule-condition');
+            const conditions = [];
+            
+            conditionElements.forEach(el => {
+                const field = el.querySelector('.condition-field').value;
+                const operator = el.querySelector('.condition-operator').value;
+                let value = el.querySelector('.condition-value').value.trim();
+                
+                // Convert numeric values
+                if (['score', 'sources_count', 'mcap', 'volume5m', 'safetyScore'].includes(field)) {
+                    value = parseFloat(value);
+                }
+                // Handle array values for 'in' operator
+                if (operator === 'in' && typeof value === 'string') {
+                    value = value.split(',').map(v => v.trim());
+                }
+                
+                conditions.push({ field, operator, value });
+            });
+            
+            if (conditions.length === 0) {
+                showToast('❌ Please add at least one condition');
+                return;
+            }
+            
+            // Gather actions
+            const actions = [];
+            if (document.getElementById('action-notify').checked) {
+                actions.push({ type: 'notify', config: {} });
+            }
+            if (document.getElementById('action-autotrade').checked) {
+                actions.push({ type: 'auto_trade', config: {} });
+            }
+            if (document.getElementById('action-telegram').checked) {
+                actions.push({ type: 'telegram', config: {} });
+            }
+            if (document.getElementById('action-discord').checked) {
+                const webhookUrl = document.getElementById('discord-webhook-url').value.trim();
+                actions.push({ type: 'discord', config: { webhookUrl } });
+            }
+            if (document.getElementById('action-webhook').checked) {
+                const url = document.getElementById('webhook-url').value.trim();
+                actions.push({ type: 'webhook', config: { url } });
+            }
+            
+            if (actions.length === 0) {
+                showToast('❌ Please select at least one action');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/alerts/rules`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        conditionGroups: [{ operator: 'AND', conditions }],
+                        groupOperator: 'AND',
+                        actions,
+                        cooldownMinutes: parseInt(document.getElementById('rule-cooldown').value) || 5,
+                        maxTriggersPerDay: parseInt(document.getElementById('rule-max-triggers').value) || 50
+                    })
+                });
+                
+                if (res.ok) {
+                    showToast('✅ Rule created!');
+                    // Clear form
+                    document.getElementById('rule-name').value = '';
+                    document.getElementById('rule-description').value = '';
+                    document.getElementById('rule-conditions-list').innerHTML = `
+                        <div class="rule-condition" data-index="0">
+                            <select class="condition-field">
+                                <option value="score">Score</option>
+                                <option value="riskLevel">Risk Level</option>
+                                <option value="sources_count">Sources Count</option>
+                            </select>
+                            <select class="condition-operator">
+                                <option value="greater_than">></option>
+                                <option value="equals">=</option>
+                            </select>
+                            <input type="text" class="condition-value" placeholder="Value">
+                        </div>
+                    `;
+                    loadAlertRulesData();
+                } else {
+                    const data = await res.json();
+                    showToast(`❌ ${data.error || 'Failed to create rule'}`);
+                }
+            } catch (e) {
+                showToast('❌ Error creating rule');
+            }
+        }
+        
+        function renderRules() {
+            const container = document.getElementById('rules-list');
+            
+            if (alertRules.length === 0) {
+                container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">No rules yet. Create one above or use a template!</div>';
+                return;
+            }
+            
+            container.innerHTML = alertRules.map(r => {
+                const actionsText = r.actions.map(a => {
+                    switch (a.type) {
+                        case 'notify': return '📢';
+                        case 'auto_trade': return '🤖';
+                        case 'telegram': return '📱';
+                        case 'discord': return '💬';
+                        case 'webhook': return '🔗';
+                        default: return '•';
+                    }
+                }).join(' ');
+                
+                return `
+                    <div class="rule-item ${r.enabled ? '' : 'disabled'}" data-id="${r.id}">
+                        <div class="rule-info">
+                            <div class="rule-name">${r.name}</div>
+                            <div class="rule-desc">${r.description || 'No description'}</div>
+                            <div class="rule-meta">
+                                <span>Actions: ${actionsText}</span>
+                                <span>Triggers: ${r.stats?.triggeredCount || 0}</span>
+                                <span>Cooldown: ${r.cooldownMinutes}m</span>
+                            </div>
+                        </div>
+                        <div class="rule-actions">
+                            <button class="rule-btn" onclick="toggleAlertRule('${r.id}')">${r.enabled ? '⏸️' : '▶️'}</button>
+                            <button class="rule-btn danger" onclick="deleteAlertRule('${r.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        async function toggleAlertRule(ruleId) {
+            try {
+                await fetch(`${API_BASE}/api/alerts/rules/${ruleId}/toggle`, { method: 'POST' });
+                loadAlertRulesData();
+            } catch (e) {
+                showToast('❌ Failed to toggle rule');
+            }
+        }
+        
+        async function deleteAlertRule(ruleId) {
+            if (!confirm('Delete this rule?')) return;
+            
+            try {
+                await fetch(`${API_BASE}/api/alerts/rules/${ruleId}`, { method: 'DELETE' });
+                showToast('✅ Rule deleted');
+                loadAlertRulesData();
+            } catch (e) {
+                showToast('❌ Failed to delete rule');
+            }
+        }
+        
+        function updateRuleStats(stats) {
+            document.getElementById('rules-total').textContent = stats.totalRules || 0;
+            document.getElementById('rules-enabled').textContent = stats.enabledRules || 0;
+            document.getElementById('rules-triggers-total').textContent = stats.totalTriggers || 0;
+            document.getElementById('rules-triggers-today').textContent = stats.todayTriggers || 0;
+        }
+        
+        // Load auto-copy and alert rules data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                loadAutoCopyData();
+                loadAlertRulesData();
+            }, 1000);
         });
     </script>
 </body>

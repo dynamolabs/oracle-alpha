@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="100%" style="stop-color:#1a1a3a"/>
+    </linearGradient>
+    <linearGradient id="glow512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d9ff"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#bg512)"/>
+  <circle cx="256" cy="220" r="120" fill="none" stroke="url(#glow512)" stroke-width="12"/>
+  <circle cx="256" cy="220" r="50" fill="url(#glow512)" opacity="0.8"/>
+  <ellipse cx="256" cy="380" rx="80" ry="30" fill="url(#glow512)" opacity="0.6"/>
+  <text x="256" y="245" font-family="sans-serif" font-size="100" fill="#fff" text-anchor="middle">🔮</text>
+</svg>
